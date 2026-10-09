@@ -111,6 +111,18 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .diff{display:flex;gap:3px;height:24px}
 .diff i{width:8px;height:24px;border:1px solid var(--ink-soft);border-top:0;border-radius:0 0 3px 3px}
 .diff i.on{background:var(--ink);border-color:var(--ink)}
+.diff.d4 i{width:6px}
+.lvpick{display:flex;flex-direction:column;align-items:center;gap:6px;margin:4px 0 10px}
+.lvpick .seg{max-width:100%}
+.lvpick .seg button{padding:0 9px;font-size:.93rem;white-space:nowrap}
+.card .lvpick p{margin:0;font-size:.92rem;color:var(--ink)}
+.card.haslv{padding-top:12px;padding-bottom:0}
+.card.haslv h2{margin-bottom:6px}
+.card.haslv .actions{position:sticky;bottom:-14px;margin-top:0;padding:8px 0 12px;background:var(--surface);border-radius:0 0 18px 18px}
+.btn.lv .diff{height:18px}
+.btn.lv .diff i{width:5px;height:18px}
+#impLevel{max-width:100%}
+#impLevel button{padding:0 8px;font-size:.93rem;white-space:nowrap}
 .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);font-weight:700;font-size:.95rem;color:var(--ink-soft)}
 .num.done{background:var(--ok);border-color:var(--ok);color:#fff}
 .is-next .num{border-color:var(--felt);color:var(--felt-ink)}
@@ -235,6 +247,14 @@ input[type=range]{width:100%;accent-color:var(--felt)}
   .staff{display:none}
   .toolbar{padding-top:4px;padding-bottom:6px}
   .rstaff{flex-basis:120px}
+  .ptitle{flex-basis:70px}
+  #startOv{padding:8px}
+  .card.haslv{max-width:660px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;padding:10px 14px}
+  .card.haslv h2{flex:1 1 100%;font-size:1.25rem;margin:0}
+  .card.haslv .lvpick{display:contents}
+  .card.haslv .lvpick p{flex:1 1 100%;order:3}
+  .card.haslv .mode{display:none}
+  .card.haslv .actions{position:static;padding:0;margin:0}
 }
 @media (prefers-reduced-motion:reduce){
   .key.guide.wait,.btn.recording .rec-dot{animation:none}
@@ -288,6 +308,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
         </button>
         <div class="ptitle"><div class="name" id="pTitle"></div><div class="progress"><i id="pProg"></i></div></div>
         <div class="pctrl">
+          <button class="btn icon lv" id="btnLevel" hidden></button>
           <div class="seg" id="modeSeg" role="group" aria-label="Modo de práctica">
             <button data-v="esperar">Esperar</button><button data-v="ritmo">Ritmo</button><button data-v="escuchar">Escuchar</button>
           </div>
@@ -308,6 +329,10 @@ input[type=range]{width:100%;accent-color:var(--felt)}
             <div class="kicker" id="soKicker" hidden></div>
             <h2 id="soTitle"></h2>
             <p class="goal" id="soGoal" hidden></p>
+            <div class="lvpick" id="soLevel" hidden>
+              <div class="seg" id="levelSeg" role="group" aria-label="Dificultad"></div>
+              <p id="soLevelDesc"></p>
+            </div>
             <p class="mode" id="soDesc"></p>
             <div class="actions"><button class="btn primary" id="btnStart">Empezar</button></div>
           </div>
@@ -392,7 +417,11 @@ input[type=range]{width:100%;accent-color:var(--felt)}
       <div class="flabel">¿Qué parte quieres practicar?</div>
       <div class="parts" id="impParts"></div>
     </div>
-    <label class="chk"><input type="checkbox" id="impMelody" checked> Solo la melodía: una nota a la vez, más fácil para empezar</label>
+    <div class="field">
+      <div class="flabel" id="impLevelLabel">Dificultad para empezar</div>
+      <div class="seg" id="impLevel" role="group" aria-labelledby="impLevelLabel"></div>
+      <p class="fhelp" id="impLevelDesc"></p>
+    </div>
     <p class="fhelp" id="impInfo"></p>
     <div class="dlg-actions">
       <button class="btn" id="impCancel">Cancelar</button>
@@ -592,18 +621,90 @@ function songData(s){
   return s._cache;
 }
 
+/* ---------- Dificultad de las canciones propias ---------- */
+const NIVELES = [null,
+  {name: 'Muy fácil', desc: 'Solo las notas principales de la melodía.'},
+  {name: 'Fácil', desc: 'La melodía completa, una nota a la vez.'},
+  {name: 'Medio', desc: 'La melodía y un bajo sencillo.'},
+  {name: 'Completa', desc: 'Todas las notas, con las dos manos.'}
+];
+function songLevels(s){
+  if (s._lv) return s._lv;
+  const base = songData(s).notes;
+  const beat = (s.bpm || 120) / 60;
+  const win = Math.max(1 / 24, 0.04 * beat) + 1e-6;
+  const gap = 0.45 * beat - 1e-6;
+  const groups = arr => { const out = []; let g = null; for (const n of arr){ if (!g || n.start - g[0].start > win){ g = []; out.push(g); } g.push(n); } return out; };
+  const clip = arr => { for (let i = 0; i < arr.length - 1; i++) arr[i].dur = Math.max(1 / 8, Math.min(arr[i].dur, arr[i + 1].start - arr[i].start)); return arr; };
+  const mk = (n, hand) => ({midi: n.midi, start: n.start, dur: n.dur, finger: 0, hand});
+  // La nota más aguda de cada momento es la melodía; se descartan los bajos sueltos que suenan entre ella.
+  const top = groups(base).map(g => g.reduce((a, b) => b.midi > a.midi ? b : a));
+  const melSrc = top.filter((n, i) => {
+    if (n.midi >= 60) return true;
+    let lo = 999;
+    for (let j = i - 1; j >= 0 && n.start - top[j].start <= 2; j--) if (top[j].midi >= 60) lo = Math.min(lo, top[j].midi);
+    for (let j = i + 1; j < top.length && top[j].start - n.start <= 2; j++) if (top[j].midi >= 60) lo = Math.min(lo, top[j].midi);
+    return lo === 999 || n.midi > lo - 7;
+  });
+  const l2 = clip(melSrc.map(n => mk(n, 'R')));
+  // Nivel 1: se quitan las notas muy seguidas y se conserva la más larga de cada grupo.
+  const kept = [];
+  for (const n of melSrc){
+    const last = kept[kept.length - 1];
+    if (!last || n.start - last.start >= gap) kept.push(n);
+    else if (n.dur > last.dur * 1.5 && (kept.length < 2 || n.start - kept[kept.length - 2].start >= gap)) kept[kept.length - 1] = n;
+  }
+  const l1 = clip(kept.map(n => mk(n, 'R')));
+  // Nivel 3: la melodía y una sola nota grave a la vez, sin notas muy seguidas.
+  const used = new Set(melSrc);
+  const bass = [];
+  for (const g of groups(base.filter(n => n.midi < 60 && !used.has(n)))){
+    const n = g.reduce((a, b) => b.midi < a.midi ? b : a);
+    if (!bass.length || n.start - bass[bass.length - 1].start >= gap * 2) bass.push(mk(n, 'L'));
+  }
+  clip(bass);
+  let k = 0;
+  for (const b of bass){
+    while (k < l2.length - 1 && l2[k + 1].start <= b.start + win) k++;
+    for (const m of [l2[k], l2[k + 1]]) if (m && Math.abs(m.start - b.start) <= win){ b.start = m.start; break; }
+  }
+  const l3 = l2.map(n => Object.assign({}, n)).concat(bass).sort((a, b) => a.start - b.start || a.midi - b.midi);
+  const l4 = base.map(n => Object.assign({}, n));
+  const notes = [null, l1, l2, l3, l4];
+  const avail = [];
+  if (l1.length && l1.length < l2.length) avail.push(1);
+  avail.push(2);
+  if (l3.length > l2.length && l3.length < l4.length) avail.push(3);
+  if (l4.length > l2.length) avail.push(4);
+  s._lv = {notes, avail};
+  return s._lv;
+}
+function pickLevel(avail, want){
+  if (avail.includes(want)) return want;
+  const lower = avail.filter(x => x < want);
+  return lower.length ? lower[lower.length - 1] : avail[0];
+}
+const hasLevels = s => !!s && s.kind === 'midi';
+function baseLevel(s){ const a = songLevels(s).avail; return a.includes(s.nivel) ? s.nivel : a[a.length - 1]; }
+function curLevel(s){
+  const a = songLevels(s).avail, want = (settings.niveles || {})[s.key];
+  return a.includes(want) ? want : baseLevel(s);
+}
+function progKey(s, level){ return !hasLevels(s) || level === baseLevel(s) ? s.key : s.key + '~' + level; }
+function diffHTML(level){ return `<span class="diff d4" aria-hidden="true">${[1, 2, 3, 4].map(i => `<i class="${i <= level ? 'on' : ''}"></i>`).join('')}</span>`; }
+
 /* ---------- Progreso y canciones propias (cuenta o navegador) ---------- */
 function hydrate(o){
   const base = {id: String(o.id), key: 'u:' + o.id, title: String(o.title || '').slice(0, 80) || 'Sin título',
                 bpm: Math.max(30, Math.min(240, +o.bpm || 100)), created: +o.created || 0, user: true, localOnly: !!o.localOnly};
   if (o.kind === 'ejercicio') return Object.assign(base, {kind: 'ejercicio', goal: String(o.goal || '').slice(0, 400),
     notes: String(o.notes || ''), left: String(o.left || ''), tema: String(o.tema || ''), generated: true});
-  return Object.assign(base, {kind: 'midi', notas: String(o.notas || ''), origin: 'Importada'});
+  return Object.assign(base, {kind: 'midi', notas: String(o.notas || ''), nivel: [1, 2, 3, 4].includes(+o.nivel) ? +o.nivel : 0, origin: 'Importada'});
 }
 function bodyOf(s){
   return s.kind === 'ejercicio'
     ? {kind: 'ejercicio', title: s.title, goal: s.goal, bpm: s.bpm, notes: s.notes, left: s.left, tema: s.tema, created: s.created}
-    : {kind: 'midi', title: s.title, bpm: s.bpm, notas: s.notas, created: s.created};
+    : Object.assign({kind: 'midi', title: s.title, bpm: s.bpm, notas: s.notas, created: s.created}, s.nivel ? {nivel: s.nivel} : {});
 }
 function mergeBest(a, b){
   const out = Object.assign({}, a);
@@ -640,7 +741,10 @@ const Data = {
           const body = bodyOf(s); body.created = body.created || Date.now();
           await ref.set(body);
           const hs = hydrate(Object.assign({id: ref.id}, body));
-          if (this.progress[s.key]){ this.progress[hs.key] = this.progress[s.key]; delete this.progress[s.key]; dirty = true; }
+          for (const suf of ['', '~1', '~2', '~3', '~4']){
+            if (this.progress[s.key + suf]){ this.progress[hs.key + suf] = this.progress[s.key + suf]; delete this.progress[s.key + suf]; dirty = true; }
+          }
+          if (settings.niveles && settings.niveles[s.key]){ settings.niveles[hs.key] = settings.niveles[s.key]; delete settings.niveles[s.key]; saveSettings(); }
           cloud.push(hs);
         } catch(e){ cloud.push(s); }
       }
@@ -675,7 +779,9 @@ const Data = {
   async deleteItem(id){
     const s = this.items.find(x => x.id === id); if (!s) return;
     this.items = this.items.filter(x => x !== s);
-    delete this.progress[s.key]; store.set('piano:mejores', this.progress);
+    for (const suf of ['', '~1', '~2', '~3', '~4']) delete this.progress[s.key + suf];
+    store.set('piano:mejores', this.progress);
+    if (settings.niveles && settings.niveles[s.key]){ delete settings.niveles[s.key]; saveSettings(); }
     this.saveLocal();
     if (this.mode === 'cloud' && !s.localOnly){ try { await this.col.doc(id).delete(); } catch(e){} this.writeProgress(); }
   }
@@ -1144,10 +1250,11 @@ async function createExercise(){
 
 function starsHTML(b){ return `<span class="stars" aria-label="${b.stars} de 3 estrellas">${'★'.repeat(b.stars)}${'☆'.repeat(3 - b.stars)}</span>`; }
 function rowItem(s){
-  const b = Data.progress[s.key];
   const gen = s.kind === 'ejercicio';
-  const sub = gen ? `${(AI_TOPICS.find(t => t.id === s.tema) || {label: 'Ejercicio'}).label}. Creado con IA.` : `${songData(s).notes.length} notas. Importada.`;
-  const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : '<span class="diff" aria-hidden="true"><i class="on"></i><i></i><i></i></span>';
+  const lv = gen ? 0 : curLevel(s);
+  const b = Data.progress[gen ? s.key : progKey(s, lv)];
+  const sub = gen ? `${(AI_TOPICS.find(t => t.id === s.tema) || {label: 'Ejercicio'}).label}. Creado con IA.` : `Dificultad: ${NIVELES[lv].name}. ${songLevels(s).notes[lv].length} notas.`;
+  const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : diffHTML(lv);
   return `<div class="song-row"><button class="song" data-id="${esc(s.key)}">${icon}
     <span><span class="t">${esc(s.title)}</span><span class="o">${esc(sub)}</span></span>${b ? starsHTML(b) : '<span class="new">Nuevo</span>'}</button>
     <button class="btn icon del" data-del="${esc(s.id)}" aria-label="Eliminar ${esc(s.title)}">${ICON.trash}</button></div>`;
@@ -1202,8 +1309,8 @@ function renderSongs(){
   const mine = Data.items.filter(s => s.kind === 'midi');
   h += `<section class="lvl"><h2>Tus canciones</h2>
     <p class="lead">${IN_CLAUDE
-      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable.'
-      : 'Importa un archivo MIDI (.mid), o crea la canción desde una grabación: pones la música a sonar y la app la convierte en notas. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable.'}</p>
+      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges la dificultad, de «Muy fácil» a «Completa».'
+      : 'Importa un archivo MIDI (.mid), o crea la canción desde una grabación: pones la música a sonar y la app la convierte en notas. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges la dificultad, de «Muy fácil» a «Completa».'}</p>
     <div class="imp-row"><button class="btn primary" id="btnImport">Importar archivo MIDI</button>${IN_CLAUDE ? '' : '<a class="btn" id="btnFromAudio" href="AudioMIDI.html">Crear desde una grabación</a>'}</div>`;
   if (listMsg) h += `<p class="msg" role="status">${esc(listMsg)}</p>`;
   h += mine.length ? mine.map(rowItem).join('')
@@ -1523,7 +1630,8 @@ function parseMidiFile(buf){
   list.forEach(p => { if (seen[p.name] > 1){ idx[p.name] = (idx[p.name] || 0) + 1; p.name += ` (parte ${idx[p.name]})`; } });
   return {bpm: Math.max(30, Math.min(240, bpm)), parts: list};
 }
-function buildImported(parts, melodyOnly){
+const MAX_NOTAS = 4000;
+function buildImported(parts){
   const q = x => Math.round(x * 24) / 24;
   let notes = [];
   for (const p of parts) for (const n of p.notes){
@@ -1532,18 +1640,12 @@ function buildImported(parts, melodyOnly){
   notes.sort((a, b) => a.start - b.start || b.midi - a.midi);
   const seen = new Set();
   notes = notes.filter(n => { const k = n.start + ':' + n.midi; if (seen.has(k)) return false; seen.add(k); return true; });
-  if (melodyOnly){
-    const mel = [];
-    for (const n of notes){ if (mel.length && Math.abs(mel[mel.length - 1].start - n.start) < 1e-6) continue; mel.push(Object.assign({}, n)); }
-    for (let i = 0; i < mel.length - 1; i++) mel[i].dur = Math.max(1 / 8, Math.min(mel[i].dur, mel[i + 1].start - mel[i].start));
-    notes = mel;
-  }
   if (!notes.length) return null;
   const t0 = notes[0].start;
-  notes.forEach(n => { n.start = q(n.start - t0); n.hand = melodyOnly ? 'R' : (n.midi < 60 ? 'L' : 'R'); });
+  notes.forEach(n => { n.start = q(n.start - t0); n.hand = n.midi < 60 ? 'L' : 'R'; });
   notes.sort((a, b) => a.start - b.start || a.midi - b.midi);
   let truncated = false;
-  if (notes.length > 1500){ notes = notes.slice(0, 1500); truncated = true; }
+  if (notes.length > MAX_NOTAS){ notes = notes.slice(0, MAX_NOTAS); truncated = true; }
   let lo = 127, hi = 0;
   for (const n of notes){ lo = Math.min(lo, n.midi); hi = Math.max(hi, n.midi); }
   return {notes, truncated, lo, hi};
@@ -1577,7 +1679,7 @@ async function unzipMidi(buf){
   throw new Error('zip-sin-midi');
 }
 const impDlg = $('#impDlg');
-let impData = null;
+let impData = null, impLv = 2;
 function takePending(){
   let raw = null;
   try { raw = localStorage.getItem('piano:pendiente'); if (raw) localStorage.removeItem('piano:pendiente'); } catch(e){}
@@ -1633,7 +1735,7 @@ function openImportDialog(mid, fileName){
   if (mid.parts.length > 1) h += `<label class="part"><input type="radio" name="impPart" value="all">
     <span><span class="pn">Todas las partes juntas</span><span class="pd">Para tocar con las dos manos</span></span></label>`;
   $('#impParts').innerHTML = h;
-  $('#impMelody').checked = true;
+  impLv = 2;
   updateImpInfo();
   impDlg.showModal();
 }
@@ -1643,25 +1745,33 @@ function impSelection(){
   return el.value === 'all' ? impData.parts : [impData.parts[+el.value]];
 }
 function updateImpInfo(){
-  const r = buildImported(impSelection(), $('#impMelody').checked);
-  const info = $('#impInfo'), save = $('#impSave');
-  if (!r){ info.textContent = 'Esta parte no tiene notas que se puedan tocar.'; save.disabled = true; return; }
+  const r = buildImported(impSelection());
+  const info = $('#impInfo'), save = $('#impSave'), seg = $('#impLevel'), desc = $('#impLevelDesc');
+  if (!r){ info.textContent = 'Esta parte no tiene notas que se puedan tocar.'; save.disabled = true; seg.innerHTML = ''; desc.textContent = ''; return; }
   save.disabled = false;
-  let t = `Quedan ${r.notes.length} notas, de ${fullName(r.lo)} a ${fullName(r.hi)}. Tempo: ${impData.bpm} pulsos por minuto.`;
-  if (r.truncated) t += ' Es una canción larga: se guardan las primeras 1500 notas.';
-  if (countWhites(r.lo, r.hi) > 22) t += ' Las notas están muy separadas: en el celular gira la pantalla para ver las teclas más grandes.';
+  const lv = songLevels({bpm: impData.bpm, _cache: {notes: r.notes, length: 0}});
+  const cur = pickLevel(lv.avail, impLv), ns = lv.notes[cur];
+  seg.innerHTML = lv.avail.map(n => `<button type="button" data-v="${n}" aria-pressed="${n === cur}">${NIVELES[n].name}</button>`).join('');
+  desc.textContent = NIVELES[cur].desc + ' Podrás cambiarla cuando quieras al practicar.';
+  let lo = 127, hi = 0;
+  for (const n of ns){ lo = Math.min(lo, n.midi); hi = Math.max(hi, n.midi); }
+  let t = `Con esta dificultad tocas ${ns.length} notas, de ${fullName(lo)} a ${fullName(hi)}. Tempo: ${impData.bpm} pulsos por minuto.`;
+  if (r.truncated) t += ` Es una canción larga: se guardan las primeras ${MAX_NOTAS} notas.`;
+  if (countWhites(lo, hi) > 22) t += ' Las notas están muy separadas: en el celular gira la pantalla para ver las teclas más grandes.';
   info.textContent = t;
+  return {r, level: cur};
 }
 $('#impParts').addEventListener('change', updateImpInfo);
-$('#impMelody').addEventListener('change', updateImpInfo);
+$('#impLevel').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ impLv = +b.dataset.v; updateImpInfo(); } });
 $('#impCancel').onclick = () => impDlg.close();
 impDlg.addEventListener('click', e => { if (e.target === impDlg) impDlg.close(); });
 $('#impSave').onclick = async () => {
-  const r = buildImported(impSelection(), $('#impMelody').checked);
-  if (!r) return;
+  const sel = updateImpInfo();
+  if (!sel) return;
+  const r = sel.r;
   const btn = $('#impSave');
   btn.disabled = true; btn.textContent = 'Guardando…';
-  const s = await Data.addItem({kind: 'midi', title: $('#impName').value.trim() || 'Mi canción', bpm: impData.bpm, notas: encodeNotes(r.notes)});
+  const s = await Data.addItem({kind: 'midi', title: $('#impName').value.trim() || 'Mi canción', bpm: impData.bpm, notas: encodeNotes(r.notes), nivel: sel.level});
   btn.disabled = false; btn.textContent = 'Guardar y practicar';
   impDlg.close();
   settings.learnTab = 'canciones'; saveSettings(); listMsg = '';
@@ -1731,7 +1841,9 @@ function openSong(key){
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
   const d = songData(s);
   if (!d.notes.length) return;
-  P = {song: s, notes: d.notes.map(n => Object.assign({}, n, {state: 0})), length: d.length,
+  const level = hasLevels(s) ? curLevel(s) : 0;
+  const src = level ? songLevels(s).notes[level] : d.notes;
+  P = {song: s, level, notes: src.map(n => Object.assign({}, n, {state: 0})), length: level ? levelLength(src) : d.length,
        mode: settings.mode, speed: settings.speed, t: -LEAD, playing: false, waiting: false,
        hits: 0, errors: 0, finished: false, timers: [], lastTs: 0};
   view = 'player'; setTabs();
@@ -1740,6 +1852,35 @@ function openSong(key){
   syncSegs(); buildSongKeyboard(); reset();
   if (!raf) raf = requestAnimationFrame(frame);
 }
+function levelLength(notes){ let len = 0; for (const n of notes) len = Math.max(len, n.start + n.dur); return len; }
+function renderLevelPick(){
+  const on = !!(P && P.level), box = $('#soLevel'), btn = $('#btnLevel');
+  box.hidden = !on; btn.hidden = !on;
+  $('#startOv .card').classList.toggle('haslv', on);
+  if (!on) return;
+  const lv = songLevels(P.song);
+  $('#levelSeg').innerHTML = lv.avail.map(n => `<button data-v="${n}" aria-pressed="${n === P.level}">${NIVELES[n].name}</button>`).join('');
+  $('#soLevelDesc').textContent = lv.avail.length === 1 ? 'Esta canción tiene una sola dificultad: se guardó solo con la melodía.' : NIVELES[P.level].desc;
+  btn.innerHTML = diffHTML(P.level);
+  btn.title = `Dificultad: ${NIVELES[P.level].name}`;
+  btn.setAttribute('aria-label', `Dificultad: ${NIVELES[P.level].name}. Cambiar dificultad`);
+}
+function setLevel(n){
+  if (!P || !P.level) return;
+  const lv = songLevels(P.song);
+  n = pickLevel(lv.avail, n);
+  settings.niveles = settings.niveles || {};
+  settings.niveles[P.song.key] = n; saveSettings();
+  if (n !== P.level){
+    P.level = n;
+    P.notes = lv.notes[n].map(x => Object.assign({}, x, {state: 0}));
+    P.length = levelLength(lv.notes[n]);
+    buildSongKeyboard();
+  }
+  reset();
+}
+$('#levelSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLevel(+b.dataset.v); });
+$('#btnLevel').onclick = () => { reset(); };
 function leavePlayer(){
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
   P = null; guideKey = ''; guideEls.forEach(el => el.classList.remove('guide', 'wait', 'lh')); guideEls = [];
@@ -1758,6 +1899,7 @@ function reset(){
   $('#soTitle').textContent = s.title;
   $('#soGoal').hidden = !s.goal; $('#soGoal').textContent = s.goal || '';
   $('#soDesc').textContent = MODE_DESC[P.mode];
+  renderLevelPick();
   guideKey = '*'; updateGuide(); updateProgress(); setPlayIcon();
 }
 function start(){
@@ -1903,9 +2045,19 @@ function finish(){
       else if (P.mode === 'esperar'){ tip = 'En este modo no hay prisa: mira la tecla iluminada antes de tocar.'; }
       else if (stars < 2 && P.speed > 0.5){ tip = 'Baja la velocidad y vuelve a intentarlo.'; extra = '<button class="btn" data-act="slower">Más despacio</button>'; }
       else if (stars === 3 && P.speed < 1){ tip = 'Sube la velocidad para el siguiente reto.'; extra = '<button class="btn" data-act="faster">Más rápido</button>'; }
+      if (P.level){
+        const av = songLevels(s).avail, i = av.indexOf(P.level), up = av[i + 1], dn = av[i - 1];
+        if (stars >= 2 && up){
+          tip = P.mode === 'esperar' ? 'Siguiente paso: prueba el modo Ritmo o sube la dificultad.' : `Ya dominas esta dificultad: sube a «${NIVELES[up].name}».`;
+          extra += `<button class="btn" data-act="lv:${up}">Subir a «${NIVELES[up].name}»</button>`;
+        } else if (stars < 2 && dn){
+          tip = `Si te cuesta, baja la dificultad a «${NIVELES[dn].name}» y vuelve a subir cuando te salga bien.`;
+          extra += `<button class="btn" data-act="lv:${dn}">Bajar a «${NIVELES[dn].name}»</button>`;
+        }
+      }
       buttons = `<button class="btn primary" data-act="again">Repetir</button>${extra}${s.generated ? '<button class="btn" data-act="another">Crear otro parecido</button>' : ''}<button class="btn" data-act="list">${s.generated ? 'Ver ejercicios' : 'Otra canción'}</button>`;
     }
-    Data.saveBest(s.key, stars, pct);
+    Data.saveBest(progKey(s, P.level), stars, pct);
     card.innerHTML = `<div class="stars-big" role="img" aria-label="${stars} de 3 estrellas">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
       <h2>${titles[stars]}</h2><p class="pct">${pct}% de precisión</p><p>${detail}</p>${tip ? `<p class="tip">${tip}</p>` : ''}
       <div class="actions">${buttons}</div>`;
@@ -1921,6 +2073,7 @@ $('#doneOv').addEventListener('click', e => {
   else if (a === 'songs'){ settings.learnTab = 'canciones'; saveSettings(); goLearn(); }
   else if (a === 'next'){ const n = LESSONS[P.song.index + 1]; if (n) openSong(n.key); }
   else if (a === 'esperar' || a === 'ritmo'){ setMode(a); start(); }
+  else if (a.startsWith('lv:')){ setLevel(+a.slice(3)); start(); }
   else if (a === 'slower'){ setSpeed(P.speed === 1 ? 0.75 : 0.5); reset(); start(); }
   else if (a === 'faster'){ setSpeed(P.speed === 0.5 ? 0.75 : 1); reset(); start(); }
 });
