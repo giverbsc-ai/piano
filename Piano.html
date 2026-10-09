@@ -120,6 +120,7 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .diff.d4 i{width:6px}
 .lvpick{display:flex;flex-direction:column;align-items:center;gap:6px;margin:4px 0 10px}
 .lvpick .seg{max-width:100%}
+.seg button:disabled{opacity:.45;cursor:default}
 .lvpick .seg button{padding:0 9px;font-size:.93rem;white-space:nowrap}
 .card .lvpick p{margin:0;font-size:.92rem;color:var(--ink)}
 .card.haslv{padding-top:12px;padding-bottom:0}
@@ -547,6 +548,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
             <h2 id="soTitle"></h2>
             <p class="goal" id="soGoal" hidden></p>
             <div class="lvpick" id="soLevel" hidden>
+              <div class="seg" id="handsSeg" role="group" aria-label="Manos" hidden></div>
               <div class="seg" id="levelSeg" role="group" aria-label="Dificultad"></div>
               <p id="soLevelDesc"></p>
             </div>
@@ -652,6 +654,11 @@ input[type=range]{width:100%;accent-color:var(--felt)}
     <div class="field">
       <div class="flabel">¿Qué parte quieres practicar?</div>
       <div class="parts" id="impParts"></div>
+    </div>
+    <div class="field">
+      <div class="flabel" id="impHandsLabel">¿Con cuántas manos?</div>
+      <div class="seg" id="impHands" role="group" aria-labelledby="impHandsLabel"></div>
+      <p class="fhelp" id="impHandsHelp"></p>
     </div>
     <div class="field">
       <div class="flabel" id="impLevelLabel">Dificultad para empezar</div>
@@ -925,13 +932,22 @@ function songData(s){
   return s._cache;
 }
 
-/* ---------- Dificultad de las canciones propias ---------- */
+/* ---------- Dificultad de las canciones propias ----------
+   Se elige con cuántas manos y qué tan difícil. Los códigos 1 a 4 son los de siempre
+   (por eso no están en orden); del 5 al 8 completan las combinaciones. */
 const NIVELES = [null,
-  {name: 'Muy fácil', desc: 'Solo las notas principales de la melodía.'},
-  {name: 'Fácil', desc: 'La melodía completa, una nota a la vez.'},
-  {name: 'Medio', desc: 'La melodía y un bajo sencillo.'},
-  {name: 'Completa', desc: 'Todas las notas, con las dos manos.'}
+  {hands: 1, rank: 1, name: 'Muy fácil', desc: 'Una mano: solo las notas principales de la melodía.'},
+  {hands: 1, rank: 2, name: 'Fácil', desc: 'Una mano: la melodía completa, una nota a la vez.'},
+  {hands: 2, rank: 2, name: 'Fácil', desc: 'Dos manos: la melodía completa y un bajo sencillo.'},
+  {hands: 2, rank: 4, name: 'Completa', desc: 'Dos manos: todas las notas.'},
+  {hands: 1, rank: 3, name: 'Medio', desc: 'Una mano: la melodía con una segunda nota por debajo.'},
+  {hands: 1, rank: 4, name: 'Completa', desc: 'Una mano: todo lo que suena en la zona de la mano derecha, con sus acordes.'},
+  {hands: 2, rank: 1, name: 'Muy fácil', desc: 'Dos manos: las notas principales de la melodía y pocas notas graves.'},
+  {hands: 2, rank: 3, name: 'Medio', desc: 'Dos manos: la melodía con su segunda nota y un bajo más movido.'}
 ];
+const LV_ORDER = [1, 2, 5, 6, 7, 3, 8, 4];
+const LV_SUF = ['', '~1', '~2', '~3', '~4', '~5', '~6', '~7', '~8'];
+const lvCode = (hands, rank) => LV_ORDER.find(n => NIVELES[n].hands === hands && NIVELES[n].rank === rank);
 /* Niveles de las canciones de la app: la melodía sola, con un bajo y con acordes en la mano izquierda. */
 const NIVELES_APP = [null,
   {name: 'Melodía', desc: 'Solo la mano derecha.'},
@@ -940,6 +956,8 @@ const NIVELES_APP = [null,
 ];
 const lvInfo = (s, n) => (s && s.chords ? NIVELES_APP : NIVELES)[n];
 const lvMax = s => s && s.chords ? 3 : 4;
+const lvRank = (s, n) => s && s.chords ? n : NIVELES[n].rank;
+const lvLabel = (s, n) => s && s.chords ? NIVELES_APP[n].name : `${NIVELES[n].name}, ${NIVELES[n].hands === 1 ? 'una mano' : 'dos manos'}`;
 function chordLevels(s){
   const mel = songData(s).notes, V = LH[s.pos || 'C'], bassMap = Object.assign({}, V.bass, s.bass || {});
   const one = tok => { const [ns, fs] = tok.split(':'); const f = fs.split('+'); return ns.split('+').map((nm, i) => ({midi: toMidi(nm), finger: +f[i] || 0})); };
@@ -989,39 +1007,72 @@ function songLevels(s){
     else if (n.dur > last.dur * 1.5 && (kept.length < 2 || n.start - kept[kept.length - 2].start >= gap)) kept[kept.length - 1] = n;
   }
   const l1 = clip(kept.map(n => mk(n, 'R')));
-  // Nivel 3: la melodía y una sola nota grave a la vez, sin notas muy seguidas.
+  // Mano izquierda: una sola nota grave a la vez, con más o menos espacio entre una y otra,
+  // alineada con la nota de la derecha que suena en ese momento.
   const used = new Set(melSrc);
-  const bass = [];
-  for (const g of groups(base.filter(n => n.midi < 60 && !used.has(n)))){
-    const n = g.reduce((a, b) => b.midi < a.midi ? b : a);
-    if (!bass.length || n.start - bass[bass.length - 1].start >= gap * 2) bass.push(mk(n, 'L'));
-  }
-  clip(bass);
-  let k = 0;
-  for (const b of bass){
-    while (k < l2.length - 1 && l2[k + 1].start <= b.start + win) k++;
-    for (const m of [l2[k], l2[k + 1]]) if (m && Math.abs(m.start - b.start) <= win){ b.start = m.start; break; }
-  }
-  const l3 = l2.map(n => Object.assign({}, n)).concat(bass).sort((a, b) => a.start - b.start || a.midi - b.midi);
+  const lefts = base.filter(n => n.midi < 60 && !used.has(n));
+  const bassLine = (space, right) => {
+    const bass = [];
+    for (const g of groups(lefts)){
+      const n = g.reduce((a, b) => b.midi < a.midi ? b : a);
+      if (!bass.length || n.start - bass[bass.length - 1].start >= space) bass.push(mk(n, 'L'));
+    }
+    clip(bass);
+    let k = 0;
+    for (const b of bass){
+      while (k < right.length - 1 && right[k + 1].start <= b.start + win) k++;
+      for (const m of [right[k], right[k + 1]]) if (m && Math.abs(m.start - b.start) <= win){ b.start = m.start; break; }
+    }
+    return bass;
+  };
+  const mix = (a, b) => a.map(n => Object.assign({}, n)).concat(b).sort((x, y) => x.start - y.start || x.midi - y.midi);
+  const l3 = mix(l2, bassLine(gap * 2, l2));
   const l4 = base.map(n => Object.assign({}, n));
-  const notes = [null, l1, l2, l3, l4];
-  const avail = [];
-  if (l1.length && l1.length < l2.length) avail.push(1);
-  avail.push(2);
-  if (l3.length > l2.length && l3.length < l4.length) avail.push(3);
-  if (l4.length > l2.length) avail.push(4);
+  // Mano derecha con más notas: una segunda nota bajo la melodía, o todo lo que suena de Do central hacia arriba.
+  const rights = base.filter(n => n.midi >= 60 || used.has(n));
+  const second = [];
+  for (const g of groups(rights)){
+    const t = g.reduce((a, b) => b.midi > a.midi ? b : a);
+    const c = g.filter(n => t.midi - n.midi >= 3 && t.midi - n.midi <= 12).sort((a, b) => b.midi - a.midi)[0];
+    if (c && (!second.length || t.start - second[second.length - 1].start >= gap)) second.push(Object.assign(mk(c, 'R'), {start: t.start}));
+  }
+  const l5 = mix(l2, second);
+  const l6 = rights.map(n => mk(n, 'R'));
+  const l7 = mix(l1, bassLine(gap * 4.4, l1));
+  const l8 = mix(l5, bassLine(gap, l5));
+  const notes = [null, l1, l2, l3, l4, l5, l6, l7, l8];
+  const ok = {2: true};
+  ok[1] = l1.length > 0 && l1.length < l2.length;
+  ok[5] = second.length > 0 && l5.length < l6.length;
+  ok[6] = l6.length > l2.length;
+  if (lefts.length){
+    ok[3] = l3.length > l2.length && l3.length < l4.length;
+    ok[4] = l4.length > l2.length;
+    ok[7] = ok[1] && l7.length > l1.length && l7.length < l3.length;
+    ok[8] = l8.length > l3.length && l8.length < l4.length;
+  }
+  const avail = LV_ORDER.filter(n => ok[n]);
   s._lv = {notes, avail};
   return s._lv;
 }
-function pickLevel(avail, want){
+function pickLevel(avail, want, s){
   if (avail.includes(want)) return want;
-  const lower = avail.filter(x => x < want);
-  return lower.length ? lower[lower.length - 1] : avail[0];
+  if ((s && s.chords) || !NIVELES[want]){
+    const lower = avail.filter(x => x < want);
+    return lower.length ? lower[lower.length - 1] : avail[0];
+  }
+  // Canciones propias: la dificultad más cercana, sin cambiar de una mano a dos ni al revés.
+  const m = NIVELES[want], same = avail.filter(x => NIVELES[x].hands === m.hands);
+  if (!same.length) return avail.includes(2) ? 2 : avail[0];
+  const lower = same.filter(x => NIVELES[x].rank <= m.rank);
+  return lower.length ? lower[lower.length - 1] : same[0];
 }
+// Una canción sin notas graves ya no ofrece «dos manos»: lo que antes era «Completa» pasa a ser «Completa, una mano».
+const lvAlias = (a, n) => n === 4 && !a.includes(4) && a.includes(6) ? 6 : n;
 const hasLevels = s => !!s && (s.kind === 'midi' || !!s.chords);
-function baseLevel(s){ const a = songLevels(s).avail; return a.includes(s.nivel) ? s.nivel : a[a.length - 1]; }
+function baseLevel(s){ const a = songLevels(s).avail, n = lvAlias(a, s.nivel); return a.includes(n) ? n : a[a.length - 1]; }
 function curLevel(s){
-  const a = songLevels(s).avail, want = (settings.niveles || {})[s.key];
+  const a = songLevels(s).avail, want = lvAlias(a, (settings.niveles || {})[s.key]);
   return a.includes(want) ? want : baseLevel(s);
 }
 function progKey(s, level){ return !hasLevels(s) || level === baseLevel(s) ? s.key : s.key + '~' + level; }
@@ -1033,7 +1084,7 @@ function hydrate(o){
                 bpm: Math.max(30, Math.min(240, +o.bpm || 100)), created: +o.created || 0, user: true, localOnly: !!o.localOnly};
   if (o.kind === 'ejercicio') return Object.assign(base, {kind: 'ejercicio', goal: String(o.goal || '').slice(0, 400),
     notes: String(o.notes || ''), left: String(o.left || ''), tema: String(o.tema || ''), generated: true});
-  return Object.assign(base, {kind: 'midi', notas: String(o.notas || ''), nivel: [1, 2, 3, 4].includes(+o.nivel) ? +o.nivel : 0, origin: 'Importada'});
+  return Object.assign(base, {kind: 'midi', notas: String(o.notas || ''), nivel: +o.nivel >= 1 && +o.nivel <= 8 && Number.isInteger(+o.nivel) ? +o.nivel : 0, origin: 'Importada'});
 }
 function bodyOf(s){
   return s.kind === 'ejercicio'
@@ -1075,7 +1126,7 @@ const Data = {
           const body = bodyOf(s); body.created = body.created || Date.now();
           await ref.set(body);
           const hs = hydrate(Object.assign({id: ref.id}, body));
-          for (const suf of ['', '~1', '~2', '~3', '~4']){
+          for (const suf of LV_SUF){
             if (this.progress[s.key + suf]){ this.progress[hs.key + suf] = this.progress[s.key + suf]; delete this.progress[s.key + suf]; dirty = true; }
           }
           if (settings.niveles && settings.niveles[s.key]){ settings.niveles[hs.key] = settings.niveles[s.key]; delete settings.niveles[s.key]; saveSettings(); }
@@ -1114,7 +1165,7 @@ const Data = {
   async deleteItem(id){
     const s = this.items.find(x => x.id === id); if (!s) return;
     this.items = this.items.filter(x => x !== s);
-    for (const suf of ['', '~1', '~2', '~3', '~4']) delete this.progress[s.key + suf];
+    for (const suf of LV_SUF) delete this.progress[s.key + suf];
     store.set('piano:mejores', this.progress);
     if (settings.niveles && settings.niveles[s.key]){ delete settings.niveles[s.key]; saveSettings(); }
     this.saveLocal();
@@ -1511,8 +1562,8 @@ function rowItem(s){
   const gen = s.kind === 'ejercicio';
   const lv = gen ? 0 : curLevel(s);
   const b = Data.progress[gen ? s.key : progKey(s, lv)];
-  const sub = gen ? `${TEMAS[s.tema] || 'Ejercicio'}. Creado con IA.` : `Dificultad: ${NIVELES[lv].name}. ${songLevels(s).notes[lv].length} notas.`;
-  const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : diffHTML(lv);
+  const sub = gen ? `${TEMAS[s.tema] || 'Ejercicio'}. Creado con IA.` : `Dificultad: ${lvLabel(s, lv)}. ${songLevels(s).notes[lv].length} notas.`;
+  const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : diffHTML(lvRank(s, lv));
   return `<div class="song-row"><button class="song" data-id="${esc(s.key)}">${icon}
     <span><span class="t">${esc(s.title)}</span><span class="o">${esc(sub)}</span></span>${b ? starsHTML(b) : '<span class="new">Nuevo</span>'}</button>
     <button class="btn icon del" data-del="${esc(s.id)}" aria-label="Eliminar ${esc(s.title)}">${ICON.trash}</button></div>`;
@@ -1559,8 +1610,8 @@ function renderSongs(){
   const mine = Data.items.filter(s => s.kind === 'midi');
   h += `<section class="lvl"><h2>Tus canciones</h2>
     <p class="lead">${IN_CLAUDE
-      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges la dificultad, de «Muy fácil» a «Completa».'
-      : 'Importa un archivo MIDI (.mid), o crea la canción desde una grabación: pones la música a sonar y la app la convierte en notas. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges la dificultad, de «Muy fácil» a «Completa».'}</p>
+      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges si la tocas con una mano o con las dos, y la dificultad, de «Muy fácil» a «Completa».'
+      : 'Importa un archivo MIDI (.mid), o crea la canción desde una grabación: pones la música a sonar y la app la convierte en notas. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges si la tocas con una mano o con las dos, y la dificultad, de «Muy fácil» a «Completa».'}</p>
     <div class="imp-row"><button class="btn primary" id="btnImport">Importar archivo MIDI</button>${IN_CLAUDE ? '' : '<a class="btn" id="btnFromAudio" href="AudioMIDI.html">Crear desde una grabación</a>'}</div>`;
   if (listMsg) h += `<p class="msg" role="status">${esc(listMsg)}</p>`;
   h += mine.length ? mine.map(rowItem).join('')
@@ -1930,7 +1981,7 @@ async function unzipMidi(buf){
   throw new Error('zip-sin-midi');
 }
 const impDlg = $('#impDlg');
-let impData = null, impLv = 2;
+let impData = null, impLv = 2, impHands = 1;
 function takePending(){
   let raw = null;
   try { raw = localStorage.getItem('piano:pendiente'); if (raw) localStorage.removeItem('piano:pendiente'); } catch(e){}
@@ -1986,7 +2037,7 @@ function openImportDialog(mid, fileName){
   if (mid.parts.length > 1) h += `<label class="part"><input type="radio" name="impPart" value="all">
     <span><span class="pn">Todas las partes juntas</span><span class="pd">Para tocar con las dos manos</span></span></label>`;
   $('#impParts').innerHTML = h;
-  impLv = 2;
+  impLv = 2; impHands = 1;
   updateImpInfo();
   impDlg.showModal();
 }
@@ -2001,9 +2052,12 @@ function updateImpInfo(){
   if (!r){ info.textContent = 'Esta parte no tiene notas que se puedan tocar.'; save.disabled = true; seg.innerHTML = ''; desc.textContent = ''; return; }
   save.disabled = false;
   const lv = songLevels({bpm: impData.bpm, _cache: {notes: r.notes, length: 0}});
-  const cur = pickLevel(lv.avail, impLv), ns = lv.notes[cur];
-  seg.innerHTML = lv.avail.map(n => `<button type="button" data-v="${n}" aria-pressed="${n === cur}">${NIVELES[n].name}</button>`).join('');
-  desc.textContent = NIVELES[cur].desc + ' Podrás cambiarla cuando quieras al practicar.';
+  const two = lv.avail.some(n => NIVELES[n].hands === 2), hands = two ? impHands : 1;
+  const cur = pickLevel(lv.avail, lvCode(hands, impLv)), ns = lv.notes[cur];
+  $('#impHands').innerHTML = [[1, 'Una mano'], [2, 'Dos manos']].map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v === hands}"${v === 2 && !two ? ' disabled' : ''}>${t}</button>`).join('');
+  $('#impHandsHelp').textContent = two ? '' : 'Esta parte no tiene notas graves para la mano izquierda: se toca con una mano.';
+  seg.innerHTML = lv.avail.filter(n => NIVELES[n].hands === hands).map(n => `<button type="button" data-v="${NIVELES[n].rank}" aria-pressed="${n === cur}">${NIVELES[n].name}</button>`).join('');
+  desc.textContent = NIVELES[cur].desc + ' Podrás cambiar las manos y la dificultad cuando quieras al practicar.';
   let lo = 127, hi = 0;
   for (const n of ns){ lo = Math.min(lo, n.midi); hi = Math.max(hi, n.midi); }
   let t = `Con esta dificultad tocas ${ns.length} notas, de ${fullName(lo)} a ${fullName(hi)}. Tempo: ${impData.bpm} pulsos por minuto.`;
@@ -2014,6 +2068,7 @@ function updateImpInfo(){
 }
 $('#impParts').addEventListener('change', updateImpInfo);
 $('#impLevel').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ impLv = +b.dataset.v; updateImpInfo(); } });
+$('#impHands').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled){ impHands = +b.dataset.v; updateImpInfo(); } });
 $('#impCancel').onclick = () => impDlg.close();
 impDlg.addEventListener('click', e => { if (e.target === impDlg) impDlg.close(); });
 $('#impSave').onclick = async () => {
@@ -2208,11 +2263,20 @@ function renderLevelPick(){
   if (!on) return;
   const lv = songLevels(P.song);
   const info = lvInfo(P.song, P.level);
-  $('#levelSeg').innerHTML = lv.avail.map(n => `<button data-v="${n}" aria-pressed="${n === P.level}">${lvInfo(P.song, n).name}</button>`).join('');
+  // Canciones propias: primero con cuántas manos y después la dificultad dentro de esa opción.
+  const own = !P.song.chords, hs = $('#handsSeg');
+  let list = lv.avail;
+  hs.hidden = !own;
+  if (own){
+    const h = NIVELES[P.level].hands, two = lv.avail.some(n => NIVELES[n].hands === 2);
+    hs.innerHTML = [[1, 'Una mano'], [2, 'Dos manos']].map(([v, t]) => `<button data-v="${v}" aria-pressed="${v === h}"${v === 2 && !two ? ' disabled' : ''}>${t}</button>`).join('');
+    list = lv.avail.filter(n => NIVELES[n].hands === h);
+  }
+  $('#levelSeg').innerHTML = list.map(n => `<button data-v="${n}" aria-pressed="${n === P.level}">${lvInfo(P.song, n).name}</button>`).join('');
   $('#soLevelDesc').textContent = lv.avail.length === 1 ? 'Esta canción tiene una sola dificultad: se guardó solo con la melodía.' : info.desc;
-  btn.innerHTML = diffHTML(P.level, lvMax(P.song));
-  btn.title = `Dificultad: ${info.name}`;
-  btn.setAttribute('aria-label', `Dificultad: ${info.name}. Cambiar dificultad`);
+  btn.innerHTML = diffHTML(lvRank(P.song, P.level), lvMax(P.song));
+  btn.title = `Dificultad: ${lvLabel(P.song, P.level)}`;
+  btn.setAttribute('aria-label', `Dificultad: ${lvLabel(P.song, P.level)}. Cambiar dificultad`);
 }
 function renderAids(){
   const fixed = (P.ctx && P.ctx.force) || {};
@@ -2252,13 +2316,17 @@ $('#btnAids').onclick = () => { reset(); };
 function setLevel(n){
   if (!P || !P.level) return;
   const lv = songLevels(P.song);
-  n = pickLevel(lv.avail, n);
+  n = pickLevel(lv.avail, n, P.song);
   settings.niveles = settings.niveles || {};
   settings.niveles[P.song.key] = n; saveSettings();
   if (n !== P.level){ P.level = n; buildRun(); buildSongKeyboard(); }
   reset();
 }
 $('#levelSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLevel(+b.dataset.v); });
+$('#handsSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled || !P || !P.level || P.song.chords) return;
+  setLevel(lvCode(+b.dataset.v, NIVELES[P.level].rank));
+});
 $('#btnLevel').onclick = () => { reset(); };
 function leavePlayer(){
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
@@ -2624,13 +2692,18 @@ function finish(){
       else if (stars < 2 && P.speed > 0.5){ tip = 'Baja la velocidad y vuelve a intentarlo.'; extra = '<button class="btn" data-act="slower">Más despacio</button>'; }
       else if (stars === 3 && P.speed < 1){ tip = 'Sube la velocidad para el siguiente reto.'; extra = '<button class="btn" data-act="faster">Más rápido</button>'; }
       if (P.level){
-        const av = songLevels(s).avail, i = av.indexOf(P.level), up = av[i + 1], dn = av[i - 1];
+        const all = songLevels(s).avail, own = !s.chords, h = own ? NIVELES[P.level].hands : 0;
+        const av = own ? all.filter(n => NIVELES[n].hands === h) : all, i = av.indexOf(P.level);
+        let up = av[i + 1], dn = av[i - 1];
+        if (own && !up && h === 1 && all.some(n => NIVELES[n].hands === 2)) up = pickLevel(all, 3);
+        if (own && !dn && h === 2) dn = pickLevel(all, 2);
+        const lvName = n => own && NIVELES[n].hands !== h ? lvLabel(s, n) : lvInfo(s, n).name;
         if (stars >= 2 && up){
-          const un = lvInfo(s, up).name;
+          const un = lvName(up);
           tip = P.mode === 'esperar' ? `Siguiente paso: prueba el modo Ritmo o sube al nivel «${un}».` : `Ya dominas este nivel: sube a «${un}».`;
           extra += `<button class="btn" data-act="lv:${up}">Subir a «${un}»</button>`;
         } else if (stars < 2 && dn){
-          const dnn = lvInfo(s, dn).name;
+          const dnn = lvName(dn);
           tip = `Si te cuesta, baja al nivel «${dnn}» y vuelve a subir cuando te salga bien.`;
           extra += `<button class="btn" data-act="lv:${dn}">Bajar a «${dnn}»</button>`;
         }
