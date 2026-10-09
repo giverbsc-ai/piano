@@ -728,7 +728,14 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
 /* Cuenta compartida entre dispositivos: configuración web del proyecto de Firebase.
    Con null la app no muestra nada de cuentas y guarda todo en el navegador, como antes. */
-const NUBE_CFG = null;
+const NUBE_CFG = {
+  apiKey: "AIzaSyAE3NTXT_fxZmAC2c3VcLt5u8hc8LBXHfU",
+  authDomain: "piano-8dcc2.firebaseapp.com",
+  projectId: "piano-8dcc2",
+  storageBucket: "piano-8dcc2.firebasestorage.app",
+  messagingSenderId: "119486158392",
+  appId: "1:119486158392:web:f982e664299a63d2de38cd"
+};
 
 /* ---------- Almacenamiento local ---------- */
 const store = {

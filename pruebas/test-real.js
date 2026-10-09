@@ -7,7 +7,8 @@ const SHOTS = path.join(require('os').tmpdir(), 'piano-pruebas'); fs.mkdirSync(S
 const CFG = "{apiKey: 'AIzaSyD-fake-key-for-offline-test-000000', authDomain: 'piano-prueba.firebaseapp.com', projectId: 'piano-prueba', appId: '1:123456789012:web:abcdef0123456789'}";
 function appHtml(){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
-  h = h.replace('const NUBE_CFG = null;', 'const NUBE_CFG = ' + CFG + ';');
+  if (!/const NUBE_CFG = [^;]*;/.test(h)) throw new Error('falta NUBE_CFG');
+  h = h.replace(/const NUBE_CFG = [^;]*;/, 'const NUBE_CFG = ' + CFG + ';');
   const ret = 'return {on, start, bind, push, addSong, delSong};';
   if (!h.includes(ret)) throw new Error('falta return');
   h = h.replace(ret, "return {on, start, bind, push, addSong, delSong, _open: open, _force(){ docServer = colServer = true; sync(); syncSongs(); }, _st: () => ({docServer, colServer, docPend, colPend, err, remote, C: C && [...C].map(([id, c]) => [id, c.pend]), sdk: !!fb, known})};");

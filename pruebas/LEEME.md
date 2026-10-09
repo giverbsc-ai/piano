@@ -14,4 +14,4 @@ Cómo correrlas (Node 18 o más):
     node pruebas/test-sync.js
     node pruebas/test-real.js
 
-Las dos activan la cuenta solo dentro de la prueba: cambian `const NUBE_CFG = null;` al servir la página.
+Las dos usan una configuración de mentira dentro de la prueba (reemplazan `NUBE_CFG` al servir la página), así que nunca tocan el proyecto real de Firebase.

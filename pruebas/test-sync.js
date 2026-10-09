@@ -59,9 +59,11 @@ function serverEdit(pathStr, patch){
 }
 /* --- servidor de archivos --- */
 const CFG = "{apiKey: 'k', authDomain: 'x.firebaseapp.com', projectId: 'x', appId: '1:1:web:1'}";
+const CFG_RE = /const NUBE_CFG = [^;]*;/;
 function appHtml(withCfg){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
-  if (withCfg){ if (!h.includes('const NUBE_CFG = null;')) throw new Error('falta NUBE_CFG'); h = h.replace('const NUBE_CFG = null;', 'const NUBE_CFG = ' + CFG + ';'); }
+  if (!CFG_RE.test(h)) throw new Error('falta NUBE_CFG');
+  h = h.replace(CFG_RE, 'const NUBE_CFG = ' + (withCfg ? CFG : 'null') + ';');
   const hook = "window.__t = {Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, renderList, store};\nNube.bind();";
   if (!h.includes('Nube.bind();')) throw new Error('falta bind');
   return h.replace('Nube.bind();', hook);
