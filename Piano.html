@@ -126,7 +126,8 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .song-row .song .t{overflow:hidden;text-overflow:ellipsis}
 .del{margin:0 4px;color:var(--ink-soft)}
 .del.armed{width:auto;padding:0 12px;border-color:var(--bad);color:var(--bad)}
-.imp-row{margin:10px 0 6px}
+.imp-row{margin:10px 0 6px;display:flex;flex-wrap:wrap;gap:8px}
+a.btn{text-decoration:none}
 .empty{color:var(--ink-soft);margin:14px 0 0;max-width:58ch}
 .msg{color:var(--bad);font-weight:500;margin:8px 0 0}
 .sync{margin:22px 0 0;font-size:.88rem;color:var(--ink-soft)}
@@ -407,6 +408,8 @@ const $ = s => document.querySelector(s);
 const root = document.documentElement;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
 
 /* ---------- Almacenamiento local ---------- */
 const store = {
@@ -1198,8 +1201,10 @@ function renderSongs(){
   }
   const mine = Data.items.filter(s => s.kind === 'midi');
   h += `<section class="lvl"><h2>Tus canciones</h2>
-    <p class="lead">Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable.</p>
-    <div class="imp-row"><button class="btn primary" id="btnImport">Importar archivo MIDI</button></div>`;
+    <p class="lead">${IN_CLAUDE
+      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable.'
+      : 'Importa un archivo MIDI (.mid), o crea la canción desde una grabación: pones la música a sonar y la app la convierte en notas. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable.'}</p>
+    <div class="imp-row"><button class="btn primary" id="btnImport">Importar archivo MIDI</button>${IN_CLAUDE ? '' : '<a class="btn" id="btnFromAudio" href="AudioMIDI.html">Crear desde una grabación</a>'}</div>`;
   if (listMsg) h += `<p class="msg" role="status">${esc(listMsg)}</p>`;
   h += mine.length ? mine.map(rowItem).join('')
     : '<p class="empty">Puedes descargar archivos MIDI gratuitos de música clásica en mutopiaproject.org, o buscar en internet el nombre de una canción junto a la palabra «MIDI».</p>';
@@ -1573,6 +1578,25 @@ async function unzipMidi(buf){
 }
 const impDlg = $('#impDlg');
 let impData = null;
+function takePending(){
+  let raw = null;
+  try { raw = localStorage.getItem('piano:pendiente'); if (raw) localStorage.removeItem('piano:pendiente'); } catch(e){}
+  if (!raw) return;
+  try {
+    const p = JSON.parse(raw);
+    const notes = (Array.isArray(p.notes) ? p.notes : []).slice(0, 8000)
+      .map(a => ({midi: Math.round(+a[0]), start: +a[1], dur: +a[2]}))
+      .filter(n => n.midi >= 21 && n.midi <= 108 && isFinite(n.start) && n.start >= 0 && n.dur > 0);
+    if (!notes.length) return;
+    let lo = 127, hi = 0, sum = 0;
+    for (const n of notes){ lo = Math.min(lo, n.midi); hi = Math.max(hi, n.midi); sum += n.midi; }
+    const bpm = Math.max(30, Math.min(240, Math.round(+p.bpm) || 120));
+    settings.learnTab = 'canciones'; saveSettings(); listMsg = '';
+    goLearn();
+    openImportDialog({bpm, parts: [{name: 'Notas de la grabación', notes, count: notes.length, lo, hi, avg: sum / notes.length}]},
+      String(p.name || 'Mi canción'));
+  } catch(e){}
+}
 $('#midiFile').addEventListener('change', async e => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -2074,6 +2098,8 @@ updateDisplay();
 updateRecUI();
 Data.init();
 initSample();
+takePending();
+window.addEventListener('pageshow', e => { if (e.persisted) takePending(); });
 })();
 </script>
 </body>
