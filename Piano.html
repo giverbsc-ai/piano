@@ -234,12 +234,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 .rfb{color:var(--ink-soft);min-height:1.5em;max-width:40ch}
 .rscore{font-weight:700;color:var(--ink-soft);white-space:nowrap}
 .keys.nolabels .key:not(.c) .lbl{visibility:hidden}
-/* Ejercicios con IA */
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 13px;min-height:36px;cursor:pointer;color:var(--ink-soft);font-weight:500}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--room);border-color:var(--ink)}
-.ai-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.ai-msg{margin-top:10px}
+/* Ejercicios guardados */
 .num.ia{font-size:.75rem;letter-spacing:.02em}
 
 @media (max-height:520px){
@@ -445,7 +440,7 @@ const store = {
   get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
-const settings = Object.assign({labels:'es', volume:0.8, theme:'auto', midiMute:true, mode:'esperar', speed:1, learnTab:'ejercicios', aiTopic:'cinco', aiLevel:'facil'}, store.get('piano:ajustes', {}));
+const settings = Object.assign({labels:'es', volume:0.8, theme:'auto', midiMute:true, mode:'esperar', speed:1, learnTab:'ejercicios'}, store.get('piano:ajustes', {}));
 if (!['ejercicios', 'retos', 'canciones'].includes(settings.learnTab)) settings.learnTab = 'ejercicios';
 const saveSettings = () => store.set('piano:ajustes', settings);
 
@@ -1168,92 +1163,14 @@ $('#btnPlayRec').onclick = () => {
 
 /* ---------- Aprender: listas ---------- */
 let listMsg = '';
-const AI_TOPICS = [
-  {id:'cinco', label:'Cinco dedos', desc:'una melodía para la mano derecha en posición de cinco dedos (de Do o de Sol), sin mover la mano'},
-  {id:'saltos', label:'Saltos', desc:'saltos de tercera, cuarta y quinta dentro de la posición de cinco dedos, con la mano derecha'},
-  {id:'ritmo', label:'Ritmo', desc:'ritmo: combinar notas de 1, 2 y 4 pulsos, pares de notas de 0.5 y algún silencio, con la mano derecha en posición de Do'},
-  {id:'negras', label:'Teclas negras', desc:'una posición de cinco dedos que use teclas negras (por ejemplo Re mayor con Fa#, La mayor con Do# o Mi mayor), con la mano derecha'},
-  {id:'izquierda', label:'Mano izquierda', desc:'la mano izquierda sola en posición de Do grave (C3 a G3, meñique en C3); escribe las notas en "left" y deja "notes" vacío'},
-  {id:'acordes', label:'Acordes', desc:'acordes de tres notas con la mano derecha (Do mayor, Fa mayor, Sol mayor, La menor) alternados con algunas notas sueltas'},
-  {id:'dos-manos', label:'Dos manos', desc:'una melodía sencilla con la mano derecha en "notes" y notas largas de acompañamiento con la mano izquierda en "left"'}
-];
-const AI_LEVELS = {
-  facil: 'fácil: pocas notas diferentes, casi todas de 1 o 2 pulsos, sin cambios de posición; tempo entre 60 y 72',
-  medio: 'medio: algo de variedad en el ritmo y en la dirección de la melodía; tempo entre 66 y 84',
-  reto: 'reto: más notas, ritmo variado y algún cambio de posición o paso del pulgar; tempo entre 72 y 96'
-};
-let sampleFn = null, aiAvail = null, aiBusy = false, aiMsg = '', aiCtl = null;
-async function initSample(){
-  try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; }
-  aiAvail = !!sampleFn;
-  if (view === 'list') renderList();
-}
-function aiPrompt(topic, level){
-  const done = LESSONS.filter(l => (Data.progress[l.key]?.stars || 0) >= 2).map(l => l.title);
-  return `Eres un profesor de piano. Compón UN ejercicio corto y ORIGINAL para un estudiante adulto que aprende piano desde cero.
-
-Tema: ${topic.desc}.
-Nivel: ${AI_LEVELS[level] || AI_LEVELS.facil}.
-${done.length ? 'El estudiante ya completó estos ejercicios: ' + done.join(', ') + '.' : 'El estudiante está empezando.'}
-
-Reglas para escribir las notas:
-- Cada nota es un token NOTA:DURACION:DEDO, separados por un espacio.
-- NOTA en notación inglesa con número de octava. C4 es el Do central. Sostenidos con #, por ejemplo F#4. No uses bemoles.
-- DURACION en pulsos: 0.5, 1, 1.5, 2, 3 o 4.
-- DEDO de 1 a 5 (1 es el pulgar), con una digitación correcta y cómoda.
-- Acorde: une notas y dedos con +, por ejemplo C4+E4+G4:2:1+3+5.
-- Silencio: R con su duración, por ejemplo R:1.
-- Mano derecha en "notes", entre C4 y G5. Mano izquierda en "left", entre C2 y C4. Si una mano no toca, deja su texto vacío.
-- Entre 16 y 40 pulsos por mano y entre 12 y 48 notas en total.
-- No copies ni imites canciones existentes: la melodía debe ser tuya.
-
-Responde solo con un objeto JSON, sin texto adicional, con esta forma:
-{"title": "título corto en español", "goal": "instrucción de 1 a 3 frases en español: dónde poner la mano y qué practicar", "bpm": 72, "notes": "C4:1:1 D4:1:2 E4:2:3", "left": ""}`;
-}
-function validateAI(o, topic){
-  if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error('forma');
-  const notes = typeof o.notes === 'string' ? o.notes.trim().slice(0, 3000) : '';
-  const left = typeof o.left === 'string' ? o.left.trim().slice(0, 3000) : '';
-  const out = [];
-  parseVoice(notes, 'R', out); parseVoice(left, 'L', out);
-  if (out.length < 4 || out.length > 120) throw new Error('cantidad');
-  if (out.some(n => n.midi < 36 || n.midi > 91)) throw new Error('rango');
-  return {kind: 'ejercicio', title: String(o.title || 'Ejercicio nuevo').slice(0, 60), goal: String(o.goal || '').slice(0, 400),
-          bpm: Math.max(50, Math.min(120, Math.round(+o.bpm || 72))), notes, left, tema: topic.id};
-}
-async function createExercise(){
-  if (aiBusy) return;
-  if (!sampleFn){ aiMsg = 'Para crear ejercicios nuevos, abre la app dentro de Claude.'; renderList(); return; }
-  const topic = AI_TOPICS.find(t => t.id === settings.aiTopic) || AI_TOPICS[0];
-  const level = AI_LEVELS[settings.aiLevel] ? settings.aiLevel : 'facil';
-  aiBusy = true; aiMsg = 'Claude está componiendo tu ejercicio. Puede tardar hasta un minuto.';
-  if (view === 'list') renderList();
-  aiCtl = new AbortController();
-  try {
-    const o = await sampleFn.json(aiPrompt(topic, level), {signal: aiCtl.signal, cache: false});
-    const item = validateAI(o, topic);
-    const saved = await Data.addItem(item);
-    aiBusy = false; aiMsg = '';
-    if (view === 'list') openSong(saved.key);
-  } catch(e){
-    aiBusy = false;
-    const code = e && e.code;
-    aiMsg = code === 'cancelled' ? ''
-      : code === 'not_granted' ? 'No se dio permiso para usar Claude. Puedes intentarlo otra vez cuando quieras.'
-      : code === 'rate_limited' ? 'Se hicieron muchas solicitudes seguidas. Espera un momento y vuelve a intentarlo.'
-      : (code === 'sampling_disabled' || code === 'capability_disabled' || code === 'capability_removed' || code === 'not_declared') ? 'Crear ejercicios no está disponible en esta cuenta.'
-      : 'No se pudo crear el ejercicio. Intenta otra vez.';
-    if (view === 'list') renderList();
-  }
-  aiCtl = null;
-}
+const TEMAS = {cinco:'Cinco dedos', saltos:'Saltos', ritmo:'Ritmo', negras:'Teclas negras', izquierda:'Mano izquierda', acordes:'Acordes', 'dos-manos':'Dos manos'};
 
 function starsHTML(b){ return `<span class="stars" aria-label="${b.stars} de 3 estrellas">${'★'.repeat(b.stars)}${'☆'.repeat(3 - b.stars)}</span>`; }
 function rowItem(s){
   const gen = s.kind === 'ejercicio';
   const lv = gen ? 0 : curLevel(s);
   const b = Data.progress[gen ? s.key : progKey(s, lv)];
-  const sub = gen ? `${(AI_TOPICS.find(t => t.id === s.tema) || {label: 'Ejercicio'}).label}. Creado con IA.` : `Dificultad: ${NIVELES[lv].name}. ${songLevels(s).notes[lv].length} notas.`;
+  const sub = gen ? `${TEMAS[s.tema] || 'Ejercicio'}. Creado con IA.` : `Dificultad: ${NIVELES[lv].name}. ${songLevels(s).notes[lv].length} notas.`;
   const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : diffHTML(lv);
   return `<div class="song-row"><button class="song" data-id="${esc(s.key)}">${icon}
     <span><span class="t">${esc(s.title)}</span><span class="o">${esc(sub)}</span></span>${b ? starsHTML(b) : '<span class="new">Nuevo</span>'}</button>
@@ -1264,7 +1181,7 @@ function renderLessons(){
   const doneOf = l => (best[l.key]?.stars || 0) >= 2;
   const done = LESSONS.filter(doneOf).length;
   const nextIdx = LESSONS.findIndex(l => !doneOf(l));
-  let h = `<p class="lead">Ejercicios cortos y en orden para aprender desde cero. Cada nota muestra qué dedo usar. Pasa al siguiente cuando consigas dos estrellas. Al final de la lista puedes crear ejercicios nuevos con IA.</p>
+  let h = `<p class="lead">Ejercicios cortos y en orden para aprender desde cero. Cada nota muestra qué dedo usar. Pasa al siguiente cuando consigas dos estrellas.</p>
     <div class="path-prog"><div class="bar"><i style="width:${(done / LESSONS.length * 100).toFixed(1)}%"></i></div><span>${done} de ${LESSONS.length} completados</span></div>`;
   for (const u of UNITS){
     h += `<section class="lvl"><h2>${u.title}</h2>`;
@@ -1277,20 +1194,9 @@ function renderLessons(){
     }
     h += '</section>';
   }
-  const topic = settings.aiTopic, lv = settings.aiLevel;
-  h += `<section class="lvl"><h2>Más ejercicios con IA</h2>
-    <p class="lead">Elige un tema y un nivel, y Claude compone un ejercicio nuevo para ti, con los dedos marcados. Cada vez sale uno distinto, así nunca te quedas sin práctica.</p>`;
-  if (aiAvail === false){
-    h += '<p class="fhelp">Para crear ejercicios nuevos, abre la app dentro de Claude.</p>';
-  } else {
-    h += `<div class="chips" role="group" aria-label="Tema">${AI_TOPICS.map(t => `<button class="chip" data-topic="${t.id}" aria-pressed="${t.id === topic}">${t.label}</button>`).join('')}</div>
-      <div class="seg" role="group" aria-label="Nivel">${[['facil', 'Fácil'], ['medio', 'Medio'], ['reto', 'Reto']].map(([v, l]) => `<button data-ailevel="${v}" aria-pressed="${v === lv}">${l}</button>`).join('')}</div>
-      <div class="ai-row"><button class="btn primary" id="btnCreate"${aiBusy ? ' disabled' : ''}>${aiBusy ? 'Creando…' : 'Crear ejercicio'}</button>${aiBusy ? '<button class="btn" id="btnCancelAI">Cancelar</button>' : ''}</div>`;
-  }
-  if (aiMsg) h += `<p class="fhelp ai-msg" role="status">${esc(aiMsg)}</p>`;
   const mine = Data.items.filter(s => s.kind === 'ejercicio');
-  if (mine.length) h += '<div style="margin-top:12px">' + mine.map(rowItem).join('') + '</div>';
-  return h + '</section>';
+  if (mine.length) h += '<section class="lvl"><h2>Tus ejercicios guardados</h2>' + mine.map(rowItem).join('') + '</section>';
+  return h;
 }
 function renderSongs(){
   const best = Data.progress;
@@ -1345,12 +1251,6 @@ function disarm(btn){ clearTimeout(btn._t); btn.classList.remove('armed'); btn.i
 $('#songList').addEventListener('click', e => {
   const t = e.target.closest('[data-tab]');
   if (t){ settings.learnTab = t.dataset.tab; saveSettings(); listMsg = ''; renderList(); $('#songList').scrollTop = 0; return; }
-  const tp = e.target.closest('[data-topic]');
-  if (tp){ settings.aiTopic = tp.dataset.topic; saveSettings(); renderList(); return; }
-  const lv = e.target.closest('[data-ailevel]');
-  if (lv){ settings.aiLevel = lv.dataset.ailevel; saveSettings(); renderList(); return; }
-  if (e.target.closest('#btnCreate')){ createExercise(); return; }
-  if (e.target.closest('#btnCancelAI')){ if (aiCtl) aiCtl.abort(); return; }
   if (e.target.closest('#btnImport')){ listMsg = ''; $('#midiFile').click(); return; }
   const rb = e.target.closest('[data-reto]');
   if (rb){ const [id, lvl] = rb.dataset.reto.split(':'); openReto(id, +lvl); return; }
@@ -2055,7 +1955,7 @@ function finish(){
           extra += `<button class="btn" data-act="lv:${dn}">Bajar a «${NIVELES[dn].name}»</button>`;
         }
       }
-      buttons = `<button class="btn primary" data-act="again">Repetir</button>${extra}${s.generated ? '<button class="btn" data-act="another">Crear otro parecido</button>' : ''}<button class="btn" data-act="list">${s.generated ? 'Ver ejercicios' : 'Otra canción'}</button>`;
+      buttons = `<button class="btn primary" data-act="again">Repetir</button>${extra}<button class="btn" data-act="list">${s.generated ? 'Ver ejercicios' : 'Otra canción'}</button>`;
     }
     Data.saveBest(progKey(s, P.level), stars, pct);
     card.innerHTML = `<div class="stars-big" role="img" aria-label="${stars} de 3 estrellas">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
@@ -2069,7 +1969,6 @@ $('#doneOv').addEventListener('click', e => {
   const a = b.dataset.act;
   if (a === 'again'){ reset(); start(); }
   else if (a === 'list') backToList();
-  else if (a === 'another'){ settings.aiTopic = P.song.tema || settings.aiTopic; settings.learnTab = 'ejercicios'; saveSettings(); goLearn(); createExercise(); }
   else if (a === 'songs'){ settings.learnTab = 'canciones'; saveSettings(); goLearn(); }
   else if (a === 'next'){ const n = LESSONS[P.song.index + 1]; if (n) openSong(n.key); }
   else if (a === 'esperar' || a === 'ritmo'){ setMode(a); start(); }
@@ -2250,7 +2149,6 @@ buildFree();
 updateDisplay();
 updateRecUI();
 Data.init();
-initSample();
 takePending();
 window.addEventListener('pageshow', e => { if (e.persisted) takePending(); });
 })();
