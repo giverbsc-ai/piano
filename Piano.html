@@ -53,7 +53,13 @@ svg.i{width:20px;height:20px;flex:none}
 
 /* Cabecera */
 .cab{flex:none;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;background:var(--lacquer);color:var(--cab-ink)}
-.brand{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.4rem;margin-right:auto;letter-spacing:.01em}
+.brand{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.4rem;margin-right:auto;letter-spacing:.01em;
+  border:0;background:transparent;color:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 8px 6px 0;border-radius:10px}
+.brand svg{color:var(--brass)}
+.brand.athome{cursor:default}
+.brand.athome svg{display:none}
+.area{font-weight:500;color:var(--cab-ink-soft);padding:0 6px}
+@media (max-width:440px){ .brand:not(.athome) span{display:none} .brand{padding-left:4px} }
 .tabs{display:flex;background:var(--lacquer-2);border-radius:999px;padding:3px}
 .tab{border:0;background:transparent;color:var(--cab-ink-soft);padding:0 14px;min-height:36px;border-radius:999px;font-weight:500;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{background:var(--brass);color:#2A1D0C}
@@ -178,6 +184,80 @@ a.btn{text-decoration:none}
 .tight #startOv .card{margin-bottom:0;border-radius:18px 18px 0 0;border-bottom:0}
 .tight #startOv .card.hasaids .actions{bottom:0;border-radius:0;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
 
+/* Inicio */
+.home{flex:1 1 auto;min-height:0;overflow-y:auto;padding:22px 16px 28px;-webkit-overflow-scrolling:touch}
+.home-in{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.home h1{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:clamp(1.7rem,5vw,2.3rem);line-height:1.12;margin:0 0 4px}
+.hcard{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:start;text-align:left;padding:18px;border:1px solid var(--line);
+  border-radius:18px;background:var(--surface);cursor:pointer}
+.hcard:hover{border-color:var(--ink-soft)}
+.hico{grid-row:1 / span 3;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--lacquer);color:var(--brass)}
+.hico svg{width:30px;height:30px}
+.hk{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.5rem;line-height:1.1}
+.hd{color:var(--ink-soft)}
+.hs{font-weight:700;font-size:.92rem;color:var(--felt-ink);margin-top:4px}
+
+/* Teoría */
+.song:disabled{opacity:.5;cursor:default}
+.song:disabled:hover{background:transparent}
+.tday{margin:10px 0 0;font-weight:500}
+.tok{color:var(--ok);font-weight:700;white-space:nowrap}
+.teo{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.teo-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 16px 20px;-webkit-overflow-scrolling:touch}
+.teo-in{max-width:620px;margin:0 auto}
+.teo-in h2{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.55rem;line-height:1.15;margin:0 0 10px}
+.teo-in p{margin:0 0 10px;max-width:62ch}
+.tstep{font-size:.9rem;font-weight:700;color:var(--felt-ink);margin-bottom:2px}
+.teo-nav{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid var(--line)}
+.tlock{font-size:.88rem;color:var(--ink-soft);text-align:center}
+.tq{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 14px 16px;text-align:center;margin-top:6px}
+.tq p{margin-left:auto;margin-right:auto}
+.tq-q{font-family:"Alegreya",Georgia,serif;font-style:italic;font-weight:500;font-size:clamp(1.7rem,7vmin,2.6rem);line-height:1.1;min-height:1.2em}
+.tq-t{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.3rem;line-height:1.2}
+.tq-fb{color:var(--ink-soft);min-height:1.5em;margin-top:4px}
+.tq-n{font-weight:700;font-size:.9rem;color:var(--ink-soft)}
+.tq.done{padding:22px 16px}
+.tq.done .tq-q{margin:2px 0 10px}
+.tfig{display:block;width:100%;height:auto;margin:4px auto 14px}
+.tfig.big{margin-bottom:0}
+.tfig .ink{fill:var(--ink)}
+.tfig .acc{fill:var(--felt-ink)}
+.tfig .ln{stroke:var(--ink-soft);stroke-width:1}
+.tfig .stem{stroke:var(--ink);stroke-width:1.5}
+.tfig .wk{fill:var(--ivory);stroke:rgba(40,28,50,.4)}
+.tfig .hl{fill:#F1D79A;stroke:rgba(40,28,50,.4)}
+.tfig .bk{fill:var(--ebony)}
+.tfig .bhl{fill:var(--brass)}
+.tfig .dotc{fill:var(--felt)}
+.tfig .palm{fill:var(--line);stroke:var(--ink-soft);stroke-width:1.2}
+.tfig .fdot{fill:var(--brass)}
+.tfig text{font-family:"Alegreya Sans",sans-serif;font-weight:700}
+.tfig .kt{fill:#3A2F42}
+.tfig .pt{fill:var(--ink)}
+.tfig .soft{fill:var(--ink-soft);font-weight:500}
+.tfig .onb{fill:#fff}
+.tfig .onhl{fill:#2A1D0C}
+.keys.nolabels-all .lbl{visibility:hidden}
+.chip:disabled{opacity:.55;cursor:default}
+
+/* Pruebas de teoría en pantallas bajas: se compactan para que la pregunta y el teclado quepan juntos */
+@media (max-height:700px){
+  .teo-body{padding:10px 16px 12px}
+  .teo-in.quiz .tstep{display:none}
+  .teo-in.quiz h2{font-size:1.15rem;margin:0 0 6px}
+  .teo-in.staffq > p{display:none}
+  .tq{padding:10px 12px 12px}
+  .tq .tfig.big{max-width:180px !important}
+}
+@media (max-height:520px){
+  .teo-body{padding:6px 12px}
+  .teo-in.quiz h2,.teo-in.quiz > p{display:none}
+  .teo-in.quiz .tq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 16px;margin:0;padding:6px 12px}
+  .teo-in.quiz .tq-q{min-height:0}
+  .tq .tfig.big{max-width:140px !important;margin:0}
+  .teo-nav{padding:5px 10px}
+}
+
 /* Ayudas del profesor */
 .card.hasaids{padding-bottom:0}
 .card.hasaids .actions{position:sticky;bottom:-14px;margin-top:0;padding:8px 0 12px;background:var(--surface);border-radius:0 0 18px 18px}
@@ -290,8 +370,11 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 <body>
 
 <header class="cab">
-  <div class="brand">Piano</div>
-  <nav class="tabs" role="tablist" aria-label="Modo">
+  <button class="brand" id="btnHome" aria-label="Piano. Volver al inicio" title="Inicio">
+    <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5l8-7 8 7"/><path d="M6.5 10v9.5h11V10"/></svg><span>Piano</span>
+  </button>
+  <div class="area" id="areaLbl" hidden>Teoría</div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Modo" hidden>
     <button class="tab" id="tabFree" role="tab" aria-selected="true">Tocar libre</button>
     <button class="tab" id="tabLearn" role="tab" aria-selected="false">Aprender</button>
   </nav>
@@ -301,7 +384,44 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 </header>
 
 <main>
-  <section class="view" id="viewFree">
+  <section class="view" id="viewHome">
+    <div class="home"><div class="home-in">
+      <h1>¿Qué quieres hacer hoy?</h1>
+      <button class="hcard" id="goTheory">
+        <span class="hico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5c3-1 6-.8 8.500.8 2.500-1.600 5.500-1.800 8.500-.8V19c-3-1-6-.800-8.500.800-2.500-1.600-5.500-1.800-8.500-.800z"/><path d="M12 6.300V19.800"/></svg></span>
+        <span class="hk">Teoría</span>
+        <span class="hd">Lecciones diarias, paso a paso y desde cero. En cada una tocas el piano para aprobar y seguir adelante.</span>
+        <span class="hs" id="homeTeo"></span>
+      </button>
+      <button class="hcard" id="goPractice">
+        <span class="hico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 13v6M15 13v6"/><path d="M7.500 5v8h3V5M13.500 5v8h3V5" fill="currentColor"/></svg></span>
+        <span class="hk">Práctica</span>
+        <span class="hd">El piano para tocar libre, los ejercicios, los retos y las canciones.</span>
+        <span class="hs" id="homePra"></span>
+      </button>
+    </div></div>
+  </section>
+
+  <section class="view" id="viewTheory" hidden>
+    <div class="songlist" id="teoList"></div>
+    <div class="teo" id="teoLesson" hidden>
+      <div class="pbar">
+        <button class="btn icon" id="tBack" aria-label="Volver a las lecciones">
+          <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="ptitle"><div class="name" id="tTitle"></div><div class="progress"><i id="tProg"></i></div></div>
+        <span class="rscore" id="tCount"></span>
+      </div>
+      <div class="teo-body" id="tBody"></div>
+      <div class="teo-nav" id="tNav">
+        <button class="btn" id="tPrev">Anterior</button>
+        <span class="tlock" id="tLock" role="status"></span>
+        <button class="btn primary" id="tNext">Siguiente</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="viewFree" hidden>
     <div class="display">
       <div class="big idle" id="bigName">Toca una tecla</div>
       <div class="sub" id="subName"></div>
@@ -831,7 +951,7 @@ const Data = {
   }
 };
 function findSong(key){
-  return LESSONS.find(l => l.key === key) || SONGS.find(s => s.key === key) || Data.items.find(s => s.key === key) || null;
+  return LESSONS.find(l => l.key === key) || SONGS.find(s => s.key === key) || TSONGS.find(s => s.key === key) || Data.items.find(s => s.key === key) || null;
 }
 
 /* ---------- Sonido ---------- */
@@ -1047,6 +1167,7 @@ function onPress(m){
     if (rec.on) rec.events.push({t: performance.now() - rec.start, m, on: true});
   } else if (view === 'player') judge(m);
   else if (view === 'reto') judgeReto(m);
+  else if (view === 'teo') teoPress(m);
 }
 function onRelease(m){
   if (view === 'free'){
@@ -1295,7 +1416,7 @@ function renderList(){
   el.innerHTML = h;
   el.scrollTop = top;
 }
-function onDataChange(){ if (view === 'list') renderList(); }
+function onDataChange(){ if (view === 'list') renderList(); else if (view === 'home') renderHome(); else if (view === 'teoList') renderTeoList(); }
 function disarm(btn){ clearTimeout(btn._t); btn.classList.remove('armed'); btn.innerHTML = ICON.trash; }
 $('#songList').addEventListener('click', e => {
   const t = e.target.closest('[data-tab]');
@@ -1744,7 +1865,9 @@ const AIDS = [
   {id:'fb', label:'Dónde fallé', desc:'Al terminar te dice en qué compases y en qué notas fallaste, y qué practicar.'}
 ];
 const aids = Object.assign({metro:true, dur:false, tempo:false, score:true, parts:false, fb:true}, settings.aids || {});
-const aidOn = id => !!aids[id];
+// Dentro de una lección de teoría algunas ayudas quedan fijas (P.ctx.force).
+const aidOn = id => { const f = P && P.ctx && P.ctx.force; return f && id in f ? !!f[id] : !!aids[id]; };
+const isBlind = () => !!P && aidOn('blind') && P.scoreH > 0;
 let aidInfo = '';
 let partSel = {key: '', idx: -1, hand: 'both', loop: false};
 
@@ -1871,18 +1994,19 @@ function syncSegs(){
   for (const b of $('#modeSeg').children) b.setAttribute('aria-pressed', b.dataset.v === P.mode ? 'true' : 'false');
   for (const b of $('#speedSeg').children) b.setAttribute('aria-pressed', +b.dataset.v === P.speed ? 'true' : 'false');
 }
-function openSong(key){
+function openSong(key, ctx){
   const s = findSong(key); if (!s) return;
   releaseAll(); leaveReto();
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
   const d = songData(s);
   if (!d.notes.length) return;
-  P = {song: s, level: hasLevels(s) ? curLevel(s) : 0, notes: [], mode: settings.mode, speed: settings.speed, t: 0, playing: false, waiting: false,
+  P = {song: s, ctx: ctx ? Object.assign({}, ctx, {force: Object.assign({parts: false}, ctx.st.force || {})}) : null,
+       level: hasLevels(s) ? curLevel(s) : 0, notes: [], mode: ctx ? (ctx.st.mode || 'esperar') : settings.mode, speed: settings.speed, t: 0, playing: false, waiting: false,
        hits: 0, errors: 0, shorts: 0, finished: false, timers: [], lastTs: 0, held: new Map(), fb: new Map(), offs: [], lap: 1, lapMsg: '', scoreH: 0};
   aidInfo = '';
   view = 'player'; setTabs();
   $('#songList').hidden = true; $('#player').hidden = false;
-  $('#pTitle').textContent = s.lesson ? `${s.index + 1}. ${s.title}` : s.title;
+  $('#pTitle').textContent = s.lesson && !ctx ? `${s.index + 1}. ${s.title}` : s.title;
   buildRun();
   syncSegs(); buildSongKeyboard(); reset();
   if (!raf) raf = requestAnimationFrame(frame);
@@ -1901,9 +2025,10 @@ function renderLevelPick(){
   btn.setAttribute('aria-label', `Dificultad: ${NIVELES[P.level].name}. Cambiar dificultad`);
 }
 function renderAids(){
-  $('#aidChips').innerHTML = AIDS.map(a => `<button class="chip tog" data-aid="${a.id}" aria-pressed="${aidOn(a.id)}">${a.label}</button>`).join('');
+  const fixed = (P.ctx && P.ctx.force) || {};
+  $('#aidChips').innerHTML = AIDS.map(a => `<button class="chip tog" data-aid="${a.id}" aria-pressed="${aidOn(a.id)}"${a.id in fixed ? ' disabled' : ''}>${a.label}</button>`).join('');
   const a = AIDS.find(x => x.id === aidInfo);
-  let d = 'Toca una ayuda para activarla o desactivarla. Las que tienen ✓ están activas.';
+  let d = 'Toca una ayuda para activarla o desactivarla. Las que tienen ✓ están activas.' + (P.ctx ? ' En esta lección algunas están fijas.' : '');
   if (a){
     d = `${a.label} ${aidOn(a.id) ? (a.f ? 'activada' : 'activado') : (a.f ? 'desactivada' : 'desactivado')}. ${a.desc}`;
     if (a.id === 'score' && aidOn('score') && !P.scoreH) d += ' En esta pantalla no cabe: pon el celular en vertical.';
@@ -1923,7 +2048,7 @@ function renderAids(){
   $('#partLoop').checked = !!partSel.loop;
 }
 $('#aidChips').addEventListener('click', e => {
-  const b = e.target.closest('[data-aid]'); if (!b || !P) return;
+  const b = e.target.closest('[data-aid]'); if (!b || !P || b.disabled) return;
   const id = b.dataset.aid;
   aids[id] = !aids[id]; aidInfo = id;
   settings.aids = aids; saveSettings();
@@ -1964,11 +2089,11 @@ function reset(){
   Object.assign(P, {playing: false, lap: 1, lapMsg: ''});
   const s = P.song;
   $('#doneOv').hidden = true; $('#startOv').hidden = false;
-  const kick = s.lesson ? `Ejercicio ${s.index + 1} de ${LESSONS.length}` : s.generated ? 'Ejercicio creado con IA' : '';
+  const kick = P.ctx ? `Teoría, día ${P.ctx.lesson.index + 1}` : s.lesson ? `Ejercicio ${s.index + 1} de ${LESSONS.length}` : s.generated ? 'Ejercicio creado con IA' : '';
   $('#soKicker').hidden = !kick; $('#soKicker').textContent = kick;
   $('#soTitle').textContent = s.title;
   $('#soGoal').hidden = !s.goal; $('#soGoal').textContent = s.goal || '';
-  $('#soDesc').textContent = MODE_DESC[P.mode];
+  $('#soDesc').textContent = MODE_DESC[P.mode] + (P.ctx ? ` Para aprobar: ${reqText(P.ctx.st)}.` : '');
   renderLevelPick(); renderAids();
   guideKey = '*'; updateGuide(); updateProgress(); setPlayIcon();
 }
@@ -1990,7 +2115,7 @@ function setPlayIcon(){
   b.innerHTML = on ? ICON.pause : ICON.play;
   b.setAttribute('aria-label', on ? 'Pausar' : 'Tocar');
 }
-function setMode(m){ settings.mode = m; saveSettings(); if (P){ P.mode = m; syncSegs(); reset(); } }
+function setMode(m){ if (!(P && P.ctx)){ settings.mode = m; saveSettings(); } if (P){ P.mode = m; syncSegs(); reset(); } }
 function setSpeed(s){ settings.speed = s; saveSettings(); if (P){ P.speed = s; syncSegs(); } }
 $('#modeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.v); });
 $('#speedSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setSpeed(+b.dataset.v); });
@@ -1998,6 +2123,7 @@ $('#btnPlay').onclick = togglePlay;
 $('#btnStart').onclick = start;
 $('#btnRestart').onclick = () => { reset(); start(); };
 function backToList(){
+  if (P && P.ctx){ teoReturn(false); return; }
   if (P && P.song) settings.learnTab = P.song.lesson || P.song.generated ? 'ejercicios' : 'canciones';
   saveSettings(); goLearn();
 }
@@ -2116,17 +2242,18 @@ function updateGuide(){
     const g0 = pendingGroup();
     if (g0.length && g0[0].start - P.t <= 2){ grp = g0; wait = P.waiting; }
   }
-  const key = grp.map(n => n.midi + n.hand).join(',');
+  const hide = grp.length > 0 && isBlind() && !((P.fb.get(Math.round(grp[0].start * 24)) || {}).errs >= 2);
+  const key = grp.map(n => n.midi + n.hand).join(',') + (hide ? '#' : '');
   if (key !== guideKey){
     guideEls.forEach(el => el.classList.remove('guide', 'wait', 'lh'));
     guideEls = [];
-    for (const n of grp){
+    for (const n of hide ? [] : grp){
       const el = keyEls.get(n.midi);
       if (el){ el.classList.add('guide'); if (n.hand === 'L') el.classList.add('lh'); guideEls.push(el); }
     }
     guideKey = key;
     const hint = $('#hint');
-    if (grp.length){ hint.textContent = hintText(grp); hint.hidden = false; } else hint.hidden = true;
+    if (grp.length){ hint.textContent = hide ? 'Lee la nota marcada en la partitura' : hintText(grp); hint.hidden = false; } else hint.hidden = true;
   }
   guideEls.forEach(el => el.classList.toggle('wait', wait));
 }
@@ -2239,9 +2366,28 @@ function finish(){
   const parts = partList(), nx = P.part && partSel.idx + 1 < parts.length ? partSel.idx + 1 : -1;
   const partBtns = (nx >= 0 ? `<button class="btn" data-act="part:${nx}">Compases ${parts[nx].label}</button>` : '') + (P.partial ? '<button class="btn" data-act="whole">Toda la pieza</button>' : '');
   if (listen){
+    const want = (P.ctx && P.ctx.st.mode) || 'esperar';
     card.innerHTML = `<h2>Ahora tú</h2>
-      <p>Tócalo en modo Esperar: las notas se detienen hasta que presiones la tecla correcta.</p>
-      <div class="actions"><button class="btn primary" data-act="esperar">Tocar en modo Esperar</button><button class="btn" data-act="again">Escuchar otra vez</button></div>`;
+      <p>${want === 'ritmo' ? 'Tócalo en modo Ritmo: las notas no se detienen.' : 'Tócalo en modo Esperar: las notas se detienen hasta que presiones la tecla correcta.'}</p>
+      <div class="actions"><button class="btn primary" data-act="${want}">Tocar en modo ${MODE_NAME[want]}</button><button class="btn" data-act="again">Escuchar otra vez</button></div>`;
+  } else if (P.ctx){
+    const st = P.ctx.st, need = st.stars || 2, modeOk = !st.mode || P.mode === st.mode;
+    const pass = total > 0 && stars >= need && modeOk;
+    if (pass && TL){ TL.ok.add(P.ctx.step); saveTeoPos(); }
+    const errs = P.errors === 0 ? 'Ninguna tecla equivocada.' : P.errors === 1 ? '1 tecla equivocada.' : `${P.errors} teclas equivocadas.`;
+    let detail = P.mode === 'esperar' ? `${total} notas tocadas. ${errs}` : `${P.hits} de ${total} notas a tiempo. ${errs}`;
+    if (aidOn('dur')) detail += P.shorts === 0 ? ' Todas con su duración.' : P.shorts === 1 ? ' 1 nota soltada antes de tiempo.' : ` ${P.shorts} notas soltadas antes de tiempo.`;
+    const fb = aidOn('fb') && !pass && modeOk ? feedback() : null;
+    const tip = pass ? 'Ya puedes seguir con la lección.'
+      : !modeOk ? `Este paso se aprueba en modo ${MODE_NAME[st.mode]}.`
+      : `Para aprobar necesitas ${need === 3 ? 'tres' : 'dos'} estrellas. Repítelo con calma${P.mode === 'ritmo' && P.speed > 0.5 ? ' o baja la velocidad' : ''}.`;
+    const buttons = pass ? '<button class="btn primary" data-act="teo-next">Continuar la lección</button><button class="btn" data-act="again">Repetir</button>'
+      : (modeOk ? '<button class="btn primary" data-act="again">Repetir</button>' : `<button class="btn primary" data-act="${st.mode}">Tocar en modo ${MODE_NAME[st.mode]}</button>`)
+        + (modeOk && P.mode === 'ritmo' && P.speed > 0.5 ? '<button class="btn" data-act="slower">Más despacio</button>' : '')
+        + '<button class="btn" data-act="teo-back">Volver a la lección</button>';
+    card.innerHTML = `<div class="stars-big" role="img" aria-label="${stars} de 3 estrellas">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
+      <h2>${pass ? '¡Aprobado!' : 'Todavía no'}</h2><p class="pct">${pct}% de precisión</p><p>${detail}</p>${fb ? fb.html : ''}<p class="tip">${tip}</p>
+      <div class="actions">${buttons}</div>`;
   } else if (!total){
     card.innerHTML = `<h2>Esa mano no toca aquí</h2>
       <p>En estos compases solo toca la otra mano. Elige otros compases o las dos manos.</p>
@@ -2303,6 +2449,8 @@ $('#doneOv').addEventListener('click', e => {
   if (a === 'again'){ reset(); start(); }
   else if (a === 'list') backToList();
   else if (a === 'aids') reset();
+  else if (a === 'teo-next') teoReturn(true);
+  else if (a === 'teo-back') teoReturn(false);
   else if (a === 'songs'){ settings.learnTab = 'canciones'; saveSettings(); goLearn(); }
   else if (a === 'next'){ const n = LESSONS[P.song.index + 1]; if (n) openSong(n.key); }
   else if (a === 'esperar' || a === 'ritmo'){ setMode(a); start(); }
@@ -2539,7 +2687,8 @@ function draw(grp){
       if (strong && measureNum(mk) >= 1 && tb < P.end - 1e-6 && tb >= P.bar0 - 1e-6){ g.fillStyle = COL.soft; g.fillText(String(measureNum(mk)), 4, y - 4); }
     }
   }
-  if (P.waiting){
+  const blind = isBlind();
+  if (P.waiting && !blind){
     for (const n of grp){
       const k = geom.get(n.midi); if (!k) continue;
       const gr = g.createLinearGradient(0, H - 90, 0, H);
@@ -2549,7 +2698,7 @@ function draw(grp){
     }
   }
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-  for (const n of P.notes){
+  for (const n of blind ? [] : P.notes){
     const yb = H - (n.start - P.t) * ppb;
     if (yb < 0) break;
     const yt = yb - n.dur * ppb;
@@ -2597,25 +2746,543 @@ function frame(ts){
   draw(grp); drawScore(grp);
 }
 
-/* ---------- Pestañas ---------- */
+/* ---------- Teoría: lecciones diarias ----------
+   Cada lección es una fila de pasos. Los de lectura se pasan con «Siguiente»;
+   los de tocar (find, staff, play) hay que aprobarlos para seguir. */
+const MODE_NAME = {esperar: 'Esperar', ritmo: 'Ritmo'};
+const TSONGS = [
+  {id:'pulso', bpm:70, title:'Negras, blancas y redonda',
+   goal:'Un solo dedo y una sola tecla: el Do central con el pulgar. Escucha el metrónomo: la negra dura un clic, la blanca dos y la redonda cuatro.',
+   notes:'C4:1:1 C4:1:1 C4:1:1 C4:1:1 C4:2:1 C4:2:1 C4:1:1 C4:1:1 C4:2:1 C4:4:1'},
+  {id:'duracion', bpm:70, title:'Notas que duran',
+   goal:'Mantén cada tecla presionada hasta que termine su barra. Cuenta los pulsos mientras la sostienes.',
+   notes:'C4:4:1 E4:2:3 G4:2:5 E4:1:3 E4:1:3 C4:2:1 G4:4:5'},
+  {id:'leer1', bpm:66, title:'Solo partitura',
+   goal:'Mano derecha en posición de Do. Lee la nota marcada en la partitura y toca su tecla.',
+   notes:'C4:1:1 D4:1:2 E4:1:3 D4:1:2 C4:2:1 E4:2:3 E4:1:3 F4:1:4 G4:1:5 F4:1:4 E4:2:3 C4:2:1'},
+  {id:'corcheas', bpm:66, title:'Negras y corcheas',
+   goal:'Cuenta «1 y 2 y 3 y 4 y». Las negras caen con el clic; las corcheas, una con el clic y otra en la «y».',
+   notes:'C4:1:1 C4:0.5:1 C4:0.5:1 C4:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 E4:0.5:3 E4:0.5:3 E4:2:3 G4:1:5 G4:0.5:5 G4:0.5:5 E4:1:3 E4:0.5:3 E4:0.5:3 C4:4:1'},
+  {id:'vals', bpm:96, meter:3, title:'Vals en Do',
+   goal:'Cuenta «1, 2, 3» en cada compás, con el 1 un poco más fuerte. Mano derecha en posición de Do.',
+   notes:'C4:1:1 E4:1:3 G4:1:5 E4:3:3 D4:1:2 F4:1:4 G4:1:5 C4:3:1 E4:2:3 G4:1:5 F4:2:4 D4:1:2 C4:3:1'}
+];
+TSONGS.forEach(s => { s.key = 't:' + s.id; s.teo = true; });
+
+const tT = (h, p, fig) => ({k: 'text', h, p, fig});
+const tF = (h, p, spec, o) => Object.assign({k: 'find', h, p}, Array.isArray(spec) ? {items: spec} : spec, o || {});
+const tS = (h, p, pool, n, range, clef) => ({k: 'staff', h, p, pool, n, range, clef});
+const tP = (h, p, song, o) => Object.assign({k: 'play', h, p, song}, o || {});
+const TEO = [
+  {id:'d1', title:'Siéntate y conoce el teclado', sum:'Postura, forma de la mano y teclas negras.',
+   fin:'Ya sabes sentarte y ubicarte con las teclas negras. Mañana aprenderás el nombre de todas las teclas blancas.',
+   steps:[
+    tT('Cómo sentarte', ['Siéntate en la mitad delantera del banco, frente al centro del teclado, con la espalda recta y los hombros sueltos.',
+      'Los codos quedan un poco por delante del cuerpo y a la altura de las teclas. Si el banco está muy bajo o muy alto, la muñeca se dobla y te cansas pronto.',
+      'Acomódate ahora mismo: así debes sentarte cada vez que practiques.']),
+    tT('La forma de la mano', ['Deja la mano redonda, como si sostuvieras una naranja. Los dedos tocan con la yema y la muñeca no se hunde.',
+      'En el piano cada dedo tiene un número: el pulgar es el 1 y el meñique es el 5, en las dos manos.'], 'hands'),
+    tT('Teclas blancas y negras', ['Las teclas negras están en grupos de dos y de tres, que se repiten por todo el teclado.',
+      'Son tu mapa: con ellas encuentras cualquier nota sin contar teclas.'], {keys:{lo:60, hi:83, hl:[61,63,66,68,70,73,75,78,80,82], alt:'Teclado con los grupos de dos y de tres teclas negras resaltados'}}),
+    tF('Un grupo de dos negras', 'Toca las dos teclas negras de un grupo de dos: primero la de la izquierda y luego la de la derecha.',
+      [{pc:1, label:'La negra de la izquierda'}, {pc:3, label:'La negra de la derecha'}], {names:false, maxErr:2}),
+    tF('Un grupo de tres negras', 'Ahora las tres teclas negras de un grupo de tres, de izquierda a derecha.',
+      [{pc:6, label:'La primera'}, {pc:8, label:'La del medio'}, {pc:10, label:'La última'}], {names:false, maxErr:2}),
+    tT('Dónde está Do', ['La tecla blanca que está justo a la izquierda de cada grupo de dos negras se llama Do.',
+      'El Do que queda en el centro del teclado es el Do central. En esta app tiene un punto rojo.'], {keys:{lo:60, hi:72, hl:[60,72], mark:{60:'Do', 72:'Do'}, alt:'Do está a la izquierda del grupo de dos teclas negras'}}),
+    tF('Toca Do', 'Busca el grupo de dos negras y toca la tecla blanca de su izquierda.',
+      [{pc:0, label:'Un Do'}, {pc:0, label:'Otra vez Do'}, {midi:60, label:'El Do central'}], {names:false, maxErr:2})
+   ]},
+  {id:'d2', title:'Los nombres de las notas', sum:'Do, Re, Mi, Fa, Sol, La y Si.',
+   fin:'Ya ubicas las siete notas. Si quieres repasarlas, en Práctica está el reto «Encuentra la nota».',
+   steps:[
+    tT('Siete notas que se repiten', ['Las teclas blancas tienen siete nombres: Do, Re, Mi, Fa, Sol, La y Si. Después de Si vuelve a empezar Do.',
+      'Hacia la derecha el sonido es más agudo; hacia la izquierda, más grave.'], {keys:{lo:60, hi:72, mark:{60:'Do',62:'Re',64:'Mi',65:'Fa',67:'Sol',69:'La',71:'Si',72:'Do'}, alt:'Nombres de las teclas blancas de Do a Do'}}),
+    tT('Do, Re y Mi', ['Do, Re y Mi son las tres teclas blancas que rodean al grupo de dos negras: Do a la izquierda, Re en el medio y Mi a la derecha.'],
+      {keys:{lo:60, hi:71, hl:[60,62,64], mark:{60:'Do',62:'Re',64:'Mi'}, alt:'Do, Re y Mi alrededor del grupo de dos negras'}}),
+    tF('Encuentra Do, Re y Mi', 'Toca la tecla cuando aparezca su nombre. Las teclas no muestran su nombre: guíate por las negras.', {pool:[0,2,4], n:6}),
+    tT('Fa, Sol, La y Si', ['Las otras cuatro rodean al grupo de tres negras. Fa está justo a su izquierda; luego vienen Sol, La y Si.'],
+      {keys:{lo:60, hi:71, hl:[65,67,69,71], mark:{65:'Fa',67:'Sol',69:'La',71:'Si'}, alt:'Fa, Sol, La y Si alrededor del grupo de tres negras'}}),
+    tF('Encuentra Fa, Sol, La y Si', 'Toca la tecla cuando aparezca su nombre.', {pool:[5,7,9,11], n:8}),
+    tF('Las siete notas', 'Ahora todas mezcladas.', {pool:[0,2,4,5,7,9,11], n:10})
+   ]},
+  {id:'d3', title:'Los dedos y tu primera posición', sum:'La posición de cinco dedos en Do.',
+   fin:'Ya tocas con los cinco dedos. Mañana aprenderás a medir el tiempo.',
+   steps:[
+    tT('El número de cada dedo', ['Recuerda: pulgar 1, índice 2, medio 3, anular 4 y meñique 5. Los números son iguales en las dos manos.',
+      'En las partituras y en esta app, el número junto a una nota te dice con qué dedo tocarla.'], 'hands'),
+    tT('La posición de Do', ['Pon el pulgar de la mano derecha en el Do central y deja caer los otros dedos, uno por tecla: 2 en Re, 3 en Mi, 4 en Fa y 5 en Sol.',
+      'Mientras la mano no cambie de lugar, cada dedo toca siempre su tecla. Así puedes tocar sin mirarte la mano.'],
+      {keys:{lo:60, hi:67, hl:[60,62,64,65,67], mark:{60:'1',62:'2',64:'3',65:'4',67:'5'}, alt:'Posición de cinco dedos: del pulgar en Do al meñique en Sol'}}),
+    tP('Tres dedos', 'Empieza con Do, Re y Mi: dedos 1, 2 y 3. Cada barra muestra el número del dedo.', 'do-re-mi'),
+    tP('Toda la mano', 'Ahora los cinco dedos, de Do a Sol y de vuelta.', 'cinco-do')
+   ]},
+  {id:'d4', title:'El pulso y las figuras', sum:'Negra, blanca y redonda.',
+   fin:'Contar en voz alta es la costumbre más útil que puedes tener. Hazlo siempre, aunque te parezca raro.',
+   steps:[
+    tT('El pulso', ['La música tiene un latido regular, como el de un reloj. Se llama pulso, y el metrónomo lo marca con un clic.',
+      'Tocar bien no es solo acertar la tecla: es tocarla en su pulso.']),
+    tT('Redonda, blanca y negra', ['La forma de cada nota indica cuántos pulsos dura. La negra dura un pulso, la blanca dura dos y la redonda dura cuatro.',
+      'Cuenta en voz alta «1, 2, 3, 4» mientras tocas.'], 'notes'),
+    tP('Toca con el metrónomo', 'Una sola tecla: aquí lo único que importa es el pulso. Se toca en modo Ritmo, sin pausas.', 'pulso', {mode:'ritmo', force:{metro:true}}),
+    tP('Notas que duran', 'Ahora también cuenta cuánto sostienes cada nota: no sueltes la tecla hasta que termine su barra.', 'duracion', {force:{metro:true, dur:true}})
+   ]},
+  {id:'d5', title:'El pentagrama y la clave de sol', sum:'Leer de Do a Sol.',
+   fin:'Acabas de leer música. Con el reto «Lee la partitura», en Práctica, ganarás velocidad.',
+   steps:[
+    tT('Cinco líneas', ['La música se escribe en el pentagrama: cinco líneas y cuatro espacios. Cada nota va sobre una línea o dentro de un espacio.',
+      'Cuanto más arriba está la nota, más agudo es el sonido y más a la derecha está su tecla.',
+      'El signo del inicio es la clave de sol. Se usa para las notas de la mano derecha.'], {staff:{notes:[60,62,64,65,67], names:true, alt:'Las notas de Do a Sol en el pentagrama'}}),
+    tT('Do, Re y Mi', ['El Do central queda debajo del pentagrama y lleva su propia rayita. Re cuelga justo debajo de la primera línea. Mi está sobre la primera línea.'],
+      {staff:{notes:[60,62,64], names:true, alt:'Do, Re y Mi en el pentagrama'}}),
+    tS('Lee Do, Re y Mi', 'Mira la nota y toca su tecla.', [60,62,64], 8, [60,72]),
+    tT('Fa y Sol', ['Fa está en el primer espacio y Sol sobre la segunda línea.',
+      'La clave de sol se llama así porque su espiral rodea la línea de Sol.'], {staff:{notes:[65,67], names:true, alt:'Fa y Sol en el pentagrama'}}),
+    tS('Lee de Do a Sol', 'Mira la nota y toca su tecla.', [60,62,64,65,67], 10, [60,72])
+   ]},
+  {id:'d6', title:'Leer y tocar', sum:'Tu primera melodía leyendo la partitura.',
+   fin:'Leer cuesta al principio y mejora cada día. En Práctica puedes dejar encendida la ayuda «Partitura» en todos los ejercicios.',
+   steps:[
+    tT('De la partitura a las teclas', ['Hasta ahora seguías las barras que caen. Hoy vas a leer: en el próximo ejercicio no hay barras ni teclas iluminadas, solo la partitura.',
+      'La nota que toca está marcada en color y los números de arriba son los dedos. Si fallas dos veces en una nota, su tecla se ilumina para ayudarte.',
+      'Pon el celular en vertical para que la partitura quepa en la pantalla.']),
+    tP('Solo partitura', 'Lee cada nota y tócala. No hay prisa: la música te espera.', 'leer1', {force:{score:true, blind:true}}),
+    tP('Tu primera canción', 'Ahora una canción completa, otra vez con las barras.', 'mary')
+   ]},
+  {id:'d7', title:'El compás y los silencios', sum:'Agrupar los pulsos y saber callar.',
+   fin:'Los silencios también son música. Si un silencio se te hace largo, es que lo estás contando bien.',
+   steps:[
+    tT('El compás', ['Los pulsos se agrupan en compases, que en la partitura se separan con líneas verticales.',
+      'Los dos números del inicio dicen cuántos pulsos tiene cada compás: 4/4 significa cuatro pulsos de negra.',
+      'El primer pulso de cada compás se siente más fuerte. El metrónomo de la app lo marca con un clic más agudo.']),
+    tT('Los silencios', ['Un silencio es un tiempo en el que no se toca nada, y también tiene figuras: el silencio de negra dura un pulso, el de blanca dos y el de redonda cuatro.',
+      'Durante un silencio la mano se queda quieta sobre las teclas y tú sigues contando.'], 'rests'),
+    tP('Tocar y callar a tiempo', 'Los silencios solo se notan si la música no se detiene: este ejercicio se aprueba en modo Ritmo.', 'silencios', {mode:'ritmo', force:{metro:true}})
+   ]},
+  {id:'d8', title:'Las corcheas', sum:'Notas de medio pulso.',
+   fin:'Si las corcheas se te adelantan, baja la velocidad al 75 % en Práctica y repítelo.',
+   steps:[
+    tT('Medio pulso', ['La corchea dura medio pulso: en un pulso caben dos. Se reconoce por el ganchito de su plica.',
+      'Para contarlas se dice «1 y 2 y 3 y 4 y»: los números caen con el clic y las «y» justo en la mitad.'], 'notes8'),
+    tP('Negras y corcheas', 'Cuenta en voz alta. Se toca en modo Ritmo.', 'corcheas', {mode:'ritmo', force:{metro:true}})
+   ]},
+  {id:'d9', title:'Una posición nueva', sum:'La posición de Sol y las notas La, Si, Do y Re.',
+   fin:'Con dos posiciones ya alcanzas nueve notas con la mano derecha.',
+   steps:[
+    tT('La mano se mueve', ['Con cinco dedos alcanzas cinco teclas. Para tocar otras notas mueves la mano completa a una posición nueva.',
+      'En la posición de Sol el pulgar va en Sol y los demás dedos caen en La, Si, Do y Re.'],
+      {keys:{lo:60, hi:76, hl:[67,69,71,72,74], mark:{67:'1',69:'2',71:'3',72:'4',74:'5'}, alt:'Posición de Sol: del pulgar en Sol al meñique en Re'}}),
+    tT('Más arriba en el pentagrama', ['Las notas siguen subiendo, una en línea y la siguiente en espacio: Sol, La, Si, Do y Re.'],
+      {staff:{notes:[67,69,71,72,74], names:true, alt:'Sol, La, Si, Do y Re en el pentagrama'}}),
+    tS('Lee de Sol a Re', 'Mira la nota y toca su tecla.', [67,69,71,72,74], 10, [60,77]),
+    tP('Cinco dedos en Sol', 'La misma forma de mano, en otro lugar del teclado.', 'cinco-sol')
+   ]},
+  {id:'d10', title:'La mano izquierda y la clave de fa', sum:'Las notas graves.',
+   fin:'Tu mano izquierda ya sabe dónde ponerse. Va a ir más lenta que la derecha durante un tiempo: es normal.',
+   steps:[
+    tT('La otra clave', ['Las notas graves, las de la mano izquierda, se escriben con la clave de fa. Sus dos puntos rodean la línea de Fa.',
+      'Las mismas líneas y espacios tienen aquí otros nombres, así que hay que aprenderlos aparte.'], {staff:{clef:'B', notes:[48,50,52,53,55], names:true, alt:'Do, Re, Mi, Fa y Sol en clave de fa'}}),
+    tS('Lee en clave de fa', 'Mira la nota y toca su tecla. Son notas graves: están a la izquierda del Do central.', [48,50,52,53,55], 10, [47,60], 'B'),
+    tT('Los dedos de la izquierda', ['La mano izquierda es un espejo de la derecha: el meñique, dedo 5, va en el Do grave y el pulgar, dedo 1, en Sol.'],
+      {keys:{lo:48, hi:60, hl:[48,50,52,53,55], mark:{48:'5',50:'4',52:'3',53:'2',55:'1'}, alt:'Mano izquierda: del meñique en Do al pulgar en Sol'}}),
+    tP('Mano izquierda en Do', 'Las barras azules son para la mano izquierda.', 'izquierda')
+   ]},
+  {id:'d11', title:'Sostenidos y bemoles', sum:'El nombre de las teclas negras.',
+   fin:'Cada tecla negra tiene dos nombres. Cuál se usa depende de la pieza; la tecla es la misma.',
+   steps:[
+    tT('Las teclas negras tienen nombre', ['Sostenido, que se escribe ♯, significa «la tecla que sigue a la derecha». Bemol, que se escribe ♭, significa «la tecla que sigue a la izquierda».',
+      'Por eso cada tecla negra tiene dos nombres: la que está entre Fa y Sol es Fa♯ y también es Sol♭.'],
+      {keys:{lo:60, hi:71, hl:[61,63,66,68,70], mark:{61:'Do♯',63:'Re♯',66:'Fa♯',68:'Sol♯',70:'La♯'}, alt:'Las cinco teclas negras con su nombre de sostenido'}}),
+    tF('Encuentra sostenidos', 'Busca la tecla blanca que se nombra y toca la negra que tiene a su derecha.',
+      [{pc:6, label:'Fa♯'}, {pc:1, label:'Do♯'}, {pc:8, label:'Sol♯'}, {pc:3, label:'Re♯'}, {pc:10, label:'La♯'}, {pc:6, label:'Fa♯'}], {maxErr:2}),
+    tF('Encuentra bemoles', 'Ahora al revés: busca la tecla blanca y toca la negra que tiene a su izquierda.',
+      [{pc:10, label:'Si♭'}, {pc:3, label:'Mi♭'}, {pc:8, label:'La♭'}, {pc:1, label:'Re♭'}, {pc:6, label:'Sol♭'}, {pc:10, label:'Si♭'}], {maxErr:2}),
+    tP('Tu primera tecla negra', 'Toca las teclas negras un poco más adentro, hacia el fondo del teclado.', 'fa-sost')
+   ]},
+  {id:'d12', title:'La escala y el paso del pulgar', sum:'Ocho notas con cinco dedos.',
+   fin:'Una escala al día, lenta y pareja, es el mejor calentamiento que existe.',
+   steps:[
+    tT('Ocho notas seguidas', ['Una escala es una fila de notas vecinas. La de Do tiene ocho, de Do a Do, y usa solo teclas blancas.',
+      'Para que alcancen los dedos, después del dedo 3 el pulgar pasa por debajo de la mano y toca Fa. Al bajar, el dedo 3 cruza por encima del pulgar.',
+      'La mano avanza de lado, sin girar la muñeca.'],
+      {keys:{lo:60, hi:72, hl:[65], mark:{60:'1',62:'2',64:'3',65:'1',67:'2',69:'3',71:'4',72:'5'}, alt:'Digitación de la escala de Do: el pulgar pasa a Fa'}}),
+    tP('La escala de Do', 'Sube y baja despacio. Lo importante es que el paso del pulgar no se note.', 'escala')
+   ]},
+  {id:'d13', title:'Los acordes', sum:'Varias notas a la vez.',
+   fin:'Con Do, Fa y Sol puedes acompañar muchísimas canciones.',
+   steps:[
+    tT('Varias notas a la vez', ['Un acorde son tres o más notas que suenan juntas. El de Do mayor se forma con Do, Mi y Sol: una tecla sí y una no.',
+      'En la partitura las notas de un acorde se dibujan apiladas, una encima de otra.'],
+      {keys:{lo:60, hi:67, hl:[60,64,67], mark:{60:'1',64:'3',67:'5'}, alt:'Acorde de Do mayor: Do, Mi y Sol con los dedos 1, 3 y 5'}}),
+    tP('Tu primer acorde', 'Arma la forma con los dedos sobre las teclas y bájalos todos a la vez.', 'acorde-do'),
+    tT('De un acorde a otro', ['Para pasar de un acorde a otro no hace falta mover toda la mano: solo cambian de tecla los dedos que hacen falta.']),
+    tP('Do, Fa y Sol', 'Tres acordes sin mover la mano de su lugar.', 'tres-acordes')
+   ]},
+  {id:'d14', title:'El compás de tres tiempos', sum:'Contar «1, 2, 3».',
+   fin:'Cuando oigas una canción, intenta contarla: ¿va de cuatro en cuatro o de tres en tres?',
+   steps:[
+    tT('El compás de 3/4', ['No toda la música se cuenta de cuatro en cuatro. En 3/4 cada compás tiene tres pulsos: «1, 2, 3». Es el compás del vals.',
+      'Aquí aparece una figura nueva: la blanca con puntillo, que dura tres pulsos. El puntito le suma a la nota la mitad de lo que vale.']),
+    tP('Vals en Do', 'Siente el 1 un poco más fuerte. Se toca en modo Ritmo.', 'vals', {mode:'ritmo', force:{metro:true}})
+   ]},
+  {id:'d15', title:'Las dos manos', sum:'Primero por turnos, después juntas.',
+   fin:'Juntar las manos le cuesta a todo el mundo. En Práctica, la ayuda «Por partes» te deja tocar una mano mientras la app toca la otra.',
+   steps:[
+    tT('Juntar las manos', ['Es lo más difícil del piano. El método es siempre el mismo: primero cada mano sola, después las dos juntas y muy despacio.',
+      'En la partitura, la mano derecha va en el pentagrama de arriba y la izquierda en el de abajo. Lo que está alineado en vertical se toca al mismo tiempo.']),
+    tP('Pregunta y respuesta', 'Las manos se turnan: una toca y la otra contesta.', 'turnos'),
+    tP('Las dos manos juntas', 'La izquierda sostiene notas largas mientras la derecha toca la melodía. Baja la velocidad al 50 % si lo necesitas.', 'dos-manos')
+   ]},
+  {id:'d16', title:'Tu primera pieza completa', sum:'El examen final.',
+   fin:'Terminaste el curso de teoría. Ahora sigue en Práctica con las canciones: ya tienes todo lo que necesitas para leerlas y tocarlas.',
+   steps:[
+    tT('Lo que ya sabes', ['Sabes sentarte, ubicar las notas, leer en las dos claves, contar el pulso, tocar acordes y juntar las manos.',
+      'Hoy lo usas todo: una canción con las dos manos y una melodía sin pausas.']),
+    tP('Estrellita con dos manos', 'La derecha toca la melodía y la izquierda la acompaña.', 'estrellita-manos'),
+    tP('Una melodía a tiempo', 'La misma canción del día 6, ahora en modo Ritmo y sin detenerte.', 'mary', {mode:'ritmo'})
+   ]}
+];
+TEO.forEach((l, i) => { l.index = i; l.key = 'teoria:' + l.id; });
+
+const teoStore = Object.assign({pasos: {}, dias: []}, store.get('piano:teoria', {}) || {});
+const saveTeo = () => store.set('piano:teoria', teoStore);
+const teoDone = l => !!Data.progress[l.key];
+const teoOpen = l => l.index === 0 || teoDone(TEO[l.index - 1]);
+const isTask = st => st.k !== 'text';
+const dayStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function teoStreak(){
+  const set = new Set(teoStore.dias), d = new Date();
+  let n = 0;
+  if (!set.has(dayStr(d))) d.setDate(d.getDate() - 1);
+  while (set.has(dayStr(d)) && n < 400){ n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+const teoSongKey = st => TSONGS.some(x => x.id === st.song) ? 't:' + st.song : st.song;
+const reqText = st => `${(st.stars || 2) === 3 ? 'tres' : 'dos'} estrellas${st.mode ? ' en modo ' + MODE_NAME[st.mode] : ''}`;
+
+/* Dibujos de las lecciones */
+function figKeys(o){
+  const hl = new Set(o.hl || []), mark = o.mark || {};
+  const ww = 28, H = 104, W = countWhites(o.lo, o.hi) * ww;
+  let w = '', b = '', i = 0;
+  for (let m = o.lo; m <= o.hi; m++){
+    if (isBlack(m)){
+      const x = i * ww - 9;
+      b += `<rect x="${x}" y="0" width="18" height="62" rx="2" class="${hl.has(m) ? 'bhl' : 'bk'}"/>`;
+      if (mark[m]) b += `<text x="${x + 9}" y="54" text-anchor="middle" font-size="8.5" class="${hl.has(m) ? 'onhl' : 'onb'}">${mark[m]}</text>`;
+    } else {
+      const x = i * ww;
+      w += `<rect x="${x + 0.5}" y="0.5" width="${ww - 1}" height="${H - 1}" rx="3" class="${hl.has(m) ? 'hl' : 'wk'}"/>`;
+      if (mark[m]) w += `<text x="${x + ww / 2}" y="${H - 9}" text-anchor="middle" font-size="11.5" class="kt">${mark[m]}</text>`;
+      if (m === 60) w += `<circle cx="${x + ww / 2}" cy="${H - 30}" r="3" class="dotc"/>`;
+      i++;
+    }
+  }
+  return `<svg class="tfig" style="max-width:${Math.min(460, W * 1.5)}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.alt || 'Teclado')}">${w}${b}</svg>`;
+}
+function figStaff(o){
+  const sp = 10, sc = sp / 250, st = o.clef || 'T', bot = BOT[st], n = o.notes.length;
+  const x0 = 78, dx = 46, W = Math.max(190, x0 + (n - 1) * dx + 40), top = 46, yb = top + 4 * sp, H = yb + (o.names ? 60 : 44);
+  const yOf = s => yb - (s - bot) * sp / 2, hw = 422 * sc;
+  const gl = (k, x, y, cls) => `<path d="${GLYPH[k]}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${sc} ${-sc})" class="${cls || 'ink'}"/>`;
+  let h = '';
+  for (let i = 0; i < 5; i++) h += `<line x1="6" x2="${W - 6}" y1="${yb - i * sp}" y2="${yb - i * sp}" class="ln"/>`;
+  h += gl(st === 'T' ? 'g' : 'f', 14, yOf(bot + (st === 'T' ? 2 : 6)));
+  o.notes.forEach((m, i) => {
+    const x = x0 + i * dx, s = stepOf(m), y = yOf(s);
+    for (let l = bot - 2; l >= s; l -= 2) h += `<line x1="${x - hw / 2 - 5}" x2="${x + hw / 2 + 5}" y1="${yOf(l)}" y2="${yOf(l)}" class="ln"/>`;
+    for (let l = bot + 10; l <= s; l += 2) h += `<line x1="${x - hw / 2 - 5}" x2="${x + hw / 2 + 5}" y1="${yOf(l)}" y2="${yOf(l)}" class="ln"/>`;
+    if (isBlack(m)) h += gl('sh', x - hw / 2 - 249 * sc - 3, y);
+    h += gl('nw', x - hw / 2, y, o.big ? 'acc' : 'ink');
+    if (o.names) h += `<text x="${x}" y="${H - 8}" text-anchor="middle" font-size="13" class="pt">${nameOf(m)}</text>`;
+  });
+  return `<svg class="tfig${o.big ? ' big' : ''}" style="max-width:${o.big ? 230 : Math.min(460, W * 1.5)}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.alt || 'Nota en el pentagrama')}">${h}</svg>`;
+}
+function figHands(){
+  // Dedos del 2 al 5 de la mano derecha: [x, y de la punta]; el pulgar va aparte.
+  const F = [[38, 34], [66, 22], [94, 32], [122, 56]];
+  const hand = (ox, left, name) => {
+    const X = x => ox + (left ? 150 - x : x);
+    let h = `<rect x="${X(left ? 46 : 22)}" y="96" width="24" height="76" rx="12" transform="rotate(${left ? 26 : -26} ${X(34)} 160)" class="palm"/>`;
+    h += `<rect x="${Math.min(X(34), X(148))}" y="104" width="114" height="76" rx="26" class="palm"/>`;
+    F.forEach(([x, y]) => { h += `<rect x="${Math.min(X(x), X(x + 24))}" y="${y}" width="24" height="${126 - y}" rx="12" class="palm"/>`; });
+    const dots = [[X(11), 113]].concat(F.map(([x, y]) => [X(x + 12), y + 15]));
+    dots.forEach(([x, y], i) => { h += `<circle cx="${x}" cy="${y}" r="10" class="fdot"/><text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="13" class="onhl">${i + 1}</text>`; });
+    return h + `<text x="${ox + 75}" y="204" text-anchor="middle" font-size="13" class="pt">${name}</text>`;
+  };
+  return `<svg class="tfig" style="max-width:420px" viewBox="0 0 350 212" role="img" aria-label="Las dos manos con los dedos numerados del 1, el pulgar, al 5, el meñique">${hand(8, true, 'Mano izquierda')}${hand(192, false, 'Mano derecha')}</svg>`;
+}
+function figNotes(with8){
+  const sp = 12, sc = sp / 250, hw = 295 * sc;
+  const cols = [['nw', 'Redonda', '4 pulsos'], ['nh', 'Blanca', '2 pulsos'], ['nb', 'Negra', '1 pulso']].concat(with8 ? [['nb', 'Corchea', 'medio pulso']] : []);
+  const cw = 88, W = cols.length * cw;
+  let h = '';
+  cols.forEach(([k, name, dur], i) => {
+    const cx = i * cw + cw / 2, y = 62, w = (k === 'nw' ? 422 : 295) * sc;
+    h += `<path d="${GLYPH[k]}" transform="translate(${cx - w / 2} ${y}) scale(${sc} ${-sc})" class="ink"/>`;
+    if (k !== 'nw') h += `<line x1="${cx + hw / 2 - 0.7}" x2="${cx + hw / 2 - 0.7}" y1="${y - 2}" y2="${y - 42}" class="stem"/>`;
+    if (name === 'Corchea') h += `<path d="${GLYPH.fu}" transform="translate(${cx + hw / 2 - 1.4} ${y - 42}) scale(${sc} ${-sc})" class="ink"/>`;
+    h += `<text x="${cx}" y="94" text-anchor="middle" font-size="13" class="pt">${name}</text><text x="${cx}" y="111" text-anchor="middle" font-size="12" class="soft">${dur}</text>`;
+  });
+  return `<svg class="tfig" style="max-width:${W * 1.3}px" viewBox="0 0 ${W} 120" role="img" aria-label="Figuras: ${cols.map(c => c[1].toLowerCase() + ', ' + c[2]).join('; ')}">${h}</svg>`;
+}
+function figRests(){
+  const sp = 12, sc = sp / 250, cw = 100, W = 300;
+  const cols = [['rw', 'De redonda', '4 pulsos'], ['rh', 'De blanca', '2 pulsos'], ['rq', 'De negra', '1 pulso']];
+  let h = '';
+  cols.forEach(([k, name, dur], i) => {
+    const cx = i * cw + cw / 2, y = k === 'rq' ? 44 : 46;
+    if (k !== 'rq') h += `<line x1="${cx - 20}" x2="${cx + 20}" y1="${y}" y2="${y}" class="ln"/>`;
+    h += `<path d="${GLYPH[k]}" transform="translate(${cx - (k === 'rq' ? 135 : 141) * sc} ${y}) scale(${sc} ${-sc})" class="ink"/>`;
+    h += `<text x="${cx}" y="88" text-anchor="middle" font-size="13" class="pt">${name}</text><text x="${cx}" y="105" text-anchor="middle" font-size="12" class="soft">${dur}</text>`;
+  });
+  return `<svg class="tfig" style="max-width:390px" viewBox="0 0 ${W} 114" role="img" aria-label="Silencios de redonda, de blanca y de negra">${h}</svg>`;
+}
+function figOf(f){
+  if (!f) return '';
+  if (f === 'hands') return figHands();
+  if (f === 'notes') return figNotes(false);
+  if (f === 'notes8') return figNotes(true);
+  if (f === 'rests') return figRests();
+  if (f.keys) return figKeys(f.keys);
+  if (f.staff) return figStaff(f.staff);
+  return '';
+}
+
+/* Índice de lecciones */
+function renderHome(){
+  const tDone = TEO.filter(teoDone).length, next = TEO.find(l => !teoDone(l));
+  $('#homeTeo').textContent = !tDone ? 'Empieza por el día 1' : next ? `${tDone} de ${TEO.length} lecciones aprobadas. Sigue el día ${next.index + 1}.` : 'Curso terminado. Puedes repasar cualquier lección.';
+  const eDone = LESSONS.filter(l => (Data.progress[l.key]?.stars || 0) >= 2).length;
+  $('#homePra').textContent = eDone ? `${eDone} de ${LESSONS.length} ejercicios completados` : 'Tocar libre, ejercicios, retos y canciones';
+}
+function renderTeoList(){
+  const done = TEO.filter(teoDone).length, next = TEO.find(l => !teoDone(l));
+  const today = teoStore.dias.includes(dayStr(new Date())), streak = teoStreak();
+  const el = $('#teoList'), top = el.scrollTop;
+  let msg = !next ? 'Terminaste todas las lecciones. Puedes repasar la que quieras.'
+    : today ? 'Ya aprobaste la lección de hoy. Vuelve mañana para la siguiente, o adelántala si tienes ganas.'
+    : `Hoy te toca el día ${next.index + 1}.`;
+  if (streak > 1) msg += ` Llevas ${streak} días seguidos.`;
+  let h = `<div class="list-inner"><h1>Teoría</h1>
+    <p class="lead">Una lección corta por día. Lees, miras y tocas: para pasar a la siguiente tienes que aprobarla tocando el piano.</p>
+    <div class="path-prog"><div class="bar"><i style="width:${(done / TEO.length * 100).toFixed(1)}%"></i></div><span>${done} de ${TEO.length} lecciones</span></div>
+    <p class="tday">${msg}</p><section class="lvl">`;
+  for (const l of TEO){
+    const d = teoDone(l), isNext = next === l;
+    const right = d ? '<span class="tok">Aprobada</span>' : isNext ? `<span class="next-tag">${today ? 'Siguiente' : 'Hoy'}</span>` : '<span class="new">Bloqueada</span>';
+    h += `<button class="song${isNext ? ' is-next' : ''}" data-teo="${l.index}"${teoOpen(l) ? '' : ' disabled'}>
+      <span class="num${d ? ' done' : ''}" aria-hidden="true">${l.index + 1}</span>
+      <span><span class="t">${l.title}</span><span class="o">Día ${l.index + 1}. ${l.sum}</span></span>${right}</button>`;
+  }
+  h += `</section><p class="sync">${Data.mode === 'cloud' ? 'Tu avance se guarda en tu cuenta.' : 'Tu avance se guarda en este navegador.'}</p></div>`;
+  el.innerHTML = h; el.scrollTop = top;
+}
+$('#teoList').addEventListener('click', e => { const b = e.target.closest('[data-teo]'); if (b && !b.disabled) openLesson(+b.dataset.teo); });
+
+/* Una lección */
+let TL = null;
+function saveTeoPos(){
+  if (!TL || teoDone(TL.l)) return;
+  teoStore.pasos[TL.l.id] = {idx: TL.idx, ok: [...TL.ok]};
+  saveTeo();
+}
+function openLesson(i){
+  const l = TEO[i]; if (!l || !teoOpen(l)) return;
+  const sv = teoStore.pasos[l.id] || {};
+  TL = {l, idx: 0, ok: new Set(), q: null, timers: [], end: false};
+  if (teoDone(l)) l.steps.forEach((st, k) => { if (isTask(st)) TL.ok.add(k); });
+  else { TL.ok = new Set(sv.ok || []); TL.idx = Math.max(0, Math.min(l.steps.length - 1, sv.idx || 0)); }
+  area = 'theory'; view = 'teo'; setTabs();
+  renderStep();
+}
+function clearQuiz(){
+  if (!TL) return;
+  TL.timers.forEach(clearTimeout); TL.timers = [];
+  if (TL.q) TL.q.hint.forEach(el => el.classList.remove('guide'));
+  TL.q = null;
+  keysEl.classList.remove('nolabels-all');
+}
+function teoKeyboard(){
+  const r = TL.q.st.range;
+  if (r) buildKeyboard(r[0], r[1]);
+  else { const fr = freeRange(); buildKeyboard(fr.lo, fr.hi); }
+}
+function renderStep(){
+  const l = TL.l, n = l.steps.length, st = l.steps[TL.idx];
+  clearQuiz();
+  $('#teoList').hidden = true; $('#teoLesson').hidden = false;
+  $('#tTitle').textContent = `Día ${l.index + 1}. ${l.title}`;
+  const body = $('#tBody'), quiz = !TL.end && (st.k === 'find' || st.k === 'staff');
+  $('.board').hidden = !quiz;
+  $('#tProg').style.width = (TL.end ? 100 : TL.idx / n * 100) + '%';
+  $('#tCount').textContent = TL.end ? '' : `${TL.idx + 1} de ${n}`;
+  $('#tNav').hidden = TL.end;
+  if (TL.end){
+    const nx = TEO[l.index + 1], streak = teoStreak();
+    body.innerHTML = `<div class="teo-in"><div class="tq done"><div class="tstep">Día ${l.index + 1}</div>
+      <div class="tq-q">¡Lección aprobada!</div><p>${l.fin}</p>
+      ${streak > 1 ? `<p class="tok">Llevas ${streak} días seguidos.</p>` : ''}
+      <div class="actions"><button class="btn primary" data-tq="list">Listo por hoy</button>
+      ${nx ? `<button class="btn" data-tq="next">Adelantar el día ${nx.index + 1}</button>` : ''}<button class="btn" data-tq="practice">Ir a la práctica</button></div></div></div>`;
+    body.scrollTop = 0;
+    return;
+  }
+  let h = `<div class="teo-in${quiz ? ' quiz' + (st.k === 'staff' ? ' staffq' : '') : ''}"><div class="tstep">${isTask(st) ? 'Ahora tocas tú' : 'Para leer'}</div><h2>${st.h}</h2>`;
+  if (st.k === 'text') h += figOf(st.fig) + st.p.map(p => `<p>${p}</p>`).join('');
+  else if (quiz) h += `<p>${st.p}</p><div class="tq" id="tq"><div class="tq-q" id="tqQ"></div><div class="tq-fb" id="tqFb" role="status"></div><div class="tq-n" id="tqN"></div></div>`;
+  else {
+    const s = findSong(teoSongKey(st)), ok = TL.ok.has(TL.idx);
+    h += `<p>${st.p}</p><div class="tq"><div class="tq-n">Ejercicio</div><div class="tq-t">${s ? s.title : ''}</div>
+      <div class="tq-fb">Para aprobar: ${reqText(st)}.</div>${ok ? '<div class="tok">Aprobado</div>' : ''}
+      <div class="actions"><button class="btn${ok ? '' : ' primary'}" data-tq="play">${ok ? 'Tocar otra vez' : 'Tocar ahora'}</button></div></div>`;
+  }
+  body.innerHTML = h + '</div>'; body.scrollTop = 0;
+  if (quiz) startQuiz(st);
+  updateTeoNav();
+  saveTeoPos();
+}
+function updateTeoNav(){
+  if (!TL || TL.end) return;
+  const st = TL.l.steps[TL.idx], last = TL.idx === TL.l.steps.length - 1, blocked = isTask(st) && !TL.ok.has(TL.idx);
+  $('#tPrev').disabled = TL.idx === 0;
+  const nx = $('#tNext');
+  nx.disabled = blocked;
+  nx.textContent = last ? 'Terminar lección' : 'Siguiente';
+  $('#tLock').textContent = blocked ? 'Aprueba este paso para seguir.' : '';
+}
+function nextStep(){
+  if (!TL) return;
+  const st = TL.l.steps[TL.idx];
+  if (isTask(st) && !TL.ok.has(TL.idx)) return;
+  if (TL.idx < TL.l.steps.length - 1){ TL.idx++; renderStep(); return; }
+  const l = TL.l;
+  if (!teoDone(l)){
+    Data.saveBest(l.key, 3, 100);
+    const d = dayStr(new Date());
+    if (!teoStore.dias.includes(d)) teoStore.dias = teoStore.dias.concat(d).slice(-400);
+  }
+  delete teoStore.pasos[l.id]; saveTeo();
+  TL.end = true; renderStep();
+}
+$('#tNext').onclick = nextStep;
+$('#tPrev').onclick = () => { if (TL && TL.idx > 0){ TL.idx--; renderStep(); } };
+$('#tBack').onclick = () => goTheory();
+$('#tBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-tq]'); if (!b || !TL) return;
+  const a = b.dataset.tq;
+  if (a === 'again') renderStep();
+  else if (a === 'list') goTheory();
+  else if (a === 'practice') goLearn();
+  else if (a === 'next') openLesson(TL.l.index + 1);
+  else if (a === 'play'){
+    const st = TL.l.steps[TL.idx];
+    openSong(teoSongKey(st), {lesson: TL.l, step: TL.idx, st});
+  }
+});
+
+/* Pruebas dentro de la lección: encontrar teclas y leer notas */
+function startQuiz(st){
+  let items = st.items ? st.items.map(x => Object.assign({}, x)) : [];
+  if (!st.items){
+    let prev = null;
+    for (let i = 0; i < st.n; i++){ const v = pick(st.pool, prev); prev = v; items.push(st.k === 'staff' ? {midi: v} : {pc: v}); }
+  }
+  TL.q = {st, items, i: 0, errors: 0, miss: 0, phase: 'input', hint: []};
+  teoKeyboard();
+  keysEl.classList.add('nolabels-all');
+  showQ();
+}
+function showQ(){
+  const q = TL.q, it = q.items[q.i], st = q.st;
+  q.hint.forEach(el => el.classList.remove('guide')); q.hint = [];
+  q.miss = 0; q.phase = 'input';
+  $('#tqQ').innerHTML = st.k === 'staff' ? figStaff({clef: st.clef || 'T', notes: [it.midi], big: true}) : esc(it.label || PCN[sys()][it.pc]);
+  $('#tqFb').textContent = st.k === 'staff' ? '¿Qué tecla es? Tócala.' : 'Toca esa tecla.';
+  $('#tqN').textContent = `${q.i + 1} de ${q.items.length}`;
+}
+function teoPress(m){
+  const q = TL && TL.q; if (!q || q.phase !== 'input') return;
+  const it = q.items[q.i], st = q.st;
+  const ok = it.midi != null ? m === it.midi : pc(m) === it.pc;
+  if (ok){
+    q.phase = 'wait'; flashKey(m, 'ok');
+    $('#tqFb').textContent = st.k === 'staff' ? `¡Bien! Es ${nameOf(m)}.` : '¡Bien!';
+    q.i++;
+    TL.timers.push(setTimeout(() => { if (TL && TL.q === q){ if (q.i >= q.items.length) endQuiz(); else showQ(); } }, st.k === 'staff' ? 700 : 420));
+  } else {
+    q.errors++; q.miss++; flashKey(m, 'bad');
+    $('#tqFb').textContent = st.names === false ? 'Esa no es. Mira bien los grupos de teclas negras.'
+      : st.k === 'staff' ? `Esa es ${nameOf(m)}. Fíjate en qué línea o espacio está la nota.` : `Esa es ${nameOf(m)}. Inténtalo otra vez.`;
+    if (q.miss >= 2 && !q.hint.length){
+      for (const [k, el] of keyEls) if (it.midi != null ? k === it.midi : pc(k) === it.pc){ el.classList.add('guide'); q.hint.push(el); }
+    }
+  }
+}
+function endQuiz(){
+  const q = TL.q, n = q.items.length, max = q.st.maxErr != null ? q.st.maxErr : Math.ceil(n / 4);
+  q.phase = 'done';
+  q.hint.forEach(el => el.classList.remove('guide')); q.hint = [];
+  const ok = q.errors <= max;
+  const errs = q.errors === 0 ? 'sin ninguna tecla equivocada' : q.errors === 1 ? 'con 1 tecla equivocada' : `con ${q.errors} teclas equivocadas`;
+  if (ok){ TL.ok.add(TL.idx); saveTeoPos(); }
+  $('#tq').innerHTML = ok
+    ? `<div class="tq-q">¡Aprobado!</div><div class="tq-fb">Completaste las ${n}, ${errs}.</div><div class="actions"><button class="btn" data-tq="again">Repetir</button></div>`
+    : `<div class="tq-q">Todavía no</div><div class="tq-fb">Las completaste ${errs}. Para aprobar puedes fallar ${max === 1 ? '1 vez' : max + ' veces'} como máximo.</div><div class="actions"><button class="btn primary" data-tq="again">Intentar otra vez</button></div>`;
+  updateTeoNav();
+}
+/* Volver del reproductor a la lección */
+function teoReturn(advance){
+  leavePlayer();
+  $('#player').hidden = true; $('#songList').hidden = false;
+  if (!TL){ goTheory(); return; }
+  view = 'teo'; setTabs();
+  if (advance && TL.ok.has(TL.idx)) nextStep(); else renderStep();
+}
+
+/* ---------- Navegación: inicio, teoría y práctica ---------- */
+let area = 'home';
 function setTabs(){
+  const learn = view === 'list' || view === 'player' || view === 'reto';
+  $('#tabs').hidden = area !== 'practice';
+  $('#areaLbl').hidden = area !== 'theory';
+  $('#btnHome').classList.toggle('athome', area === 'home');
   $('#tabFree').setAttribute('aria-selected', view === 'free' ? 'true' : 'false');
-  $('#tabLearn').setAttribute('aria-selected', view !== 'free' ? 'true' : 'false');
+  $('#tabLearn').setAttribute('aria-selected', learn ? 'true' : 'false');
+  $('#viewHome').hidden = view !== 'home';
+  $('#viewTheory').hidden = !(view === 'teoList' || view === 'teo');
   $('#viewFree').hidden = view !== 'free';
-  $('#viewLearn').hidden = view === 'free';
+  $('#viewLearn').hidden = !learn;
+  $('.board').hidden = view === 'home' || view === 'teoList';
+}
+function leaveAll(){
+  leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); clearQuiz();
+  $('#player').hidden = true; $('#reto').hidden = true; $('#songList').hidden = false;
+}
+function goHome(){
+  leaveAll(); TL = null;
+  area = 'home'; view = 'home'; setTabs(); renderHome();
+}
+function goTheory(){
+  leaveAll(); TL = null;
+  area = 'theory'; view = 'teoList'; setTabs();
+  $('#teoLesson').hidden = true; $('#teoList').hidden = false;
+  renderTeoList();
 }
 function goFree(){
-  leavePlayer(); leaveReto(); releaseAll();
-  view = 'free'; setTabs(); buildFree(); updateDisplay();
+  leaveAll(); TL = null;
+  area = 'practice'; view = 'free'; setTabs(); buildFree(); updateDisplay();
 }
 function goLearn(){
-  leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback();
-  view = 'list'; setTabs();
-  $('#player').hidden = true; $('#reto').hidden = true; $('#songList').hidden = false;
+  leaveAll(); TL = null;
+  area = 'practice'; view = 'list'; setTabs();
   renderList(); buildFree();
 }
 $('#tabFree').onclick = goFree;
 $('#tabLearn').onclick = () => { if (view !== 'list') goLearn(); };
+$('#btnHome').onclick = goHome;
+$('#goTheory').onclick = goTheory;
+$('#goPractice').onclick = goFree;
 
 /* ---------- Ajustes ---------- */
 const dlg = $('#dlg');
@@ -2682,7 +3349,7 @@ window.addEventListener('resize', () => {
   rsT = setTimeout(() => {
     if (view === 'player' && P) buildSongKeyboard();
     else if (view === 'reto' && RT){ const [lo, hi] = retoRange(); if (lo !== range.lo || hi !== range.hi) buildKeyboard(lo, hi); }
-    else buildFree();
+    else if (view === 'free' || view === 'list') buildFree();
   }, 120);
 });
 if (window.ResizeObserver){
@@ -2699,6 +3366,7 @@ buildFree();
 updateDisplay();
 updateRecUI();
 Data.init();
+goHome();
 takePending();
 window.addEventListener('pageshow', e => { if (e.persisted) takePending(); });
 })();
