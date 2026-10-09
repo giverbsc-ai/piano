@@ -1232,30 +1232,36 @@ function findSong(key){
    El navegador sigue siendo la copia de trabajo: la app abre al instante y funciona sin conexión.
    Con la cuenta abierta, cada cambio se sube y los de otros dispositivos llegan en vivo.
    Nada se pisa: de las estrellas queda la mejor marca, los días de racha se suman y cada canción
-   se reconoce por su id. No se escribe en la cuenta hasta haber leído lo que ya tiene el servidor.
+   se reconoce por su id. No se escribe en la cuenta hasta haber leído lo que ya tiene el servidor,
+   y nada se quita de este dispositivo si la cuenta no confirmó que lo tiene.
    En la cuenta: usuarios/{uid} guarda mejores, teoria, sesion y niveles; usuarios/{uid}/canciones/{id}, cada canción. */
 const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 const canon = v => JSON.stringify(v, (k, x) => isObj(x) ? Object.keys(x).sort().reduce((o, n) => (o[n] = x[n], o), {}) : x);
+const copy = v => JSON.parse(JSON.stringify(v));
 const joinDays = (a, b) => [...new Set((Array.isArray(a) ? a : []).concat(Array.isArray(b) ? b : []).filter(d => typeof d === 'string'))].sort().slice(-400);
 const Nube = (() => {
   const on = !!NUBE_CFG && !IN_CLAUDE;
   let fb = null, auth = null, db = null, FV = null, user = null, ref = null, col = null, unsubs = [];
   let remote = null, docServer = false, docPend = false, C = null, colServer = false, colPend = false;
-  let err = '', loading = false, known = false, queued = false, runs = [], writes = [], hold = 0;
-  const meta = Object.assign({uid: '', borradas: [], niv: {}}, store.get('piano:nube', {}) || {});
-  if (!Array.isArray(meta.borradas)) meta.borradas = [];
-  if (!isObj(meta.niv)) meta.niv = {};
+  let err = '', loading = false, known = false, queued = false, runs = [], writes = [], hold = 0, firstSongs = false;
+  const deleting = new Set(), flight = new Map();   // borrados y dificultades enviados que la cuenta aún no confirma
+  /* uid: cuenta abierta en este dispositivo. visto: la cuenta ya confirmó que tiene todo lo de aquí.
+     borradas: canciones borradas aquí que falta borrar en la cuenta. niv: dificultades tal como las confirmó la cuenta. */
+  const meta = Object.assign({uid: '', visto: false, borradas: [], niv: {}}, store.get('piano:nube', {}) || {});
+  const fixMeta = () => { if (!Array.isArray(meta.borradas)) meta.borradas = []; if (!isObj(meta.niv)) meta.niv = {}; };
+  fixMeta();
   const saveMeta = () => store.set('piano:nube', meta);
 
-  /* Diferencias que hay que subir: solo las claves que cambian, para no pisar lo que escribe otro dispositivo. */
-  function mapPatch(r, m, del){
+  /* Diferencias que hay que subir: solo las claves que cambian, para no pisar lo que escribe otro dispositivo.
+     r es lo que hay en la cuenta (ya limpio); las claves de delFrom que no estén en m se borran. */
+  function mapPatch(r, m, delFrom){
     r = isObj(r) ? r : {};
     const out = {}; let n = 0;
     for (const k of Object.keys(m)){
       if (!k || m[k] === undefined || canon(m[k]) === canon(r[k])) continue;
-      out[k] = JSON.parse(JSON.stringify(m[k])); n++;
+      out[k] = copy(m[k]); n++;
     }
-    if (del) for (const k of Object.keys(r)) if (!(k in m)){ out[k] = FV.delete(); n++; }
+    if (isObj(delFrom)) for (const k of Object.keys(delFrom)) if (k && !(k in m)){ out[k] = FV.delete(); n++; }
     return n ? out : null;
   }
   function daysPatch(r, m){
@@ -1265,6 +1271,23 @@ const Nube = (() => {
   function cleanBest(r){
     const out = {};
     if (isObj(r)) for (const [k, v] of Object.entries(r)) if (isObj(v) && v.stars >= 0 && v.stars <= 3) out[k] = {stars: +v.stars, pct: +v.pct || 0};
+    return out;
+  }
+  /* Pasos de teoría a medias: los de lecciones ya aprobadas sobran; los de lecciones que esta versión no conoce se dejan igual. */
+  function cleanPasos(src){
+    const out = {};
+    if (isObj(src)) for (const [id, p] of Object.entries(src)){
+      if (!isObj(p)) continue;
+      const les = TEO.find(x => x.id === id);
+      if (!les) out[id] = p;
+      else if (!teoDone(les)) out[id] = {idx: Math.max(0, Math.round(+p.idx) || 0),
+        ok: [...new Set((Array.isArray(p.ok) ? p.ok : []).map(Number).filter(n => Number.isInteger(n) && n >= 0))].sort((a, b) => a - b)};
+    }
+    return out;
+  }
+  function cleanNiv(r){
+    const out = {};
+    if (isObj(r)) for (const [k, v] of Object.entries(r)) if (Number.isInteger(v) && v >= 1 && v <= 8) out[k] = v;
     return out;
   }
   const planOf = o => {
@@ -1278,29 +1301,24 @@ const Nube = (() => {
       raw: () => Data.progress,
       merge: (r, l) => mergeBest(cleanBest(r), l),
       apply(m){ Data.progress = m; store.set('piano:mejores', m); },
-      patch: (r, m) => mapPatch(r, m, false)
+      patch: (r, m) => mapPatch(cleanBest(r), m, null)
     },
     teoria: {
       raw: () => ({pasos: teoStore.pasos, dias: teoStore.dias}),
       merge(r, l){
         r = isObj(r) ? r : {};
-        const pasos = {};
-        for (const src of [r.pasos, l.pasos]) if (isObj(src)) for (const [id, p] of Object.entries(src)){
-          if (!isObj(p)) continue;
-          const les = TEO.find(x => x.id === id);
-          if (!les){ if (!pasos[id]) pasos[id] = p; continue; }   // lección de una versión más nueva: se deja como está
-          if (teoDone(les)) continue;
-          const c = pasos[id] || {idx: 0, ok: []};
-          const ok = (Array.isArray(p.ok) ? p.ok : []).map(Number).filter(n => Number.isInteger(n) && n >= 0);
-          pasos[id] = {idx: Math.max(c.idx, Math.min(les.steps.length - 1, Math.max(0, Math.round(+p.idx) || 0))),
-                       ok: [...new Set(c.ok.concat(ok))].sort((a, b) => a - b)};
+        const pasos = cleanPasos(r.pasos);
+        for (const [id, q] of Object.entries(cleanPasos(l.pasos))){
+          const c = pasos[id];
+          if (!c) pasos[id] = q;
+          else if (TEO.some(x => x.id === id)) pasos[id] = {idx: Math.max(c.idx, q.idx), ok: [...new Set(c.ok.concat(q.ok))].sort((a, b) => a - b)};
         }
         return {pasos, dias: joinDays(r.dias, l.dias)};
       },
       apply(m){ teoStore.pasos = m.pasos; teoStore.dias = m.dias; store.set('piano:teoria', teoStore); },
       patch(r, m){
         r = isObj(r) ? r : {};
-        const out = {}, p = mapPatch(r.pasos, m.pasos, true), d = daysPatch(r.dias, m.dias);
+        const out = {}, p = mapPatch(cleanPasos(r.pasos), m.pasos, r.pasos), d = daysPatch(r.dias, m.dias);
         if (p) out.pasos = p;
         if (d) out.dias = d;
         return p || d ? out : null;
@@ -1320,38 +1338,48 @@ const Nube = (() => {
           else if (a.items.map(sesId).join('|') === b.items.map(sesId).join('|')) p = {dia: a.dia, items: a.items.map((it, i) => Object.assign({}, it, {done: !!(it.done || b.items[i].done)}))};
           else {
             const da = a.items.filter(x => x.done).length, db = b.items.filter(x => x.done).length;
-            p = da !== db ? (da > db ? a : b) : (canon(a) < canon(b) ? a : b);
+            // Gana el plan con más pasos hechos; si empatan, el más completo (a otro dispositivo le puede faltar una canción).
+            p = da !== db ? (da > db ? a : b) : a.items.length !== b.items.length ? (a.items.length > b.items.length ? a : b) : (canon(a) < canon(b) ? a : b);
           }
         }
-        return {dia: p ? p.dia : '', items: p ? p.items : [], dias: joinDays(r.dias, l.dias), ult};
+        let dias = joinDays(r.dias, l.dias);
+        // Si entre dos dispositivos se completó el plan, el día cuenta para la racha.
+        if (p && p.items.every(x => x.done)) dias = joinDays(dias, [p.dia]);
+        return {dia: p ? p.dia : '', items: p ? p.items : [], dias, ult};
       },
+      /* Aquí solo entra el plan de hoy, sin los pasos que este dispositivo no puede abrir y con algún paso hecho.
+         Así lo que se guarda es lo mismo que la app vuelve a leer, y no hay nada que corregir después. */
       apply(m){
         sesStore.dias = m.dias; sesStore.ult = m.ult;
-        if (m.dia && m.dia === dayStr(new Date())){ sesStore.dia = m.dia; sesStore.items = JSON.parse(JSON.stringify(m.items)); }
+        if (m.dia && m.dia === dayStr(new Date())){
+          const items = copy(m.items).filter(sesValid);
+          if (items.some(it => it.done)){ sesStore.dia = m.dia; sesStore.items = items; }
+        }
         store.set('piano:sesion', sesStore);
       },
       patch(r, m){
         r = isObj(r) ? r : {};
-        const out = {}, u = mapPatch(r.ult, m.ult, false), d = daysPatch(r.dias, m.dias);
+        const out = {}, u = mapPatch(r.ult, m.ult, null), d = daysPatch(r.dias, m.dias);
         if (u) out.ult = u;
         if (d) out.dias = d;
         const plan = !!m.dia && (m.dia !== r.dia || canon(m.items) !== canon(r.items));
-        if (plan){ out.dia = m.dia; out.items = JSON.parse(JSON.stringify(m.items)); }
+        if (plan){ out.dia = m.dia; out.items = copy(m.items); }
         return u || d || plan ? out : null;
       }
     },
-    /* La dificultad elegida en cada canción: gana el último cambio. Lo que se cambió aquí desde la última subida manda. */
+    /* La dificultad elegida en cada canción: gana el último cambio. Lo que se cambió aquí y la cuenta
+       todavía no confirmó (distinto de meta.niv) manda sobre lo que llega. */
     niveles: {
       lww: true,
       raw: () => settings.niveles || {},
       merge(r, l){
-        const out = {};
-        if (isObj(r)) for (const [k, v] of Object.entries(r)) if (Number.isInteger(v) && v >= 1 && v <= 8) out[k] = v;
-        for (const k of new Set(Object.keys(meta.niv).concat(Object.keys(l)))) if (l[k] !== meta.niv[k]){ if (l[k] == null) delete out[k]; else out[k] = l[k]; }
+        const out = cleanNiv(r);
+        // Manda lo local en lo que cambió aquí desde la última confirmación y en lo que está enviado sin confirmar.
+        for (const k of new Set(Object.keys(meta.niv).concat(Object.keys(l), [...flight.keys()]))) if (flight.has(k) || l[k] !== meta.niv[k]){ if (l[k] == null) delete out[k]; else out[k] = l[k]; }
         return out;
       },
       apply(m){ settings.niveles = m; saveSettings(); },
-      patch: (r, m) => mapPatch(r, m, true)
+      patch: (r, m) => mapPatch(cleanNiv(r), m, r)
     }
   };
 
@@ -1383,19 +1411,48 @@ const Nube = (() => {
       if (!live) continue;
       const p = S.patch(remote[name], m);
       if (p){ out[name] = p; any = true; }
-      done.push([name, S, m]);
+      done.push([name, S, m, p]);
     }
-    const slow = any && tooFast(writes, 40, 60000);
-    if (slow){ hold = Date.now() + 60000; setTimeout(push, 60500); }
+    if (any && tooFast(writes, 40, 60000)){ hold = Date.now() + 60000; setTimeout(push, 60500); }
     else {
-      if (any) ref.set(out, {merge: true}).catch(fail);
-      // Lo que se acaba de enviar ya cuenta como parte de la cuenta: el servidor lo confirma después.
-      for (const [name, S, m] of done){
-        remote[name] = JSON.parse(JSON.stringify(m));
-        if (S.lww){ meta.niv = JSON.parse(JSON.stringify(m)); saveMeta(); }
+      const confirm = [];
+      for (const [name, S, m, p] of done){
+        // Lo que se acaba de enviar ya cuenta como parte de la cuenta: el servidor lo confirma después.
+        remote[name] = copy(m);
+        if (!S.lww) continue;
+        // meta.niv solo avanza con lo que la cuenta ya tiene; lo enviado espera su confirmación.
+        const sent = p ? Object.keys(p) : [], nb = {};
+        sent.forEach(k => flight.set(k, (flight.get(k) || 0) + 1));
+        for (const k of Object.keys(m)) if (!flight.has(k)) nb[k] = m[k];
+        for (const k of flight.keys()) if (k in meta.niv) nb[k] = meta.niv[k];
+        meta.niv = nb; saveMeta();
+        if (sent.length) confirm.push(() => {
+          for (const k of sent){
+            const left = (flight.get(k) || 1) - 1;
+            if (left > 0){ flight.set(k, left); continue; }
+            flight.delete(k);
+            if (k in m) meta.niv[k] = m[k]; else delete meta.niv[k];
+          }
+          saveMeta();
+        });
+      }
+      if (any){
+        const mine = ref;
+        ref.set(out, {merge: true}).then(() => { if (ref === mine){ confirm.forEach(f => f()); mark(); paint(); } }, e => { if (ref === mine) fail(e); });
       }
     }
     if (changed){ sesInvalidate(); onDataChange(); }
+  }
+  /* ¿Queda algo de este dispositivo que la cuenta todavía no tiene? */
+  function pendingLocal(){
+    if (!user || !remote || !C) return true;
+    if (Data.items.some(s => !s.noSube && (s.localOnly || s.nube === 1))) return true;
+    if (meta.borradas.length) return true;
+    return Object.keys(SEC).some(name => !!SEC[name].patch(remote[name], SEC[name].merge(remote[name], SEC[name].raw())));
+  }
+  const unsynced = () => !!user && (!!err || !docServer || !colServer || docPend || colPend || pendingLocal());
+  function mark(){
+    if (!meta.visto && user && !unsynced()){ meta.visto = true; saveMeta(); }
   }
 
   /* Canciones propias */
@@ -1410,15 +1467,25 @@ const Nube = (() => {
     store.set('piano:mejores', Data.progress);
     if (settings.niveles && settings.niveles[from]){ if (!settings.niveles[to]) settings.niveles[to] = settings.niveles[from]; delete settings.niveles[from]; saveSettings(); }
     if (sesStore.ult[from]){ if (!sesStore.ult[to] || sesStore.ult[from] > sesStore.ult[to]) sesStore.ult[to] = sesStore.ult[from]; delete sesStore.ult[from]; store.set('piano:sesion', sesStore); }
-    push();
+  }
+  function delRemote(id){
+    if (!col || deleting.has(id)) return;
+    deleting.add(id);
+    const mine = col;
+    col.doc(id).delete().then(() => {
+      deleting.delete(id);
+      if (col === mine && meta.borradas.includes(id)){ meta.borradas = meta.borradas.filter(x => x !== id); saveMeta(); mark(); paint(); }
+    }, () => { deleting.delete(id); });
   }
   function syncSongs(){
     if (!user || !C) return;
     let changed = false, dirty = false;
     if (colServer && meta.borradas.length){
-      // Canciones borradas aquí mientras no había conexión con la cuenta.
-      for (const id of meta.borradas) if (C.has(id)){ col.doc(id).delete().catch(() => {}); C.delete(id); }
-      meta.borradas = []; saveMeta();
+      // Canciones borradas aquí que la cuenta todavía tiene: se borran allá. Las que ya no están, se olvidan.
+      const n = meta.borradas.length;
+      for (const id of meta.borradas) if (C.has(id)) delRemote(id);
+      meta.borradas = meta.borradas.filter(id => C.has(id) || deleting.has(id));
+      if (meta.borradas.length !== n) saveMeta();
     }
     const gone = new Set(meta.borradas), sigs = new Map();
     for (const [id, c] of C){
@@ -1432,18 +1499,22 @@ const Nube = (() => {
       if (canon(bodyOf(L)) !== canon(bodyOf(hs))){ hs.nube = Math.max(st, L.nube || 0); Data.items[i] = hs; changed = true; }
       else if (L.localOnly || (L.nube || 0) < st){ L.localOnly = false; L.nube = st; dirty = true; }
     }
-    if (colServer) for (const L of Data.items.slice()){
-      if (C.has(L.id) || (!L.localOnly && !L.nube)) continue;
-      const drop = () => { Data.items = Data.items.filter(x => x !== L); changed = true; };
-      if (L.nube === 2){ drop(); continue; }             // la borraron en otro dispositivo
-      if (L.noSube) continue;
-      const twin = L.localOnly ? sigs.get(sig(L)) : null;
-      if (twin){ moveKeys(L.key, 'u:' + twin); drop(); continue; }   // la misma canción ya estaba en la cuenta
-      const body = JSON.parse(JSON.stringify(bodyOf(L)));
-      if (JSON.stringify(body).length > 900000){ L.noSube = true; continue; }
-      L.localOnly = false; L.nube = 1; dirty = true;
-      sigs.set(sig(L), L.id);
-      col.doc(L.id).set(body).catch(() => { L.noSube = true; L.nube = 0; L.localOnly = true; Data.saveLocal(); });
+    if (colServer){
+      // Solo al entrar se unen las canciones repetidas: lo que este dispositivo traía de antes y ya estaba en la cuenta.
+      const dedupe = firstSongs; firstSongs = false;
+      for (const L of Data.items.slice()){
+        if (C.has(L.id) || (!L.localOnly && !L.nube)) continue;
+        const drop = () => { Data.items = Data.items.filter(x => x !== L); changed = true; };
+        if (L.nube === 2){ drop(); continue; }             // la borraron en otro dispositivo
+        if (L.noSube) continue;
+        const twin = dedupe && L.localOnly ? sigs.get(sig(L)) : null;
+        if (twin){ moveKeys(L.key, 'u:' + twin); drop(); continue; }
+        const body = copy(bodyOf(L));
+        if (JSON.stringify(body).length > 900000){ L.noSube = true; continue; }
+        L.localOnly = false; L.nube = 1; dirty = true;
+        sigs.set(sig(L), L.id);
+        col.doc(L.id).set(body).catch(() => { L.noSube = true; L.nube = 0; L.localOnly = true; Data.saveLocal(); });
+      }
     }
     if (changed || dirty){ Data.items.sort((a, b) => a.created - b.created); Data.saveLocal(); }
     if (changed){ sesInvalidate(); onDataChange(); }
@@ -1451,8 +1522,9 @@ const Nube = (() => {
   }
   function addSong(){ syncSongs(); }
   function delSong(id){
-    if (col) col.doc(id).delete().catch(() => {});
-    else { meta.borradas.push(id); saveMeta(); }
+    // Se anota antes de pedirlo: si el pedido se pierde (pestaña cerrada, sin conexión), se repite al volver.
+    if (!meta.borradas.includes(id)){ meta.borradas.push(id); saveMeta(); }
+    delRemote(id);
   }
 
   /* Sesión de la cuenta */
@@ -1460,11 +1532,13 @@ const Nube = (() => {
     unsubs.forEach(u => { try { u(); } catch(e){} });
     unsubs = []; ref = col = remote = C = null;
     docServer = docPend = colServer = colPend = false;
+    deleting.clear(); flight.clear();
   }
   function fail(e){
     err = (e && e.code) || 'error';
     detach(); paint();
   }
+  /* La cuenta ya tiene todo: este dispositivo queda limpio. */
   function wipeLocal(){
     Data.items = Data.items.filter(s => s.localOnly && !s.nube);
     Data.saveLocal();
@@ -1472,14 +1546,20 @@ const Nube = (() => {
     teoStore.pasos = {}; teoStore.dias = []; store.set('piano:teoria', teoStore);
     sesStore.dia = ''; sesStore.items = []; sesStore.dias = []; sesStore.ult = {}; store.set('piano:sesion', sesStore);
     settings.niveles = {}; saveSettings();
-    meta.uid = ''; meta.borradas = []; meta.niv = {}; saveMeta();
+    meta.uid = ''; meta.visto = false; meta.borradas = []; meta.niv = {}; saveMeta();
+  }
+  /* La cuenta no llegó a recibir todo: lo de este dispositivo se queda aquí, como datos sin cuenta. */
+  function keepLocal(){
+    Data.items.forEach(s => { if (s.nube){ s.nube = 0; s.localOnly = true; } });
+    Data.saveLocal();
+    meta.uid = ''; meta.visto = false; meta.borradas = []; meta.niv = {}; saveMeta();
   }
   function open(u){
     if (user && user.uid === u.uid && ref) return;
     detach();
-    if (meta.uid && meta.uid !== u.uid) wipeLocal();   // quedaban datos de otra cuenta en este dispositivo
-    meta.uid = u.uid; saveMeta();
-    user = u; err = ''; hold = 0;
+    if (meta.uid && meta.uid !== u.uid){ if (meta.visto) wipeLocal(); else keepLocal(); }   // quedaban datos de otra cuenta
+    if (meta.uid !== u.uid){ meta.uid = u.uid; meta.visto = false; saveMeta(); }
+    user = u; err = ''; hold = 0; firstSongs = true;
     Data.mode = 'cloud';
     ref = db.collection('usuarios').doc(u.uid);
     col = ref.collection('canciones');
@@ -1489,16 +1569,16 @@ const Nube = (() => {
       remote = (snap.exists && snap.data()) || {};
       if (!snap.metadata.fromCache) docServer = true;
       docPend = snap.metadata.hasPendingWrites;
-      sync(); paint();
-    }, fail));
+      sync(); mark(); paint();
+    }, e => { if (ref === mine) fail(e); }));
     unsubs.push(col.onSnapshot({includeMetadataChanges: true}, qs => {
       if (ref !== mine) return;
       C = new Map();
       qs.forEach(d => C.set(d.id, {body: d.data(), pend: d.metadata.hasPendingWrites}));
       if (!qs.metadata.fromCache) colServer = true;
       colPend = qs.metadata.hasPendingWrites;
-      syncSongs(); paint();
-    }, fail));
+      syncSongs(); mark(); paint();
+    }, e => { if (ref === mine) fail(e); }));
     paint(); onDataChange();
   }
   function close(){
@@ -1526,14 +1606,18 @@ const Nube = (() => {
     } catch(e){ err = 'sdk'; }
     loading = false; paint();
   }
-  const unsynced = () => !!user && (!docServer || !colServer || docPend || colPend || !!err);
   async function signOut(){
     if (!auth) return;
-    try { await Promise.race([db.waitForPendingWrites(), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+    hold = 0; sync(); syncSongs();
+    const wait = ms => new Promise(r => setTimeout(() => r(false), ms));
+    const flushed = await Promise.race([db.waitForPendingWrites().then(() => true, () => false), wait(4000)]);
+    // Solo se limpia el dispositivo si la cuenta confirmó que tiene todo. Si no, lo de aquí se queda aquí.
+    const clean = meta.visto && flushed && !err && docServer && colServer && !pendingLocal();
     detach(); user = null;
-    wipeLocal();
     try { await auth.signOut(); } catch(e){}
-    goHome();
+    if (clean) wipeLocal(); else keepLocal();
+    try { await db.terminate(); await db.clearPersistence(); } catch(e){}
+    location.reload();
   }
 
   /* Textos y botones */
@@ -1544,7 +1628,7 @@ const Nube = (() => {
     if (!user) return err === 'sdk' ? 'No se pudo cargar la conexión con las cuentas. Revisa tu internet y vuelve a abrir la app.' : '';
     if (err) return err === 'permission-denied' ? 'La cuenta no dio permiso para guardar. Tus cambios quedan en este dispositivo.' : 'No se pudo conectar con tu cuenta. Tus cambios quedan en este dispositivo.';
     if (!docServer || !colServer) return offline() ? 'Sin conexión: los cambios quedan aquí y se suben cuando vuelva internet.' : 'Conectando…';
-    if (docPend || colPend) return offline() ? 'Sin conexión: los cambios se suben cuando vuelva internet.' : 'Guardando…';
+    if (docPend || colPend || pendingLocal()) return offline() ? 'Sin conexión: los cambios se suben cuando vuelva internet.' : 'Guardando…';
     return 'Todo guardado.';
   }
   function paint(){
@@ -1594,11 +1678,12 @@ const Nube = (() => {
   function bind(){
     if (!on) return;
     const d = $('#accDlg'), mail = () => $('#accMail').value.trim(), pass = () => $('#accPass').value;
-    const show = () => { say(''); $('#accPass').value = ''; d.showModal(); };
+    const show = () => { say(''); d.showModal(); };
     $('#accBtn').onclick = () => { dlg.close(); show(); };
     $('#homeAcc').onclick = () => { if (user){ syncSettingsUI(); dlg.showModal(); } else show(); };
     $('#accCancel').onclick = () => d.close();
     d.addEventListener('click', e => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => { $('#accPass').value = ''; });
     $('#accGoogle').onclick = () => act(() => auth.signInWithPopup(new fb.auth.GoogleAuthProvider()));
     const need = pw => {
       if (!mail()){ say('Escribe tu correo.'); $('#accMail').focus(); return false; }
@@ -1617,12 +1702,12 @@ const Nube = (() => {
     out.onclick = () => {
       if (!out.classList.contains('armed')){
         out.classList.add('armed'); out.textContent = 'Sí, cerrar sesión';
-        warn.textContent = unsynced() ? 'Hay cambios de este dispositivo que todavía no se subieron a tu cuenta. Si cierras sesión ahora, se pueden perder.'
+        warn.textContent = !meta.visto || unsynced() ? 'Todavía hay cosas de este dispositivo que no se subieron a tu cuenta. Si cierras sesión ahora, se quedan guardadas aquí, sin cuenta.'
           : 'Tus canciones y tu avance siguen guardados en tu cuenta. En este dispositivo se quitan hasta que vuelvas a entrar.';
         warn.hidden = false; return;
       }
-      out.disabled = true;
-      signOut().then(() => { out.disabled = false; disarm(); dlg.close(); });
+      out.disabled = true; out.textContent = 'Cerrando…';
+      signOut();
     };
     dlg.addEventListener('close', disarm);
     // Si la conexión con la cuenta falló, se reintenta al volver internet o al volver a la app.
@@ -1630,6 +1715,12 @@ const Nube = (() => {
     window.addEventListener('online', retry);
     window.addEventListener('offline', paint);
     document.addEventListener('visibilitychange', () => { if (!document.hidden && (!fb || err)) retry(); });
+    // Otra pestaña cerró la sesión o cambió de cuenta: esta se recarga para no seguir mostrando datos que ya no van.
+    window.addEventListener('storage', e => {
+      if (e.key !== 'piano:nube') return;
+      let o = null; try { o = JSON.parse(e.newValue || 'null'); } catch(x){}
+      if (meta.uid && (!o || o.uid !== meta.uid)) location.reload();
+    });
     paint();
   }
   return {on, start, bind, push, addSong, delSong};
@@ -4047,10 +4138,12 @@ function buildSession(){
   }
   return items;
 }
+/* Un paso del plan sirve si este dispositivo puede abrirlo: el ejercicio, el reto o la canción existen aquí. */
+const sesValid = it => !!it && !!SES_K[it.k] && (it.reto ? RETOS.some(r => r.id === it.reto) : !!findSong(it.key));
 function getSession(){
   const today = dayStr(new Date());
   if (sesStore.dia !== today || !sesStore.items.length){ sesStore.dia = today; sesStore.items = buildSession(); saveSes(); }
-  const ok = sesStore.items.filter(it => it && SES_K[it.k] && (it.reto ? RETOS.some(r => r.id === it.reto) : !!findSong(it.key)));
+  const ok = sesStore.items.filter(sesValid);
   if (ok.length !== sesStore.items.length){ sesStore.items = ok; saveSes(); }
   return sesStore.items;
 }
