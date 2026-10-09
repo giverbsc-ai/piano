@@ -524,7 +524,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
         <div class="pctrl">
           <button class="btn icon lv" id="btnLevel" hidden></button>
           <div class="seg" id="modeSeg" role="group" aria-label="Modo de práctica">
-            <button data-v="esperar">Esperar</button><button data-v="ritmo">Ritmo</button><button data-v="escuchar">Escuchar</button>
+            <button data-v="esperar">Esperar</button><button data-v="ritmo">Ritmo</button><button data-v="juntos">Juntos</button><button data-v="escuchar">Escuchar</button>
           </div>
           <div class="seg" id="speedSeg" role="group" aria-label="Velocidad">
             <button data-v="0.5">50%</button><button data-v="0.75">75%</button><button data-v="1">100%</button>
@@ -1317,7 +1317,7 @@ function press(m, src, vel = 0.8){
   const c = (down.get(m) || 0) + 1; down.set(m, c);
   if (c === 1){
     keyEls.get(m)?.classList.add('down');
-    if (!(src === 'midi' && settings.midiMute)) startVoice(m, vel);
+    if (!(src === 'midi' && settings.midiMute) && !(view === 'player' && P && P.mode === 'juntos' && autoCount.has(m))) startVoice(m, vel);
   }
   onPress(m);
 }
@@ -1326,7 +1326,7 @@ function release(m){
   if (c > 0){ down.set(m, c); return; }
   down.delete(m);
   keyEls.get(m)?.classList.remove('down');
-  releaseVoice(m);
+  if (!autoCount.has(m)) releaseVoice(m);
   onRelease(m);
 }
 const ptrs = new Map();
@@ -2088,6 +2088,7 @@ $('#impSave').onclick = async () => {
 const MODE_DESC = {
   esperar: 'Modo Esperar: las notas se detienen hasta que toques la tecla correcta.',
   ritmo: 'Modo Ritmo: las notas no se detienen; tócalas justo cuando lleguen a la franja roja.',
+  juntos: 'Modo Juntos: la app toca la pieza contigo, sin detenerse. Toca encima de su sonido; si te pierdes, la música sigue y te vuelves a enganchar.',
   escuchar: 'Modo Escuchar: la app lo toca por ti. Mira qué teclas se iluminan.'
 };
 
@@ -2095,7 +2096,7 @@ const MODE_DESC = {
 const AIDS = [
   {id:'metro', label:'Metrónomo', desc:'Marca el pulso con un clic y dibuja las líneas de compás. El primer tiempo de cada compás suena más agudo.'},
   {id:'dur', label:'Duración', f:1, desc:'Cuenta cuánto dura cada nota: mantén la tecla presionada hasta que termine su barra. Si la sueltas antes, vale la mitad.'},
-  {id:'tempo', label:'A tiempo', desc:'La tercera estrella solo se gana en modo Ritmo, tocando sin pausas. En modo Esperar el máximo son dos.'},
+  {id:'tempo', label:'A tiempo', desc:'La tercera estrella solo se gana tocando sin pausas, en modo Ritmo o Juntos. En modo Esperar el máximo son dos.'},
   {id:'dedos', label:'Digitación', f:1, desc:'Muestra en cada nota el número del dedo con el que conviene tocarla: 1 es el pulgar y 5 el meñique. Apágala cuando ya te la sepas.'},
   {id:'score', label:'Partitura', f:1, desc:'Muestra las notas en el pentagrama mientras tocas, para que aprendas a leer música.'},
   {id:'parts', label:'Por partes', desc:'Practica solo unos compases, o una sola mano mientras la app toca la otra.'},
@@ -2337,7 +2338,7 @@ function leavePlayer(){
 }
 function clearRun(){
   P.timers.forEach(clearTimeout); P.timers = []; clearAuto();
-  P.notes.forEach(n => { n.state = 0; n.short = false; });
+  P.notes.forEach(n => { n.state = 0; n.short = false; n.sung = false; });
   P.held.clear(); P.fb = new Map(); P.offs = [];
   Object.assign(P, {t: P.t0, waiting: false, hits: 0, errors: 0, shorts: 0, finished: false});
 }
@@ -2399,8 +2400,8 @@ function tick(accent){
   o.connect(gn); gn.connect(master);
   o.start(now); o.stop(now + 0.08);
 }
-function playFor(m, sec, timers){
-  startVoice(m, 0.75); autoKey(m, true);
+function playFor(m, sec, timers, vel = 0.75){
+  startVoice(m, vel); autoKey(m, true);
   timers.push(setTimeout(() => { autoKey(m, false); if (!autoCount.has(m) && !down.has(m)) releaseVoice(m); }, sec * 1000));
 }
 function flashKey(m, cls){
@@ -2474,12 +2475,14 @@ function step(dt){
     const k0 = Math.floor((tPrev - M.g0) / M.pulse + 1e-9), k1 = Math.floor((P.t - M.g0) / M.pulse + 1e-9);
     if (k1 > k0) tick(((k1 % M.meter) + M.meter) % M.meter === 0);
   }
-  const listen = P.mode === 'escuchar';
+  const listen = P.mode === 'escuchar', duo = P.mode === 'juntos';
   for (const n of P.notes){
     if (n.start > P.t) break;
     if (n.state === 0 && (listen || n.auto)){ n.state = 3; playFor(n.midi, n.dur / bps() * 0.92, P.timers); }
+    // Modo Juntos: la app hace sonar cada nota en su momento, la toque o no el alumno.
+    else if (duo && !n.auto && !n.sung){ n.sung = true; playFor(n.midi, n.dur / bps() * 0.92, P.timers, 0.6); }
   }
-  if (P.mode === 'ritmo'){
+  if (P.mode === 'ritmo' || duo){
     const tol = tolBeats();
     for (const n of P.notes){ if (n.start > P.t) break; if (n.state === 0 && P.t > n.start + tol) n.state = 2; }
   }
@@ -2597,7 +2600,7 @@ function feedback(){
     if (meas.size > 3) out.push(`<p>Hay fallos en ${meas.size} compases; estos son los que más pesan.</p>`);
   }
   if (P.mode === 'esperar' && slows >= Math.max(3, nG * 0.5)) out.push(`<p>Te detuviste a buscar la tecla en ${slows} de ${nG} notas. Es normal al empezar: repítelo hasta que salga seguido.</p>`);
-  if (P.mode === 'ritmo'){
+  if (P.mode !== 'esperar'){
     const avg = P.offs.length >= 4 ? P.offs.reduce((a, b) => a + b, 0) / P.offs.length : 0;
     if (avg > 0.07 || (late >= 3 && late > early)) out.push('<p>En general tocas un poco tarde: mira la barra antes de que llegue y prepara el dedo.</p>');
     else if (avg < -0.07 || (early >= 3 && early > late)) out.push('<p>En general te adelantas: espera a que la barra toque la franja roja.</p>');
@@ -2681,14 +2684,15 @@ function finish(){
                         : '<button class="btn primary" data-act="songs">Ir a las canciones</button><button class="btn" data-act="again">Repetir</button>';
         if (r.capped) buttons += ritmoBtn;
       } else {
-        tip = 'Consigue dos estrellas para pasar al siguiente ejercicio.' + (P.mode === 'ritmo' ? ' Prueba en modo Esperar o a menor velocidad.' : ' Mira la tecla iluminada antes de tocar.');
-        buttons = '<button class="btn primary" data-act="again">Repetir</button>' + (P.mode === 'ritmo' ? '<button class="btn" data-act="esperar">Modo Esperar</button>' : '');
+        tip = 'Consigue dos estrellas para pasar al siguiente ejercicio.' + (P.mode !== 'esperar' ? ' Prueba en modo Esperar o a menor velocidad.' : ' Mira la tecla iluminada antes de tocar.');
+        buttons = '<button class="btn primary" data-act="again">Repetir</button>' + (P.mode !== 'esperar' ? '<button class="btn" data-act="esperar">Modo Esperar</button>' : '');
       }
       buttons += fix + '<button class="btn" data-act="list">Ver ejercicios</button>';
     } else {
       let extra = '';
       if (P.mode === 'esperar' && stars >= 2){ tip = r.capped ? 'La tercera estrella se gana en modo Ritmo, sin pausas.' : 'Siguiente paso: prueba el modo Ritmo, sin pausas.'; extra = ritmoBtn; }
       else if (P.mode === 'esperar'){ tip = 'En este modo no hay prisa: mira la tecla iluminada antes de tocar.'; }
+      else if (P.mode === 'juntos' && stars >= 2){ tip = 'Siguiente paso: tócalo en modo Ritmo, sin que la app te acompañe.'; extra = ritmoBtn; }
       else if (stars < 2 && P.speed > 0.5){ tip = 'Baja la velocidad y vuelve a intentarlo.'; extra = '<button class="btn" data-act="slower">Más despacio</button>'; }
       else if (stars === 3 && P.speed < 1){ tip = 'Sube la velocidad para el siguiente reto.'; extra = '<button class="btn" data-act="faster">Más rápido</button>'; }
       if (P.level){
@@ -3026,7 +3030,7 @@ function frame(ts){
 /* ---------- Teoría: lecciones diarias ----------
    Cada lección es una fila de pasos. Los de lectura se pasan con «Siguiente»;
    los de tocar (find, staff, play) hay que aprobarlos para seguir. */
-const MODE_NAME = {esperar: 'Esperar', ritmo: 'Ritmo'};
+const MODE_NAME = {esperar: 'Esperar', ritmo: 'Ritmo', juntos: 'Juntos'};
 const TSONGS = [
   {id:'pulso', bpm:70, title:'Negras, blancas y redonda',
    goal:'Un solo dedo y una sola tecla: el Do central con el pulgar. Escucha el metrónomo: la negra dura un clic, la blanca dos y la redonda cuatro.',
