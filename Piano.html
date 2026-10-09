@@ -334,6 +334,17 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 .part .pd{display:block;font-size:.9rem;color:var(--ink-soft)}
 .dlg-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .dlg .done{align-self:flex-end}
+.acc-g{align-self:stretch}
+.acc-or{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:.9rem}
+.acc-or::before,.acc-or::after{content:"";flex:1;height:1px;background:var(--line)}
+.msg.ok{color:var(--ok)}
+.acc-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.acc-act{display:flex;flex-direction:column;gap:8px}
+.acc-act .linkbtn{align-self:flex-start}
+.linkbtn{border:0;background:none;padding:6px 0;color:var(--felt-ink);font-weight:500;text-decoration:underline;cursor:pointer}
+.linkbtn:disabled{opacity:.4;cursor:default}
+#accOut.armed{border-color:var(--bad);color:var(--bad)}
+#accMsg,#accWarn{margin:0}
 
 
 /* Retos */
@@ -440,6 +451,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
       <h1>¿Qué quieres hacer hoy?</h1>
       <div class="dev-now" id="devNowRow"><span id="homeDevTxt"></span><button class="btn" id="homeDevice">Cambiar dispositivo</button></div>
       <div class="rot" id="rotHint" role="status" hidden><span id="rotTxt"></span><button class="btn" id="rotDevice">Cambiar dispositivo</button></div>
+      <div class="dev-now" id="accRow" hidden><span id="homeAccTxt" role="status"></span><button class="btn" id="homeAcc">Entrar</button></div>
       <button class="hcard" id="goToday">
         <span class="hico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M9 15l2 2 4-4"/></svg></span>
         <span class="hk">Sesión de hoy</span>
@@ -612,6 +624,13 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 <dialog id="dlg" aria-labelledby="dlgTitle">
   <div class="dlg">
     <h2 id="dlgTitle">Ajustes</h2>
+    <div class="field" id="accField" hidden>
+      <div class="flabel">Cuenta</div>
+      <p class="fhelp" id="accState" role="status"></p>
+      <button class="btn" id="accBtn">Entrar o crear cuenta</button>
+      <button class="btn" id="accOut" hidden>Cerrar sesión</button>
+      <p class="fhelp" id="accWarn" hidden></p>
+    </div>
     <div class="field">
       <div class="flabel">Nombres de las notas</div>
       <div class="seg" id="lblSeg" role="group" aria-label="Nombres de las notas">
@@ -642,6 +661,31 @@ input[type=range]{width:100%;accent-color:var(--felt)}
     </div>
     <button class="btn primary done" id="dlgClose">Listo</button>
   </div>
+</dialog>
+
+<dialog id="accDlg" aria-labelledby="accTitle">
+  <form class="dlg" id="accForm" novalidate>
+    <div class="acc-top"><h2 id="accTitle">Tu cuenta</h2><button type="button" class="btn icon" id="accCancel" aria-label="Cerrar">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="fhelp">Con una cuenta, tus canciones y tu avance aparecen igual en el celular, la tablet y el computador. Lo que ya tengas en este dispositivo se suma a tu cuenta.</p>
+    <button type="button" class="btn acc-g" id="accGoogle">Continuar con Google</button>
+    <div class="acc-or">o con tu correo</div>
+    <div class="field">
+      <label class="flabel" for="accMail">Correo</label>
+      <input type="email" id="accMail" class="txt" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false">
+    </div>
+    <div class="field">
+      <label class="flabel" for="accPass">Contraseña</label>
+      <input type="password" id="accPass" class="txt" autocomplete="current-password">
+      <p class="fhelp">Mínimo 6 caracteres.</p>
+    </div>
+    <p class="msg" id="accMsg" role="status" hidden></p>
+    <div class="acc-act">
+      <button type="submit" class="btn primary" id="accIn">Entrar</button>
+      <button type="button" class="btn" id="accNew">Crear cuenta</button>
+      <button type="button" class="linkbtn" id="accForgot">Olvidé mi contraseña</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="impDlg" aria-labelledby="impTitle">
@@ -682,6 +726,9 @@ const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
+/* Cuenta compartida entre dispositivos: configuración web del proyecto de Firebase.
+   Con null la app no muestra nada de cuentas y guarda todo en el navegador, como antes. */
+const NUBE_CFG = null;
 
 /* ---------- Almacenamiento local ---------- */
 const store = {
@@ -1081,7 +1128,7 @@ function diffHTML(level, max){ return `<span class="diff d4" aria-hidden="true">
 /* ---------- Progreso y canciones propias (cuenta o navegador) ---------- */
 function hydrate(o){
   const base = {id: String(o.id), key: 'u:' + o.id, title: String(o.title || '').slice(0, 80) || 'Sin título',
-                bpm: Math.max(30, Math.min(240, +o.bpm || 100)), created: +o.created || 0, user: true, localOnly: !!o.localOnly};
+                bpm: Math.max(30, Math.min(240, +o.bpm || 100)), created: +o.created || 0, user: true, localOnly: !!o.localOnly, nube: +o.nube || 0};
   if (o.kind === 'ejercicio') return Object.assign(base, {kind: 'ejercicio', goal: String(o.goal || '').slice(0, 400),
     notes: String(o.notes || ''), left: String(o.left || ''), tema: String(o.tema || ''), generated: true});
   return Object.assign(base, {kind: 'midi', notas: String(o.notas || ''), nivel: +o.nivel >= 1 && +o.nivel <= 8 && Number.isInteger(+o.nivel) ? +o.nivel : 0, origin: 'Importada'});
@@ -1102,8 +1149,9 @@ function mergeBest(a, b){
 const Data = {
   mode: 'local', col: null, pref: null, q: Promise.resolve(),
   progress: store.get('piano:mejores', {}) || {},
-  items: (store.get('piano:mis-canciones', []) || []).map(o => hydrate(Object.assign({}, o, {localOnly: true}))),
-  saveLocal(){ store.set('piano:mis-canciones', this.items.filter(s => s.localOnly).map(s => Object.assign({id: s.id}, bodyOf(s)))); },
+  /* nube: 0 solo está en este navegador; 1 se envió a la cuenta; 2 la cuenta confirmó que la tiene. */
+  items: (store.get('piano:mis-canciones', []) || []).map(o => hydrate(Object.assign({}, o, {localOnly: !o.nube}))),
+  saveLocal(){ store.set('piano:mis-canciones', this.items.filter(s => s.localOnly || s.nube).map(s => Object.assign({id: s.id}, bodyOf(s), s.nube ? {nube: s.nube} : {}))); },
   async init(){
     try {
       if (!window.claude || typeof window.claude.use !== 'function') return;
@@ -1141,7 +1189,8 @@ const Data = {
     } catch(e){ /* sin cuenta: se sigue usando el navegador */ }
   },
   writeProgress(){
-    if (this.mode !== 'cloud') return;
+    Nube.push();
+    if (!this.pref) return;
     const body = {mejores: JSON.parse(JSON.stringify(this.progress))};
     this.q = this.q.then(() => this.pref.set(body)).catch(() => {});
   },
@@ -1154,12 +1203,13 @@ const Data = {
   },
   async addItem(body){
     body = Object.assign({}, body, {created: Date.now()});
-    if (this.mode === 'cloud'){
+    if (this.col){
       try { const ref = this.col.doc(); await ref.set(body); const hs = hydrate(Object.assign({id: ref.id}, body)); this.items.push(hs); return hs; }
       catch(e){ /* se guarda en el navegador */ }
     }
-    const hs = hydrate(Object.assign({id: 'l' + Date.now().toString(36), localOnly: true}, body));
+    const hs = hydrate(Object.assign({id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), localOnly: true}, body));
     this.items.push(hs); this.saveLocal();
+    Nube.addSong();
     return hs;
   },
   async deleteItem(id){
@@ -1169,11 +1219,425 @@ const Data = {
     store.set('piano:mejores', this.progress);
     if (settings.niveles && settings.niveles[s.key]){ delete settings.niveles[s.key]; saveSettings(); }
     this.saveLocal();
-    if (this.mode === 'cloud' && !s.localOnly){ try { await this.col.doc(id).delete(); } catch(e){} this.writeProgress(); }
+    if (s.nube) Nube.delSong(id);
+    Nube.push();
+    if (this.col && !s.localOnly && !s.nube){ try { await this.col.doc(id).delete(); } catch(e){} this.writeProgress(); }
   }
 };
 function findSong(key){
   return LESSONS.find(l => l.key === key) || SONGS.find(s => s.key === key) || TSONGS.find(s => s.key === key) || Data.items.find(s => s.key === key) || null;
+}
+
+/* ---------- Cuenta y sincronización entre dispositivos ----------
+   El navegador sigue siendo la copia de trabajo: la app abre al instante y funciona sin conexión.
+   Con la cuenta abierta, cada cambio se sube y los de otros dispositivos llegan en vivo.
+   Nada se pisa: de las estrellas queda la mejor marca, los días de racha se suman y cada canción
+   se reconoce por su id. No se escribe en la cuenta hasta haber leído lo que ya tiene el servidor.
+   En la cuenta: usuarios/{uid} guarda mejores, teoria, sesion y niveles; usuarios/{uid}/canciones/{id}, cada canción. */
+const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
+const canon = v => JSON.stringify(v, (k, x) => isObj(x) ? Object.keys(x).sort().reduce((o, n) => (o[n] = x[n], o), {}) : x);
+const joinDays = (a, b) => [...new Set((Array.isArray(a) ? a : []).concat(Array.isArray(b) ? b : []).filter(d => typeof d === 'string'))].sort().slice(-400);
+const Nube = (() => {
+  const on = !!NUBE_CFG && !IN_CLAUDE;
+  let fb = null, auth = null, db = null, FV = null, user = null, ref = null, col = null, unsubs = [];
+  let remote = null, docServer = false, docPend = false, C = null, colServer = false, colPend = false;
+  let err = '', loading = false, known = false, queued = false, runs = [], writes = [], hold = 0;
+  const meta = Object.assign({uid: '', borradas: [], niv: {}}, store.get('piano:nube', {}) || {});
+  if (!Array.isArray(meta.borradas)) meta.borradas = [];
+  if (!isObj(meta.niv)) meta.niv = {};
+  const saveMeta = () => store.set('piano:nube', meta);
+
+  /* Diferencias que hay que subir: solo las claves que cambian, para no pisar lo que escribe otro dispositivo. */
+  function mapPatch(r, m, del){
+    r = isObj(r) ? r : {};
+    const out = {}; let n = 0;
+    for (const k of Object.keys(m)){
+      if (!k || m[k] === undefined || canon(m[k]) === canon(r[k])) continue;
+      out[k] = JSON.parse(JSON.stringify(m[k])); n++;
+    }
+    if (del) for (const k of Object.keys(r)) if (!(k in m)){ out[k] = FV.delete(); n++; }
+    return n ? out : null;
+  }
+  function daysPatch(r, m){
+    const have = new Set(Array.isArray(r) ? r : []), add = m.filter(d => !have.has(d));
+    return add.length ? FV.arrayUnion(...add) : null;
+  }
+  function cleanBest(r){
+    const out = {};
+    if (isObj(r)) for (const [k, v] of Object.entries(r)) if (isObj(v) && v.stars >= 0 && v.stars <= 3) out[k] = {stars: +v.stars, pct: +v.pct || 0};
+    return out;
+  }
+  const planOf = o => {
+    const items = Array.isArray(o.items) ? o.items.filter(it => isObj(it) && (it.reto || it.key)) : [];
+    return o.dia && typeof o.dia === 'string' && items.some(it => it.done) ? {dia: o.dia, items} : null;
+  };
+
+  /* Cada sección sabe leer lo local, combinarlo con la cuenta, guardarlo aquí y decir qué falta subir. */
+  const SEC = {
+    mejores: {
+      raw: () => Data.progress,
+      merge: (r, l) => mergeBest(cleanBest(r), l),
+      apply(m){ Data.progress = m; store.set('piano:mejores', m); },
+      patch: (r, m) => mapPatch(r, m, false)
+    },
+    teoria: {
+      raw: () => ({pasos: teoStore.pasos, dias: teoStore.dias}),
+      merge(r, l){
+        r = isObj(r) ? r : {};
+        const pasos = {};
+        for (const src of [r.pasos, l.pasos]) if (isObj(src)) for (const [id, p] of Object.entries(src)){
+          if (!isObj(p)) continue;
+          const les = TEO.find(x => x.id === id);
+          if (!les){ if (!pasos[id]) pasos[id] = p; continue; }   // lección de una versión más nueva: se deja como está
+          if (teoDone(les)) continue;
+          const c = pasos[id] || {idx: 0, ok: []};
+          const ok = (Array.isArray(p.ok) ? p.ok : []).map(Number).filter(n => Number.isInteger(n) && n >= 0);
+          pasos[id] = {idx: Math.max(c.idx, Math.min(les.steps.length - 1, Math.max(0, Math.round(+p.idx) || 0))),
+                       ok: [...new Set(c.ok.concat(ok))].sort((a, b) => a - b)};
+        }
+        return {pasos, dias: joinDays(r.dias, l.dias)};
+      },
+      apply(m){ teoStore.pasos = m.pasos; teoStore.dias = m.dias; store.set('piano:teoria', teoStore); },
+      patch(r, m){
+        r = isObj(r) ? r : {};
+        const out = {}, p = mapPatch(r.pasos, m.pasos, true), d = daysPatch(r.dias, m.dias);
+        if (p) out.pasos = p;
+        if (d) out.dias = d;
+        return p || d ? out : null;
+      }
+    },
+    sesion: {
+      raw: () => ({dia: sesStore.dia, items: sesStore.items, dias: sesStore.dias, ult: sesStore.ult}),
+      /* El plan del día solo cuenta cuando ya tiene algún paso hecho: sin pasos hechos, cada dispositivo lo arma solo. */
+      merge(r, l){
+        r = isObj(r) ? r : {};
+        const ult = {};
+        for (const src of [r.ult, l.ult]) if (isObj(src)) for (const [k, d] of Object.entries(src)) if (typeof d === 'string' && (!ult[k] || d > ult[k])) ult[k] = d;
+        const a = planOf(r), b = planOf(l);
+        let p = a || b;
+        if (a && b){
+          if (a.dia !== b.dia) p = a.dia > b.dia ? a : b;
+          else if (a.items.map(sesId).join('|') === b.items.map(sesId).join('|')) p = {dia: a.dia, items: a.items.map((it, i) => Object.assign({}, it, {done: !!(it.done || b.items[i].done)}))};
+          else {
+            const da = a.items.filter(x => x.done).length, db = b.items.filter(x => x.done).length;
+            p = da !== db ? (da > db ? a : b) : (canon(a) < canon(b) ? a : b);
+          }
+        }
+        return {dia: p ? p.dia : '', items: p ? p.items : [], dias: joinDays(r.dias, l.dias), ult};
+      },
+      apply(m){
+        sesStore.dias = m.dias; sesStore.ult = m.ult;
+        if (m.dia && m.dia === dayStr(new Date())){ sesStore.dia = m.dia; sesStore.items = JSON.parse(JSON.stringify(m.items)); }
+        store.set('piano:sesion', sesStore);
+      },
+      patch(r, m){
+        r = isObj(r) ? r : {};
+        const out = {}, u = mapPatch(r.ult, m.ult, false), d = daysPatch(r.dias, m.dias);
+        if (u) out.ult = u;
+        if (d) out.dias = d;
+        const plan = !!m.dia && (m.dia !== r.dia || canon(m.items) !== canon(r.items));
+        if (plan){ out.dia = m.dia; out.items = JSON.parse(JSON.stringify(m.items)); }
+        return u || d || plan ? out : null;
+      }
+    },
+    /* La dificultad elegida en cada canción: gana el último cambio. Lo que se cambió aquí desde la última subida manda. */
+    niveles: {
+      lww: true,
+      raw: () => settings.niveles || {},
+      merge(r, l){
+        const out = {};
+        if (isObj(r)) for (const [k, v] of Object.entries(r)) if (Number.isInteger(v) && v >= 1 && v <= 8) out[k] = v;
+        for (const k of new Set(Object.keys(meta.niv).concat(Object.keys(l)))) if (l[k] !== meta.niv[k]){ if (l[k] == null) delete out[k]; else out[k] = l[k]; }
+        return out;
+      },
+      apply(m){ settings.niveles = m; saveSettings(); },
+      patch: (r, m) => mapPatch(r, m, true)
+    }
+  };
+
+  function tooFast(list, max, ms){
+    const now = Date.now();
+    while (list.length && now - list[0] > ms) list.shift();
+    list.push(now);
+    return list.length > max;
+  }
+  function push(){
+    if (!user || queued) return;
+    queued = true;
+    Promise.resolve().then(() => { queued = false; sync(); });
+  }
+  function sync(){
+    if (!user || !remote) return;
+    if (Date.now() < hold) return;
+    if (tooFast(runs, 80, 10000)){ hold = Date.now() + 30000; setTimeout(push, 30500); return; }
+    // Solo se escribe cuando el servidor ya contestó por el avance y por las canciones:
+    // así las canciones repetidas se unen antes de subir sus estrellas.
+    const live = docServer && colServer;
+    const out = {}, done = []; let any = false, changed = false;
+    for (const name of Object.keys(SEC)){
+      const S = SEC[name];
+      if (S.lww && !live) continue;
+      const before = canon(S.raw());
+      const m = S.merge(remote[name], S.raw());
+      if (canon(m) !== before){ S.apply(m); if (canon(S.raw()) !== before) changed = true; }
+      if (!live) continue;
+      const p = S.patch(remote[name], m);
+      if (p){ out[name] = p; any = true; }
+      done.push([name, S, m]);
+    }
+    const slow = any && tooFast(writes, 40, 60000);
+    if (slow){ hold = Date.now() + 60000; setTimeout(push, 60500); }
+    else {
+      if (any) ref.set(out, {merge: true}).catch(fail);
+      // Lo que se acaba de enviar ya cuenta como parte de la cuenta: el servidor lo confirma después.
+      for (const [name, S, m] of done){
+        remote[name] = JSON.parse(JSON.stringify(m));
+        if (S.lww){ meta.niv = JSON.parse(JSON.stringify(m)); saveMeta(); }
+      }
+    }
+    if (changed){ sesInvalidate(); onDataChange(); }
+  }
+
+  /* Canciones propias */
+  const sig = s => s.kind === 'midi' ? 'm|' + s.title + '|' + s.notas : 'e|' + s.title + '|' + s.notes + '|' + s.left;
+  function moveKeys(from, to){
+    for (const suf of LV_SUF){
+      const a = Data.progress[from + suf]; if (!a) continue;
+      const b = Data.progress[to + suf];
+      if (!b || a.stars > b.stars || (a.stars === b.stars && a.pct > b.pct)) Data.progress[to + suf] = a;
+      delete Data.progress[from + suf];
+    }
+    store.set('piano:mejores', Data.progress);
+    if (settings.niveles && settings.niveles[from]){ if (!settings.niveles[to]) settings.niveles[to] = settings.niveles[from]; delete settings.niveles[from]; saveSettings(); }
+    if (sesStore.ult[from]){ if (!sesStore.ult[to] || sesStore.ult[from] > sesStore.ult[to]) sesStore.ult[to] = sesStore.ult[from]; delete sesStore.ult[from]; store.set('piano:sesion', sesStore); }
+    push();
+  }
+  function syncSongs(){
+    if (!user || !C) return;
+    let changed = false, dirty = false;
+    if (colServer && meta.borradas.length){
+      // Canciones borradas aquí mientras no había conexión con la cuenta.
+      for (const id of meta.borradas) if (C.has(id)){ col.doc(id).delete().catch(() => {}); C.delete(id); }
+      meta.borradas = []; saveMeta();
+    }
+    const gone = new Set(meta.borradas), sigs = new Map();
+    for (const [id, c] of C){
+      if (gone.has(id)) continue;
+      const st = c.pend ? 1 : 2;
+      const hs = hydrate(Object.assign({}, c.body, {id, nube: st, localOnly: false}));
+      sigs.set(sig(hs), id);
+      const i = Data.items.findIndex(s => s.id === id);
+      if (i < 0){ Data.items.push(hs); changed = true; continue; }
+      const L = Data.items[i];
+      if (canon(bodyOf(L)) !== canon(bodyOf(hs))){ hs.nube = Math.max(st, L.nube || 0); Data.items[i] = hs; changed = true; }
+      else if (L.localOnly || (L.nube || 0) < st){ L.localOnly = false; L.nube = st; dirty = true; }
+    }
+    if (colServer) for (const L of Data.items.slice()){
+      if (C.has(L.id) || (!L.localOnly && !L.nube)) continue;
+      const drop = () => { Data.items = Data.items.filter(x => x !== L); changed = true; };
+      if (L.nube === 2){ drop(); continue; }             // la borraron en otro dispositivo
+      if (L.noSube) continue;
+      const twin = L.localOnly ? sigs.get(sig(L)) : null;
+      if (twin){ moveKeys(L.key, 'u:' + twin); drop(); continue; }   // la misma canción ya estaba en la cuenta
+      const body = JSON.parse(JSON.stringify(bodyOf(L)));
+      if (JSON.stringify(body).length > 900000){ L.noSube = true; continue; }
+      L.localOnly = false; L.nube = 1; dirty = true;
+      sigs.set(sig(L), L.id);
+      col.doc(L.id).set(body).catch(() => { L.noSube = true; L.nube = 0; L.localOnly = true; Data.saveLocal(); });
+    }
+    if (changed || dirty){ Data.items.sort((a, b) => a.created - b.created); Data.saveLocal(); }
+    if (changed){ sesInvalidate(); onDataChange(); }
+    push();
+  }
+  function addSong(){ syncSongs(); }
+  function delSong(id){
+    if (col) col.doc(id).delete().catch(() => {});
+    else { meta.borradas.push(id); saveMeta(); }
+  }
+
+  /* Sesión de la cuenta */
+  function detach(){
+    unsubs.forEach(u => { try { u(); } catch(e){} });
+    unsubs = []; ref = col = remote = C = null;
+    docServer = docPend = colServer = colPend = false;
+  }
+  function fail(e){
+    err = (e && e.code) || 'error';
+    detach(); paint();
+  }
+  function wipeLocal(){
+    Data.items = Data.items.filter(s => s.localOnly && !s.nube);
+    Data.saveLocal();
+    Data.progress = {}; store.set('piano:mejores', Data.progress);
+    teoStore.pasos = {}; teoStore.dias = []; store.set('piano:teoria', teoStore);
+    sesStore.dia = ''; sesStore.items = []; sesStore.dias = []; sesStore.ult = {}; store.set('piano:sesion', sesStore);
+    settings.niveles = {}; saveSettings();
+    meta.uid = ''; meta.borradas = []; meta.niv = {}; saveMeta();
+  }
+  function open(u){
+    if (user && user.uid === u.uid && ref) return;
+    detach();
+    if (meta.uid && meta.uid !== u.uid) wipeLocal();   // quedaban datos de otra cuenta en este dispositivo
+    meta.uid = u.uid; saveMeta();
+    user = u; err = ''; hold = 0;
+    Data.mode = 'cloud';
+    ref = db.collection('usuarios').doc(u.uid);
+    col = ref.collection('canciones');
+    const mine = ref;
+    unsubs.push(ref.onSnapshot({includeMetadataChanges: true}, snap => {
+      if (ref !== mine) return;
+      remote = (snap.exists && snap.data()) || {};
+      if (!snap.metadata.fromCache) docServer = true;
+      docPend = snap.metadata.hasPendingWrites;
+      sync(); paint();
+    }, fail));
+    unsubs.push(col.onSnapshot({includeMetadataChanges: true}, qs => {
+      if (ref !== mine) return;
+      C = new Map();
+      qs.forEach(d => C.set(d.id, {body: d.data(), pend: d.metadata.hasPendingWrites}));
+      if (!qs.metadata.fromCache) colServer = true;
+      colPend = qs.metadata.hasPendingWrites;
+      syncSongs(); paint();
+    }, fail));
+    paint(); onDataChange();
+  }
+  function close(){
+    detach(); user = null;
+    if (!Data.pref) Data.mode = 'local';
+    paint(); onDataChange();
+  }
+  const loadScript = src => new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => { s.remove(); rej(new Error(src)); };
+    document.head.appendChild(s);
+  });
+  async function start(){
+    if (!on || fb || loading) return;
+    loading = true; paint();
+    try {
+      for (const f of ['app', 'auth', 'firestore']) if (!(window.firebase && (f === 'app' ? window.firebase.initializeApp : window.firebase[f]))) await loadScript(`lib/firebase-${f}-compat.js`);
+      const F = window.firebase;
+      if (!F.apps.length) F.initializeApp(NUBE_CFG);
+      auth = F.auth(); db = F.firestore(); FV = F.firestore.FieldValue;
+      auth.languageCode = 'es';
+      try { await db.enablePersistence({synchronizeTabs: true}); } catch(e){ /* sin copia sin conexión: sigue funcionando en línea */ }
+      fb = F; err = '';
+      auth.onAuthStateChanged(u => { known = true; if (u) open(u); else close(); });
+    } catch(e){ err = 'sdk'; }
+    loading = false; paint();
+  }
+  const unsynced = () => !!user && (!docServer || !colServer || docPend || colPend || !!err);
+  async function signOut(){
+    if (!auth) return;
+    try { await Promise.race([db.waitForPendingWrites(), new Promise(r => setTimeout(r, 4000))]); } catch(e){}
+    detach(); user = null;
+    wipeLocal();
+    try { await auth.signOut(); } catch(e){}
+    goHome();
+  }
+
+  /* Textos y botones */
+  const offline = () => navigator.onLine === false;
+  const who = () => (user && (user.email || user.displayName)) || 'tu cuenta';
+  function status(){
+    if (!on) return '';
+    if (!user) return err === 'sdk' ? 'No se pudo cargar la conexión con las cuentas. Revisa tu internet y vuelve a abrir la app.' : '';
+    if (err) return err === 'permission-denied' ? 'La cuenta no dio permiso para guardar. Tus cambios quedan en este dispositivo.' : 'No se pudo conectar con tu cuenta. Tus cambios quedan en este dispositivo.';
+    if (!docServer || !colServer) return offline() ? 'Sin conexión: los cambios quedan aquí y se suben cuando vuelva internet.' : 'Conectando…';
+    if (docPend || colPend) return offline() ? 'Sin conexión: los cambios se suben cuando vuelva internet.' : 'Guardando…';
+    return 'Todo guardado.';
+  }
+  function paint(){
+    if (!on) return;
+    const st = status(), waiting = !known && !err && !!meta.uid;
+    $('#accField').hidden = false; $('#accRow').hidden = false;
+    $('#accState').textContent = user ? `Entraste como ${who()}. ${st}`
+      : waiting ? 'Conectando con tu cuenta…'
+      : st || 'Entra con una cuenta para ver tus canciones y tu avance en el celular, la tablet y el computador.';
+    $('#accBtn').hidden = !!user || waiting;
+    $('#accOut').hidden = !user;
+    $('#homeAccTxt').textContent = user ? `Cuenta: ${who()}. ${st}`
+      : waiting ? 'Conectando con tu cuenta…'
+      : 'Sin cuenta: tus canciones y tu avance solo están en este dispositivo.';
+    $('#homeAcc').textContent = user ? 'Cuenta' : 'Entrar';
+    $('#homeAcc').hidden = waiting;
+  }
+  const AUTH_ERR = {
+    'auth/invalid-email': 'Ese correo no es válido.',
+    'auth/missing-email': 'Escribe tu correo.',
+    'auth/missing-password': 'Escribe tu contraseña.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese correo. Toca «Entrar».',
+    'auth/invalid-credential': 'El correo o la contraseña no coinciden.',
+    'auth/invalid-login-credentials': 'El correo o la contraseña no coinciden.',
+    'auth/wrong-password': 'El correo o la contraseña no coinciden.',
+    'auth/user-not-found': 'No hay una cuenta con ese correo. Toca «Crear cuenta».',
+    'auth/user-disabled': 'Esta cuenta está desactivada.',
+    'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos y prueba otra vez.',
+    'auth/network-request-failed': 'No hay conexión a internet.',
+    'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes o entra con tu correo.',
+    'auth/operation-not-supported-in-this-environment': 'Aquí no se puede abrir la ventana de Google. Entra con tu correo.',
+    'auth/operation-not-allowed': 'Esta forma de entrar todavía no está activada.',
+    'auth/unauthorized-domain': 'Este sitio todavía no está autorizado para iniciar sesión.',
+    'auth/account-exists-with-different-credential': 'Ya tienes una cuenta con ese correo. Entra con tu correo y contraseña.'
+  };
+  const QUIET = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/user-cancelled'];
+  function say(t, ok){ const m = $('#accMsg'); m.textContent = t || ''; m.hidden = !t; m.classList.toggle('ok', !!ok); }
+  async function act(fn, done){
+    if (!auth){ say(err === 'sdk' ? 'No se pudo cargar la conexión con las cuentas. Revisa tu internet.' : 'Cargando… prueba otra vez en un momento.'); start(); return; }
+    const btns = [...$('#accDlg').querySelectorAll('button')];
+    btns.forEach(b => b.disabled = true); say('');
+    try { await fn(); if (done) done(); else $('#accDlg').close(); }
+    catch(e){ if (!QUIET.includes(e && e.code)) say(AUTH_ERR[e && e.code] || 'No se pudo entrar. Prueba otra vez.'); }
+    btns.forEach(b => b.disabled = false);
+  }
+  function bind(){
+    if (!on) return;
+    const d = $('#accDlg'), mail = () => $('#accMail').value.trim(), pass = () => $('#accPass').value;
+    const show = () => { say(''); $('#accPass').value = ''; d.showModal(); };
+    $('#accBtn').onclick = () => { dlg.close(); show(); };
+    $('#homeAcc').onclick = () => { if (user){ syncSettingsUI(); dlg.showModal(); } else show(); };
+    $('#accCancel').onclick = () => d.close();
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+    $('#accGoogle').onclick = () => act(() => auth.signInWithPopup(new fb.auth.GoogleAuthProvider()));
+    const need = pw => {
+      if (!mail()){ say('Escribe tu correo.'); $('#accMail').focus(); return false; }
+      if (pw && !pass()){ say('Escribe tu contraseña.'); $('#accPass').focus(); return false; }
+      return true;
+    };
+    $('#accForm').addEventListener('submit', e => { e.preventDefault(); if (need(true)) act(() => auth.signInWithEmailAndPassword(mail(), pass())); });
+    $('#accNew').onclick = () => {
+      if (!need(true)) return;
+      if (pass().length < 6){ say(AUTH_ERR['auth/weak-password']); $('#accPass').focus(); return; }
+      act(() => auth.createUserWithEmailAndPassword(mail(), pass()));
+    };
+    $('#accForgot').onclick = () => { if (need(false)) act(() => auth.sendPasswordResetEmail(mail()), () => say('Te enviamos un correo para cambiar la contraseña. Revisa también la carpeta de correo no deseado.', true)); };
+    const out = $('#accOut'), warn = $('#accWarn');
+    const disarm = () => { out.classList.remove('armed'); out.textContent = 'Cerrar sesión'; warn.hidden = true; };
+    out.onclick = () => {
+      if (!out.classList.contains('armed')){
+        out.classList.add('armed'); out.textContent = 'Sí, cerrar sesión';
+        warn.textContent = unsynced() ? 'Hay cambios de este dispositivo que todavía no se subieron a tu cuenta. Si cierras sesión ahora, se pueden perder.'
+          : 'Tus canciones y tu avance siguen guardados en tu cuenta. En este dispositivo se quitan hasta que vuelvas a entrar.';
+        warn.hidden = false; return;
+      }
+      out.disabled = true;
+      signOut().then(() => { out.disabled = false; disarm(); dlg.close(); });
+    };
+    dlg.addEventListener('close', disarm);
+    // Si la conexión con la cuenta falló, se reintenta al volver internet o al volver a la app.
+    const retry = () => { paint(); if (!fb) start(); else if (err && !ref && auth.currentUser){ err = ''; open(auth.currentUser); } };
+    window.addEventListener('online', retry);
+    window.addEventListener('offline', paint);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && (!fb || err)) retry(); });
+    paint();
+  }
+  return {on, start, bind, push, addSong, delSong};
+})();
+/* Texto al pie de las listas: dónde queda guardado el avance. */
+function syncNote(all){
+  if (Data.mode === 'cloud') return all ? 'Tu progreso y tus canciones se guardan en tu cuenta: los ves igual en el celular, la tablet y el computador.' : 'Tu avance se guarda en tu cuenta.';
+  return (all ? 'Tu progreso se guarda en este navegador.' : 'Tu avance se guarda en este navegador.') + (Nube.on ? ' Entra con tu cuenta en Ajustes para verlo en todos tus dispositivos.' : '');
 }
 
 /* ---------- Sonido ---------- */
@@ -1637,7 +2101,7 @@ function renderList(){
   let h = `<div class="list-inner"><h1>Aprender</h1>
     <div class="seg ltabs" role="group" aria-label="Sección">${tabBtn('hoy', 'Hoy')}${tabBtn('ejercicios', 'Ejercicios')}${tabBtn('retos', 'Retos')}${tabBtn('canciones', 'Canciones')}</div>`;
   h += tab === 'hoy' ? renderToday() : tab === 'retos' ? renderRetos() : tab === 'canciones' ? renderSongs() : renderLessons();
-  h += `<p class="sync">${Data.mode === 'cloud' ? 'Tu progreso, tus ejercicios y tus canciones se guardan en tu cuenta: los ves igual en el celular y en el computador.' : 'Tu progreso se guarda en este navegador.'}</p></div>`;
+  h += `<p class="sync">${syncNote(true)}</p></div>`;
   el.innerHTML = h;
   el.scrollTop = top;
 }
@@ -2319,7 +2783,7 @@ function setLevel(n){
   const lv = songLevels(P.song);
   n = pickLevel(lv.avail, n, P.song);
   settings.niveles = settings.niveles || {};
-  settings.niveles[P.song.key] = n; saveSettings();
+  settings.niveles[P.song.key] = n; saveSettings(); Nube.push();
   if (n !== P.level){ P.level = n; buildRun(); buildSongKeyboard(); }
   reset();
 }
@@ -3226,7 +3690,7 @@ const TEO = [
 TEO.forEach((l, i) => { l.index = i; l.key = 'teoria:' + l.id; });
 
 const teoStore = Object.assign({pasos: {}, dias: []}, store.get('piano:teoria', {}) || {});
-const saveTeo = () => store.set('piano:teoria', teoStore);
+const saveTeo = () => { store.set('piano:teoria', teoStore); Nube.push(); };
 const teoDone = l => !!Data.progress[l.key];
 const teoOpen = l => l.index === 0 || teoDone(TEO[l.index - 1]);
 const isTask = st => st.k !== 'text';
@@ -3359,7 +3823,7 @@ function renderTeoList(){
       <span class="num${d ? ' done' : ''}" aria-hidden="true">${l.index + 1}</span>
       <span><span class="t">${l.title}</span><span class="o">Día ${l.index + 1}. ${l.sum}</span></span>${right}</button>`;
   }
-  h += `</section><p class="sync">${Data.mode === 'cloud' ? 'Tu avance se guarda en tu cuenta.' : 'Tu avance se guarda en este navegador.'}</p></div>`;
+  h += `</section><p class="sync">${syncNote(false)}</p></div>`;
   el.innerHTML = h; el.scrollTop = top;
 }
 $('#teoList').addEventListener('click', e => { const b = e.target.closest('[data-teo]'); if (b && !b.disabled) openLesson(+b.dataset.teo); });
@@ -3531,7 +3995,7 @@ const sesStore = Object.assign({dia: '', items: [], dias: [], ult: {}}, store.ge
 if (!Array.isArray(sesStore.items)) sesStore.items = [];
 if (!Array.isArray(sesStore.dias)) sesStore.dias = [];
 if (!sesStore.ult || typeof sesStore.ult !== 'object') sesStore.ult = {};
-const saveSes = () => store.set('piano:sesion', sesStore);
+const saveSes = () => { store.set('piano:sesion', sesStore); Nube.push(); };
 const SES_K = {warm: 'Calentamiento', rev: 'Repaso', new: 'Lo nuevo', song: 'Canción'};
 const WARM = ['cinco-do', 'cinco-sol', 'escala', 'escala-sol', 'izquierda', 'arpegio', 'acorde-izq', 'tres-acordes-izq'];
 const starsAt = key => (Data.progress[key]?.stars || 0);
@@ -3836,7 +4300,9 @@ buildFree();
 updateDisplay();
 updateRecUI();
 Data.init();
+Nube.bind();
 if (DEVICES[settings.device]) goHome(); else goDevice();
+Nube.start();
 takePending();
 window.addEventListener('pageshow', e => { if (e.persisted) takePending(); });
 })();
