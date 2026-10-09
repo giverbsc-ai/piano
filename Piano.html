@@ -46,7 +46,7 @@
 [hidden]{display:none !important}
 html{height:100%;background:var(--lacquer);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
 body{height:100%;margin:0;display:flex;flex-direction:column;overflow:hidden;background:var(--room);color:var(--ink);
-  font:400 16px/1.45 "Alegreya Sans","Segoe UI",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+  font:400 1rem/1.45 "Alegreya Sans","Segoe UI",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
 button,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 svg.i{width:20px;height:20px;flex:none}
@@ -367,6 +367,47 @@ input[type=range]{width:100%;accent-color:var(--felt)}
   .card.haslv .aids{flex:1 1 100%;order:4}
   .card.haslv .actions{flex:1 1 100%;order:5}
 }
+/* Elegir dispositivo */
+.dev-in{max-width:760px;margin:0 auto}
+.dev-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.dev-opt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:16px 8px 14px;min-height:132px;
+  border:1px solid var(--line);border-radius:18px;background:var(--surface);cursor:pointer;text-align:center}
+.dev-opt:hover{border-color:var(--ink-soft)}
+.dev-opt svg{width:72px;height:50px;color:var(--felt-ink);margin-bottom:4px}
+.dev-opt .dn{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.25rem;line-height:1.15}
+.dev-opt .dp{color:var(--ink-soft);font-size:.95rem}
+.dev-opt .dtag{position:absolute;top:8px;right:10px;font-size:.78rem;font-weight:700;color:var(--felt-ink)}
+.dev-opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dev-opt.wide{grid-column:1 / -1}
+@media (min-width:700px){ .dev-grid{grid-template-columns:repeat(5,1fr)} .dev-opt.wide{grid-column:auto} }
+.rot{margin:0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+
+/* Ajustes según el dispositivo elegido (data-dev en la raíz; el tamaño de letra se fija desde el código) */
+:root[data-dev^="tab"] .btn{min-height:46px;padding:0 16px}
+:root[data-dev^="tab"] .btn.icon{width:46px;padding:0}
+:root[data-dev^="tab"] .seg button{min-height:44px;padding:0 14px}
+:root[data-dev^="tab"] .chip{min-height:40px;padding:0 14px}
+:root[data-dev^="tab"] .tab{min-height:42px;padding:0 18px}
+:root[data-dev^="tab"] .icon-btn{width:48px;height:48px}
+:root[data-dev^="tab"] svg.i{width:23px;height:23px}
+:root[data-dev^="tab"] .num{width:36px;height:36px}
+:root[data-dev^="tab"] .song{grid-template-columns:40px 1fr auto;padding:14px 10px}
+:root[data-dev^="tab"] .lbl{font-size:clamp(11px,1.5vw,17px)}
+:root[data-dev^="tab"] .list-inner,:root[data-dev="pc"] .list-inner{max-width:780px}
+:root[data-dev^="tab"] .teo-in,:root[data-dev="pc"] .teo-in{max-width:760px}
+:root[data-dev^="tab"] .card{max-width:540px}
+:root[data-dev="pc"] .card{max-width:460px}
+:root[data-dev="tab-v"] .home-in{max-width:760px}
+/* En horizontal, mientras se toca, el teclado en pantalla es más bajo para dar lugar a la partitura y a las barras */
+:root[data-dev="tab-h"] body[data-view="player"] .board,:root[data-dev="tab-h"] body[data-view="reto"] .board{flex-basis:clamp(150px,24%,220px)}
+:root[data-dev="pc"] body[data-view="player"] .board,:root[data-dev="pc"] body[data-view="reto"] .board{flex-basis:clamp(150px,27%,260px)}
+@media (min-width:900px){
+  :root[data-dev="tab-h"] .home-in,:root[data-dev="pc"] .home-in{max-width:1120px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+  :root[data-dev="tab-h"] .home-in > h1,:root[data-dev="pc"] .home-in > h1,:root[data-dev="tab-h"] .home-in > .rot,:root[data-dev="pc"] .home-in > .rot{grid-column:1 / -1}
+  :root[data-dev="tab-h"] .hcard,:root[data-dev="pc"] .hcard{grid-template-columns:1fr;align-content:start;gap:6px;padding:22px}
+  :root[data-dev="tab-h"] .hico,:root[data-dev="pc"] .hico{grid-row:auto;margin-bottom:8px}
+}
+
 @media (prefers-reduced-motion:reduce){
   .key.guide.wait,.btn.recording .rec-dot{animation:none}
 }
@@ -392,6 +433,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
   <section class="view" id="viewHome">
     <div class="home"><div class="home-in">
       <h1>¿Qué quieres hacer hoy?</h1>
+      <p class="rot" id="rotHint" role="status" hidden></p>
       <button class="hcard" id="goToday">
         <span class="hico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M9 15l2 2 4-4"/></svg></span>
         <span class="hk">Sesión de hoy</span>
@@ -410,6 +452,14 @@ input[type=range]{width:100%;accent-color:var(--felt)}
         <span class="hd">El piano para tocar libre, los ejercicios, los retos y las canciones.</span>
         <span class="hs" id="homePra"></span>
       </button>
+    </div></div>
+  </section>
+
+  <section class="view" id="viewDevice" hidden>
+    <div class="home"><div class="dev-in">
+      <h1>¿Dónde vas a usar la app?</h1>
+      <p class="lead">Elige tu dispositivo y cómo lo vas a poner. Con eso se ajustan el tamaño de la letra, la partitura y el teclado. Puedes cambiarlo cuando quieras en Ajustes.</p>
+      <div class="dev-grid" id="devGrid"></div>
     </div></div>
   </section>
 
@@ -571,6 +621,11 @@ input[type=range]{width:100%;accent-color:var(--felt)}
       </div>
     </div>
     <div class="field">
+      <div class="flabel">Dispositivo</div>
+      <p class="fhelp" id="devNow"></p>
+      <button class="btn" id="btnDevice">Cambiar dispositivo</button>
+    </div>
+    <div class="field">
       <div class="flabel">Teclado físico por USB</div>
       <p class="fhelp">Si tu teclado tiene salida USB-MIDI, conéctalo al computador y la app reconocerá lo que tocas, también en los ejercicios y canciones.</p>
       <button class="btn" id="btnMidi">Conectar teclado</button>
@@ -623,6 +678,30 @@ const store = {
 const settings = Object.assign({labels:'es', volume:0.8, theme:'auto', midiMute:true, mode:'esperar', speed:1, learnTab:'ejercicios'}, store.get('piano:ajustes', {}));
 if (!['hoy', 'ejercicios', 'retos', 'canciones'].includes(settings.learnTab)) settings.learnTab = 'ejercicios';
 const saveSettings = () => store.set('piano:ajustes', settings);
+
+/* ---------- Dispositivo: el alumno elige dónde usa la app y la pantalla se ajusta ----------
+   fs: tamaño de letra; k: escala de la partitura y de los textos sobre las barras; keyW: ancho de tecla al tocar libre. */
+const DEVICES = {
+  'cel-v': {name: 'Celular', pos: 'v', fs: 16, k: 1, keyW: 46},
+  'cel-h': {name: 'Celular', pos: 'h', fs: 16, k: 1, keyW: 46},
+  'tab-v': {name: 'Tablet', pos: 'v', fs: 19, k: 1.35, keyW: 58},
+  'tab-h': {name: 'Tablet', pos: 'h', fs: 18, k: 1.25, keyW: 58},
+  'pc': {name: 'Computador', pos: '', fs: 17, k: 1.15, keyW: 42}
+};
+function guessDevice(){
+  const w = window.innerWidth, h = window.innerHeight;
+  if (!matchMedia('(pointer: coarse)').matches) return 'pc';
+  return (Math.min(w, h) >= 600 ? 'tab' : 'cel') + (w > h ? '-h' : '-v');
+}
+let DEV = DEVICES['cel-v'];
+function applyDevice(){
+  const id = DEVICES[settings.device] ? settings.device : guessDevice();
+  DEV = DEVICES[id];
+  root.dataset.dev = id;
+  root.style.fontSize = DEV.fs + 'px';
+}
+applyDevice();
+const devLabel = id => { const d = DEVICES[id]; return d ? d.name + (d.pos === 'v' ? ' en vertical' : d.pos === 'h' ? ' en horizontal' : '') : 'Sin elegir'; };
 
 /* ---------- Notas ---------- */
 const PCN = {
@@ -1172,7 +1251,7 @@ function refreshLabels(){
 }
 function freeWhiteCount(){
   const w = keysEl.clientWidth || window.innerWidth;
-  return Math.max(8, Math.min(36, Math.round(w / (fine ? 42 : 46))));
+  return Math.max(8, Math.min(36, Math.round(w / DEV.keyW)));
 }
 
 /* ---------- Entrada: toque, mouse, teclado del computador, MIDI ---------- */
@@ -2062,9 +2141,15 @@ function buildSongKeyboard(){
 }
 function layoutScore(){
   const stage = $('#stage');
-  let h = 0;
-  if (P && aidOn('score')){ h = P.sheet.staves.length === 2 ? 150 : 90; if (stage.clientHeight < h + 90) h = 0; }
-  if (P) P.scoreH = h;
+  let h = 0, k = DEV.k;
+  if (P && aidOn('score')){
+    const base = P.sheet.staves.length === 2 ? 150 : 90;
+    // La partitura grande solo se usa si deja lugar suficiente para las barras.
+    if (stage.clientHeight < base * k + 150) k = 1;
+    h = Math.round(base * k);
+    if (stage.clientHeight < h + 90) h = 0;
+  }
+  if (P){ P.scoreH = h; P.scoreK = k; }
   stage.style.setProperty('--sh', h + 'px');
   scoreCv.hidden = !h;
   if (h){
@@ -2130,7 +2215,7 @@ function renderAids(){
   let d = 'Toca una ayuda para activarla o desactivarla. Las que tienen ✓ están activas.' + (P.ctx ? ' En esta lección algunas están fijas.' : '');
   if (a){
     d = `${a.label} ${aidOn(a.id) ? (a.f ? 'activada' : 'activado') : (a.f ? 'desactivada' : 'desactivado')}. ${a.desc}`;
-    if (a.id === 'score' && aidOn('score') && !P.scoreH) d += ' En esta pantalla no cabe: pon el celular en vertical.';
+    if (a.id === 'score' && aidOn('score') && !P.scoreH) d += ` En esta pantalla no cabe: pon ${DEV.name === 'Tablet' ? 'la tablet' : DEV.name === 'Celular' ? 'el celular' : 'la ventana'} en vertical.`;
   }
   $('#aidDesc').textContent = d;
   const pp = $('#soParts'), on = aidOn('parts');
@@ -2675,14 +2760,15 @@ function drawScore(grp){
   const W = scoreCv.clientWidth, H = P.scoreH, sh = P.sheet, M = P.M;
   if (!W) return;
   sg.clearRect(0, 0, W, H);
-  const two = sh.staves.length === 2, sp = two ? 7 : 8, sc = sp / 250;
-  const yb = two ? {T: 22 + 4 * sp, B: 22 + 14 * sp} : {[sh.staves[0]]: 30 + 4 * sp};
+  const K = P.scoreK || 1, two = sh.staves.length === 2, sp = (two ? 7 : 8) * K, sc = sp / 250;
+  const yb = two ? {T: 22 * K + 4 * sp, B: 22 * K + 14 * sp} : {[sh.staves[0]]: 30 * K + 4 * sp};
+  const F10 = `700 ${Math.round(10 * K)}px "Alegreya Sans", sans-serif`;
   const yOf = (st, s) => yb[st] - (s - BOT[st]) * sp / 2;
   const seg = (x1, y1, x2, y2) => { sg.beginPath(); sg.moveTo(x1, y1); sg.lineTo(x2, y2); sg.stroke(); };
   const clefW = 671 * sc, showTS = !sh.midi;
   const x0 = 8 + clefW + 6 + (showTS ? 470 * sc + 14 : 4);
-  const ppu = sh.ppu * (W > 720 ? 1.35 : 1);
-  const xh = x0 + Math.min(96, (W - x0) * 0.2);
+  const ppu = sh.ppu * (W > 720 ? 1.35 : 1) * K;
+  const xh = x0 + Math.min(96 * K, (W - x0) * 0.2);
   const xOf = t => xh + (t - P.t) * ppu;
   const topY = yb[sh.staves[0]] - 4 * sp, botY = yb[sh.staves[sh.staves.length - 1]];
   sg.lineCap = 'butt';
@@ -2694,28 +2780,28 @@ function drawScore(grp){
   sg.save();
   sg.beginPath(); sg.rect(x0 - 2, 0, W - x0 + 2, H); sg.clip();
   sg.fillStyle = COL.hi; sg.globalAlpha = 0.14;
-  sg.fillRect(xh - 9, topY - 6, 18, botY - topY + 12);
+  sg.fillRect(xh - 9 * K, topY - 6, 18 * K, botY - topY + 12);
   sg.globalAlpha = 1;
   const tMin = P.t - (xh - x0) / ppu - 1, tMax = P.t + (W - xh) / ppu + 1;
-  sg.font = '700 10px "Alegreya Sans", sans-serif'; sg.textBaseline = 'alphabetic';
+  sg.font = F10; sg.textBaseline = 'alphabetic';
   for (let k = Math.ceil((tMin - M.g0) / M.mlen); ; k++){
     const tb = M.g0 + k * M.mlen;
     if (tb > tMax || tb > P.end + 1e-6) break;
     if (tb <= P.bar0 + 1e-6) continue;
-    const x = Math.round(xOf(tb) - 12) + 0.5;
+    const x = Math.round(xOf(tb) - 12 * K) + 0.5;
     sg.strokeStyle = COL.soft; sg.lineWidth = 1; seg(x, topY, x, botY);
     if (tb < P.end - 1e-6 && measureNum(k) >= 1){
-      sg.fillStyle = COL.soft; sg.textAlign = 'right'; sg.font = 'italic 500 11px "Alegreya", Georgia, serif';
+      sg.fillStyle = COL.soft; sg.textAlign = 'right'; sg.font = `italic 500 ${Math.round(11 * K)}px "Alegreya", Georgia, serif`;
       sg.fillText(String(measureNum(k)), x - 3, topY - 3);
     }
   }
-  sg.font = '700 10px "Alegreya Sans", sans-serif';
+  sg.font = F10;
   sg.fillStyle = COL.ink;
   for (const r of sh.rests){
     if (r.t < tMin - M.mlen) continue;
     if (r.t > tMax) break;
     const st = r.st;
-    if (r.whole) glyph('rw', (xOf(r.t) + xOf(r.t + M.mlen)) / 2 - 12 - 141 * sc, yOf(st, BOT[st] + 6), sc);
+    if (r.whole) glyph('rw', (xOf(r.t) + xOf(r.t + M.mlen)) / 2 - 12 * K - 141 * sc, yOf(st, BOT[st] + 6), sc);
     else {
       const k = r.fig >= 4 ? 'rw' : r.fig >= 2 ? 'rh' : r.fig >= 1 ? 'rq' : r.fig >= 0.5 ? 'r8' : 'r16';
       glyph(k, xOf(r.t) - 4, yOf(st, BOT[st] + (k === 'rw' ? 6 : 4)), sc);
@@ -2746,7 +2832,7 @@ function drawScore(grp){
       glyph(hk, x - hw / 2, y, sc);
       if (isBlack(it.midi)) glyph('sh', x - hw / 2 - 249 * sc - 2, y, sc);
       if (it.fig === 3 || it.fig === 1.5 || it.fig === 0.75){
-        sg.beginPath(); sg.arc(x + hw / 2 + 4, y - ((steps[i] - BOT[st]) % 2 === 0 ? sp / 2 : 0), 1.6, 0, Math.PI * 2); sg.fill();
+        sg.beginPath(); sg.arc(x + hw / 2 + 4 * K, y - ((steps[i] - BOT[st]) % 2 === 0 ? sp / 2 : 0), 1.6 * K, 0, Math.PI * 2); sg.fill();
       }
       if (it.tie){
         const d = up ? 1 : -1, x1 = x + hw / 2 + 1, x2 = Math.max(x1 + 6, xOf(it.tie.t) - hw / 2 - 1), ty = y + d * sp * 0.75;
@@ -2756,7 +2842,7 @@ function drawScore(grp){
     });
     if (c.fingers){
       sg.fillStyle = c0 === COL.ink ? COL.soft : c0; sg.textAlign = 'center';
-      sg.fillText(c.fingers, x, two && st === 'B' ? H - 4 : 11);
+      sg.fillText(c.fingers, x, two && st === 'B' ? H - 4 : Math.round(11 * K));
     }
   }
   sg.restore();
@@ -2785,9 +2871,9 @@ function draw(grp){
   g.clearRect(0, 0, W, H);
   for (const [m, k] of geom){ if (k.black) continue; g.fillStyle = pc(m) === 0 ? COL.laneC : COL.lane; g.fillRect(Math.round(k.x), 0, 1, H); }
   if (!P) return;
-  const ppb = Math.max(36, H / 5), M = P.M;
+  const ppb = Math.max(36, H / 5), M = P.M, kk = DEV.k;
   if (aidOn('metro')){
-    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = '700 10px "Alegreya Sans", sans-serif';
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = `700 ${Math.round(10 * kk)}px "Alegreya Sans", sans-serif`;
     const tTop = P.t + H / ppb;
     for (let k = Math.ceil((P.t - M.g0) / M.pulse - 1e-6); ; k++){
       const tb = M.g0 + k * M.pulse;
@@ -2827,15 +2913,15 @@ function draw(grp){
     g.globalAlpha = n.state === 2 ? 0.5 : n.auto ? 0.42 : 1;
     g.fillStyle = fill; rr(x, top, w, h, Math.min(6, w / 3, h / 2)); g.fill();
     g.globalAlpha = 1;
-    const fs = w < 26 ? 10 : 12;
-    if (fing && n.finger && !n.auto && h >= 36 && w >= 14){
-      const r = Math.min(8.5, w / 2 - 1.5), cx = x + w / 2, cy = top + r + 4;
+    const fs = Math.round((w < 26 ? 10 : 12) * kk);
+    if (fing && n.finger && !n.auto && h >= 36 * kk && w >= 14){
+      const r = Math.min(8.5 * kk, w / 2 - 1.5), cx = x + w / 2, cy = top + r + 4;
       g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.9)'; g.fill();
       g.fillStyle = '#231B2B'; g.font = `700 ${fs}px "Alegreya Sans", sans-serif`;
       g.textBaseline = 'middle'; g.fillText(String(n.finger), cx, cy + 0.5); g.textBaseline = 'alphabetic';
     }
-    if (h >= 18 && w >= 14 && !n.auto){
-      const label = fing && n.finger && h < 36 ? String(n.finger) : settings.labels !== 'none' ? nameOf(n.midi) : '';
+    if (h >= 18 * kk && w >= 14 && !n.auto){
+      const label = fing && n.finger && h < 36 * kk ? String(n.finger) : settings.labels !== 'none' ? nameOf(n.midi) : '';
       if (label){ g.font = `700 ${fs}px "Alegreya Sans", sans-serif`; g.fillStyle = txt; g.fillText(label, x + w / 2, Math.min(top + h - 6, H - 6)); }
     }
   }
@@ -2844,7 +2930,7 @@ function draw(grp){
     g.fillStyle = COL.soft; g.globalAlpha = 0.55;
     g.font = `italic 500 ${Math.min(96, H * 0.4)}px "Alegreya", Georgia, serif`;
     g.textBaseline = 'middle'; g.fillText(String(beat), W / 2, H * 0.42);
-    if (P.lapMsg){ g.globalAlpha = 0.9; g.font = '700 15px "Alegreya Sans", sans-serif'; g.fillText(P.lapMsg, W / 2, Math.min(H - 14, H * 0.42 + Math.min(96, H * 0.4) * 0.62 + 10)); }
+    if (P.lapMsg){ g.globalAlpha = 0.9; g.font = `700 ${Math.round(15 * kk)}px "Alegreya Sans", sans-serif`; g.fillText(P.lapMsg, W / 2, Math.min(H - 14, H * 0.42 + Math.min(96, H * 0.4) * 0.62 + 10)); }
     g.globalAlpha = 1; g.textBaseline = 'alphabetic';
   }
 }
@@ -2957,7 +3043,7 @@ const TEO = [
    steps:[
     tT('De la partitura a las teclas', ['Hasta ahora seguías las barras que caen. Hoy vas a leer: en el próximo ejercicio no hay barras ni teclas iluminadas, solo la partitura.',
       'La nota que toca está marcada en color y los números de arriba son los dedos. Si fallas dos veces en una nota, su tecla se ilumina para ayudarte.',
-      'Pon el celular en vertical para que la partitura quepa en la pantalla.']),
+      'Si la partitura no cabe en la pantalla, pon el celular o la tablet en vertical.']),
     tP('Solo partitura', 'Lee cada nota y tócala. No hay prisa: la música te espera.', 'leer1', {force:{score:true, blind:true}}),
     tP('Tu primera canción', 'Ahora una canción completa, otra vez con las barras.', 'mary')
    ]},
@@ -3503,11 +3589,14 @@ function setTabs(){
   $('#btnHome').classList.toggle('athome', area === 'home');
   $('#tabFree').setAttribute('aria-selected', view === 'free' ? 'true' : 'false');
   $('#tabLearn').setAttribute('aria-selected', learn ? 'true' : 'false');
+  document.body.dataset.view = view;
   $('#viewHome').hidden = view !== 'home';
+  $('#viewDevice').hidden = view !== 'device';
   $('#viewTheory').hidden = !(view === 'teoList' || view === 'teo');
   $('#viewFree').hidden = view !== 'free';
   $('#viewLearn').hidden = !learn;
-  $('.board').hidden = view === 'home' || view === 'teoList';
+  // En horizontal las listas ocupan toda la pantalla: el teclado aparece al tocar.
+  $('.board').hidden = view === 'home' || view === 'teoList' || view === 'device' || (view === 'list' && DEV.pos === 'h');
 }
 function leaveAll(){
   leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); clearQuiz();
@@ -3515,7 +3604,41 @@ function leaveAll(){
 }
 function goHome(){
   leaveAll(); TL = null;
-  area = 'home'; view = 'home'; setTabs(); renderHome();
+  area = 'home'; view = 'home'; setTabs(); renderHome(); checkOrient();
+}
+/* Primera pantalla: dónde se usa la app. También se abre desde Ajustes. */
+const DEV_ICON = {
+  'cel-v': '<rect x="23" y="4" width="18" height="36" rx="3"/><path d="M30 35h4"/>',
+  'cel-h': '<rect x="14" y="13" width="36" height="18" rx="3"/><path d="M45 20v4"/>',
+  'tab-v': '<rect x="18" y="3" width="28" height="38" rx="3"/><path d="M30 36h4"/>',
+  'tab-h': '<rect x="13" y="8" width="38" height="28" rx="3"/><path d="M46 20v4"/>',
+  'pc': '<rect x="10" y="5" width="44" height="27" rx="3"/><path d="M32 32v6M22 40h20"/>'
+};
+function renderDevice(){
+  const cur = DEVICES[settings.device] ? settings.device : '', sug = guessDevice();
+  $('#devGrid').innerHTML = Object.keys(DEVICES).map(id => {
+    const d = DEVICES[id], tag = id === cur ? 'En uso' : !cur && id === sug ? 'Sugerido' : '';
+    return `<button class="dev-opt${id === 'pc' ? ' wide' : ''}" data-pick="${id}" aria-pressed="${id === cur}">
+      <svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${DEV_ICON[id]}</svg>
+      <span class="dn">${d.name}</span><span class="dp">${d.pos === 'v' ? 'Vertical' : d.pos === 'h' ? 'Horizontal' : 'Laptop o de mesa'}</span>${tag ? `<span class="dtag">${tag}</span>` : ''}</button>`;
+  }).join('');
+}
+function goDevice(){
+  leaveAll(); TL = null;
+  area = 'home'; view = 'device'; setTabs(); renderDevice();
+}
+$('#devGrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-pick]'); if (!b) return;
+  settings.device = b.dataset.pick; saveSettings();
+  applyDevice(); freeStart = null;
+  goHome();
+});
+/* Aviso si la pantalla no está en la posición elegida. */
+function checkOrient(){
+  const el = $('#rotHint'), land = window.innerWidth > window.innerHeight;
+  const off = !!DEVICES[settings.device] && !!DEV.pos && (DEV.pos === 'h') !== land;
+  el.hidden = !off;
+  if (off) el.textContent = `Elegiste usar ${DEV.name === 'Tablet' ? 'la tablet' : 'el celular'} en ${DEV.pos === 'h' ? 'horizontal' : 'vertical'}. Gira la pantalla, o cambia el dispositivo en Ajustes.`;
 }
 function goTheory(){
   leaveAll(); TL = null;
@@ -3534,7 +3657,7 @@ function goLearn(){
 }
 $('#tabFree').onclick = goFree;
 $('#tabLearn').onclick = () => { if (view !== 'list') goLearn(); };
-$('#btnHome').onclick = goHome;
+$('#btnHome').onclick = () => { if (view !== 'device' || DEVICES[settings.device]) goHome(); };
 $('#goTheory').onclick = goTheory;
 $('#goPractice').onclick = goFree;
 $('#goToday').onclick = () => { settings.learnTab = 'hoy'; saveSettings(); goLearn(); };
@@ -3550,12 +3673,14 @@ function syncSettingsUI(){
   for (const b of $('#themeSeg').children) b.setAttribute('aria-pressed', b.dataset.v === settings.theme ? 'true' : 'false');
   $('#vol').value = settings.volume;
   $('#midiMute').checked = !!settings.midiMute;
+  $('#devNow').textContent = devLabel(settings.device) + '.';
 }
 $('#btnSettings').onclick = () => {
   if (P && P.playing){ P.playing = false; setPlayIcon(); updateGuide(); }
   syncSettingsUI(); dlg.showModal();
 };
 $('#dlgClose').onclick = () => dlg.close();
+$('#btnDevice').onclick = () => { dlg.close(); goDevice(); };
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 $('#lblSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -3605,6 +3730,8 @@ window.addEventListener('resize', () => {
     if (view === 'player' && P) buildSongKeyboard();
     else if (view === 'reto' && RT){ const [lo, hi] = retoRange(); if (lo !== range.lo || hi !== range.hi) buildKeyboard(lo, hi); }
     else if (view === 'free' || view === 'list') buildFree();
+    else if (view === 'home') checkOrient();
+    else if (view === 'device') renderDevice();
   }, 120);
 });
 if (window.ResizeObserver){
@@ -3621,7 +3748,7 @@ buildFree();
 updateDisplay();
 updateRecUI();
 Data.init();
-goHome();
+if (DEVICES[settings.device]) goHome(); else goDevice();
 takePending();
 window.addEventListener('pageshow', e => { if (e.persisted) takePending(); });
 })();
