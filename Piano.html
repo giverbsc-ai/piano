@@ -380,7 +380,11 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 .dev-opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .dev-opt.wide{grid-column:1 / -1}
 @media (min-width:700px){ .dev-grid{grid-template-columns:repeat(5,1fr)} .dev-opt.wide{grid-column:auto} }
-.rot{margin:0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.rot{margin:0;padding:10px 14px;border:1px solid var(--felt);border-radius:12px;background:var(--surface);color:var(--ink);display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.rot span{flex:1 1 220px}
+.dev-now{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;color:var(--ink-soft)}
+.dev-now span{flex:1 1 180px}
+.dev-now .btn{min-height:36px}
 
 /* Ajustes según el dispositivo elegido (data-dev en la raíz; el tamaño de letra se fija desde el código) */
 :root[data-dev^="tab"] .btn{min-height:46px;padding:0 16px}
@@ -403,7 +407,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 :root[data-dev="pc"] body[data-view="player"] .board,:root[data-dev="pc"] body[data-view="reto"] .board{flex-basis:clamp(150px,27%,260px)}
 @media (min-width:900px){
   :root[data-dev="tab-h"] .home-in,:root[data-dev="pc"] .home-in{max-width:1120px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
-  :root[data-dev="tab-h"] .home-in > h1,:root[data-dev="pc"] .home-in > h1,:root[data-dev="tab-h"] .home-in > .rot,:root[data-dev="pc"] .home-in > .rot{grid-column:1 / -1}
+  :root[data-dev="tab-h"] .home-in > h1,:root[data-dev="pc"] .home-in > h1,:root[data-dev="tab-h"] .home-in > .rot,:root[data-dev="pc"] .home-in > .rot,:root[data-dev="tab-h"] .home-in > .dev-now,:root[data-dev="pc"] .home-in > .dev-now{grid-column:1 / -1}
   :root[data-dev="tab-h"] .hcard,:root[data-dev="pc"] .hcard{grid-template-columns:1fr;align-content:start;gap:6px;padding:22px}
   :root[data-dev="tab-h"] .hico,:root[data-dev="pc"] .hico{grid-row:auto;margin-bottom:8px}
 }
@@ -433,7 +437,8 @@ input[type=range]{width:100%;accent-color:var(--felt)}
   <section class="view" id="viewHome">
     <div class="home"><div class="home-in">
       <h1>¿Qué quieres hacer hoy?</h1>
-      <p class="rot" id="rotHint" role="status" hidden></p>
+      <div class="dev-now" id="devNowRow"><span id="homeDevTxt"></span><button class="btn" id="homeDevice">Cambiar dispositivo</button></div>
+      <div class="rot" id="rotHint" role="status" hidden><span id="rotTxt"></span><button class="btn" id="rotDevice">Cambiar dispositivo</button></div>
       <button class="hcard" id="goToday">
         <span class="hico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M9 15l2 2 4-4"/></svg></span>
         <span class="hk">Sesión de hoy</span>
@@ -460,6 +465,7 @@ input[type=range]{width:100%;accent-color:var(--felt)}
       <h1>¿Dónde vas a usar la app?</h1>
       <p class="lead">Elige tu dispositivo y cómo lo vas a poner. Con eso se ajustan el tamaño de la letra, la partitura y el teclado. Puedes cambiarlo cuando quieras en Ajustes.</p>
       <div class="dev-grid" id="devGrid"></div>
+      <div class="actions"><button class="btn" id="devBack" hidden>Volver sin cambiar</button></div>
     </div></div>
   </section>
 
@@ -3626,6 +3632,7 @@ function renderDevice(){
 function goDevice(){
   leaveAll(); TL = null;
   area = 'home'; view = 'device'; setTabs(); renderDevice();
+  $('#devBack').hidden = !DEVICES[settings.device];
 }
 $('#devGrid').addEventListener('click', e => {
   const b = e.target.closest('[data-pick]'); if (!b) return;
@@ -3637,9 +3644,13 @@ $('#devGrid').addEventListener('click', e => {
 function checkOrient(){
   const el = $('#rotHint'), land = window.innerWidth > window.innerHeight;
   const off = !!DEVICES[settings.device] && !!DEV.pos && (DEV.pos === 'h') !== land;
-  el.hidden = !off;
-  if (off) el.textContent = `Elegiste usar ${DEV.name === 'Tablet' ? 'la tablet' : 'el celular'} en ${DEV.pos === 'h' ? 'horizontal' : 'vertical'}. Gira la pantalla, o cambia el dispositivo en Ajustes.`;
+  el.hidden = !off; $('#devNowRow').hidden = off;
+  if (off) $('#rotTxt').textContent = `Elegiste usar ${DEV.name === 'Tablet' ? 'la tablet' : 'el celular'} en ${DEV.pos === 'h' ? 'horizontal' : 'vertical'}, pero la pantalla está en ${land ? 'horizontal' : 'vertical'}. Gírala, o cambia el dispositivo.`;
+  $('#homeDevTxt').textContent = `Pantalla ajustada para: ${devLabel(settings.device).toLowerCase()}.`;
 }
+$('#homeDevice').onclick = () => goDevice();
+$('#rotDevice').onclick = () => goDevice();
+$('#devBack').onclick = () => goHome();
 function goTheory(){
   leaveAll(); TL = null;
   area = 'theory'; view = 'teoList'; setTabs();
