@@ -345,6 +345,25 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 .linkbtn:disabled{opacity:.4;cursor:default}
 #accOut.armed{border-color:var(--bad);color:var(--bad)}
 #accMsg,#accWarn{margin:0}
+#accForm.mail-closed .acc-m{display:none}
+/* Bienvenida: la portada, el registro y, abajo, seguir sin cuenta */
+body[data-view="welcome"] .cab{display:none}
+.wel{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
+.wel-in{width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column}
+.wel-img{display:block;width:100%;height:auto;aspect-ratio:5/4;object-fit:cover;object-position:50% 0;background:var(--lacquer)}
+.wel-side{padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+.wel .dlg{padding:0;max-height:none;overflow:visible;gap:14px}
+.wel #accCancel{display:none}
+.wel-skip{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:8px}
+@media (min-width:560px){
+  .wel-in{padding-top:20px}
+  .wel-img{border-radius:18px}
+}
+@media (min-width:560px) and (orientation:landscape){
+  .wel-in{max-width:1080px;flex-direction:row;align-items:center;gap:clamp(16px,3vw,32px);padding:clamp(12px,3vh,24px) 24px;margin:auto}
+  .wel-img{flex:0 1 auto;width:min(52%,calc(100vh - 48px));aspect-ratio:1}
+  .wel-side{flex:1 1 0;min-width:0;max-width:440px;padding:0}
+}
 
 
 /* Retos */
@@ -446,6 +465,18 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 </header>
 
 <main>
+  <section class="view" id="viewWelcome" hidden>
+    <div class="wel"><div class="wel-in">
+      <img class="wel-img" id="welImg" width="1024" height="1024" alt="Un piano con una tablet que muestra la app, y notas musicales doradas">
+      <div class="wel-side">
+        <div id="welSlot"></div>
+        <div class="wel-skip">
+          <button class="btn" id="welSkip">Seguir sin cuenta</button>
+          <p class="fhelp">Sin cuenta, tus canciones y tu avance quedan solo en este dispositivo. Puedes entrar después desde Ajustes.</p>
+        </div>
+      </div>
+    </div></div>
+  </section>
   <section class="view" id="viewHome">
     <div class="home"><div class="home-in">
       <h1>¿Qué quieres hacer hoy?</h1>
@@ -669,18 +700,19 @@ input[type=range]{width:100%;accent-color:var(--felt)}
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <p class="fhelp">Con una cuenta, tus canciones y tu avance aparecen igual en el celular, la tablet y el computador. Lo que ya tengas en este dispositivo se suma a tu cuenta.</p>
     <button type="button" class="btn acc-g" id="accGoogle">Continuar con Google</button>
-    <div class="acc-or">o con tu correo</div>
-    <div class="field">
+    <button type="button" class="btn acc-g" id="welMail" hidden>Usar correo y contraseña</button>
+    <div class="acc-or acc-m">o con tu correo</div>
+    <div class="field acc-m">
       <label class="flabel" for="accMail">Correo</label>
       <input type="email" id="accMail" class="txt" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false">
     </div>
-    <div class="field">
+    <div class="field acc-m">
       <label class="flabel" for="accPass">Contraseña</label>
       <input type="password" id="accPass" class="txt" autocomplete="current-password">
       <p class="fhelp">Mínimo 6 caracteres.</p>
     </div>
     <p class="msg" id="accMsg" role="status" hidden></p>
-    <div class="acc-act">
+    <div class="acc-act acc-m">
       <button type="submit" class="btn primary" id="accIn">Entrar</button>
       <button type="button" class="btn" id="accNew">Crear cuenta</button>
       <button type="button" class="linkbtn" id="accForgot">Olvidé mi contraseña</button>
@@ -1258,6 +1290,11 @@ const Nube = (() => {
   const fixMeta = () => { if (!Array.isArray(meta.borradas)) meta.borradas = []; if (!isObj(meta.niv)) meta.niv = {}; };
   fixMeta();
   const saveMeta = () => store.set('piano:nube', meta);
+  /* Bienvenida: se muestra al abrir la app sin cuenta, hasta que se entra o se elige seguir sin cuenta en esta visita. */
+  const SKIP = 'piano:sin-cuenta';
+  const skipped = () => { try { return sessionStorage.getItem(SKIP) === '1'; } catch(e){ return false; } };
+  const setSkip = v => { try { if (v) sessionStorage.setItem(SKIP, '1'); else sessionStorage.removeItem(SKIP); } catch(e){} };
+  const welcome = () => on && !user && !meta.uid && !skipped();
 
   /* Diferencias que hay que subir: solo las claves que cambian, para no pisar lo que escribe otro dispositivo.
      r es lo que hay en la cuenta (ya limpio); las claves de delFrom que no estén en m se borran. */
@@ -1568,6 +1605,7 @@ const Nube = (() => {
     if (meta.uid !== u.uid){ meta.uid = u.uid; meta.visto = false; saveMeta(); }
     user = u; err = ''; hold = 0; firstSongs = true;
     Data.mode = 'cloud';
+    if (view === 'welcome') enterApp();
     ref = db.collection('usuarios').doc(u.uid);
     col = ref.collection('canciones');
     const mine = ref;
@@ -1623,6 +1661,7 @@ const Nube = (() => {
     detach(); user = null;
     try { await auth.signOut(); } catch(e){}
     if (clean) wipeLocal(); else keepLocal();
+    setSkip(false);
     try { await db.terminate(); await db.clearPersistence(); } catch(e){}
     location.reload();
   }
@@ -1676,16 +1715,26 @@ const Nube = (() => {
   function say(t, ok){ const m = $('#accMsg'); m.textContent = t || ''; m.hidden = !t; m.classList.toggle('ok', !!ok); }
   async function act(fn, done){
     if (!auth){ say(err === 'sdk' ? 'No se pudo cargar la conexión con las cuentas. Revisa tu internet.' : 'Cargando… prueba otra vez en un momento.'); start(); return; }
-    const btns = [...$('#accDlg').querySelectorAll('button')];
+    const btns = [...$('#accForm').querySelectorAll('button')];
     btns.forEach(b => b.disabled = true); say('');
     try { await fn(); if (done) done(); else $('#accDlg').close(); }
     catch(e){ if (!QUIET.includes(e && e.code)) say(AUTH_ERR[e && e.code] || 'No se pudo entrar. Prueba otra vez.'); }
     btns.forEach(b => b.disabled = false);
   }
+  /* El mismo formulario sirve en la bienvenida y en la ventana de cuenta: se mueve de un lado al otro. */
+  function dock(w){
+    const f = $('#accForm');
+    (w ? $('#welSlot') : $('#accDlg')).appendChild(f);
+    f.classList.toggle('mail-closed', w); $('#welMail').hidden = !w;
+    $('#accTitle').textContent = w ? 'Entra o crea tu cuenta' : 'Tu cuenta';
+    say(''); $('#accPass').value = '';
+  }
   function bind(){
     if (!on) return;
     const d = $('#accDlg'), mail = () => $('#accMail').value.trim(), pass = () => $('#accPass').value;
-    const show = () => { say(''); d.showModal(); };
+    const show = () => { dock(false); d.showModal(); };
+    $('#welSkip').onclick = () => { setSkip(true); enterApp(); };
+    $('#welMail').onclick = () => { $('#accForm').classList.remove('mail-closed'); $('#welMail').hidden = true; $('#accMail').focus(); };
     $('#accBtn').onclick = () => { dlg.close(); show(); };
     $('#homeAcc').onclick = () => { if (user){ syncSettingsUI(); dlg.showModal(); } else show(); };
     $('#accCancel').onclick = () => d.close();
@@ -1730,7 +1779,7 @@ const Nube = (() => {
     });
     paint();
   }
-  return {on, start, bind, push, addSong, delSong};
+  return {on, start, bind, push, addSong, delSong, welcome, dock};
 })();
 /* Texto al pie de las listas: dónde queda guardado el avance. */
 function syncNote(all){
@@ -4237,13 +4286,14 @@ function setTabs(){
   $('#tabFree').setAttribute('aria-selected', view === 'free' ? 'true' : 'false');
   $('#tabLearn').setAttribute('aria-selected', learn ? 'true' : 'false');
   document.body.dataset.view = view;
+  $('#viewWelcome').hidden = view !== 'welcome';
   $('#viewHome').hidden = view !== 'home';
   $('#viewDevice').hidden = view !== 'device';
   $('#viewTheory').hidden = !(view === 'teoList' || view === 'teo');
   $('#viewFree').hidden = view !== 'free';
   $('#viewLearn').hidden = !learn;
   // En horizontal las listas ocupan toda la pantalla: el teclado aparece al tocar.
-  $('.board').hidden = view === 'home' || view === 'teoList' || view === 'device' || (view === 'list' && DEV.pos === 'h');
+  $('.board').hidden = view === 'home' || view === 'welcome' || view === 'teoList' || view === 'device' || (view === 'list' && DEV.pos === 'h');
 }
 function leaveAll(){
   leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); clearQuiz();
@@ -4253,7 +4303,18 @@ function goHome(){
   leaveAll(); TL = null;
   area = 'home'; view = 'home'; setTabs(); renderHome(); checkOrient();
 }
-/* Primera pantalla: dónde se usa la app. También se abre desde Ajustes. */
+/* Bienvenida: la portada con el registro. De ahí se pasa a elegir dispositivo (la primera vez) o al inicio. */
+function goWelcome(){
+  leaveAll(); TL = null;
+  area = 'home'; view = 'welcome'; setTabs();
+  Nube.dock(true);
+  const im = $('#welImg'); if (!im.getAttribute('src')) im.src = 'img/portada.jpg';
+}
+function enterApp(){
+  if (view === 'welcome') Nube.dock(false);
+  if (DEVICES[settings.device]) goHome(); else goDevice();
+}
+/* Dónde se usa la app. También se abre desde Ajustes. */
 const DEV_ICON = {
   'cel-v': '<rect x="23" y="4" width="18" height="36" rx="3"/><path d="M30 35h4"/>',
   'cel-h': '<rect x="14" y="13" width="36" height="18" rx="3"/><path d="M45 20v4"/>',
@@ -4401,7 +4462,7 @@ updateDisplay();
 updateRecUI();
 Data.init();
 Nube.bind();
-if (DEVICES[settings.device]) goHome(); else goDevice();
+if (Nube.welcome()) goWelcome(); else enterApp();
 Nube.start();
 takePending();
 window.addEventListener('pageshow', e => { if (e.persisted) takePending(); });

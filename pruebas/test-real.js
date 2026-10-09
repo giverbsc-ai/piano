@@ -9,9 +9,9 @@ function appHtml(){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
   if (!/const NUBE_CFG = [^;]*;/.test(h)) throw new Error('falta NUBE_CFG');
   h = h.replace(/const NUBE_CFG = [^;]*;/, 'const NUBE_CFG = ' + CFG + ';');
-  const ret = 'return {on, start, bind, push, addSong, delSong};';
+  const ret = 'return {on, start, bind, push, addSong, delSong, welcome, dock};';
   if (!h.includes(ret)) throw new Error('falta return');
-  h = h.replace(ret, "return {on, start, bind, push, addSong, delSong, _open: open, _force(){ docServer = colServer = true; sync(); syncSongs(); }, _st: () => ({docServer, colServer, docPend, colPend, err, remote, C: C && [...C].map(([id, c]) => [id, c.pend]), sdk: !!fb, known})};");
+  h = h.replace(ret, "return {on, start, bind, push, addSong, delSong, welcome, dock, _open: open, _force(){ docServer = colServer = true; sync(); syncSongs(); }, _st: () => ({docServer, colServer, docPend, colPend, err, remote, C: C && [...C].map(([id, c]) => [id, c.pend]), sdk: !!fb, known})};");
   return h.replace('Nube.bind();', "window.__t = {Data, settings, teoStore, sesStore, Nube, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, TEO, dayStr};\nNube.bind();");
 }
 const server = http.createServer((req, res) => {
@@ -19,6 +19,7 @@ const server = http.createServer((req, res) => {
   if (u === '/piano/Piano.html'){ res.writeHead(200, {'content-type': 'text/html; charset=utf-8'}); return res.end(appHtml()); }
   const m = u.match(/^\/piano\/lib\/(firebase-(app|auth|firestore)-compat\.js)$/);
   if (m){ res.writeHead(200, {'content-type': 'text/javascript'}); return res.end(fs.readFileSync(path.join(REPO, 'lib', m[1]))); }
+  if (u === '/piano/img/portada.jpg'){ res.writeHead(200, {'content-type': 'image/jpeg'}); return res.end(fs.readFileSync(path.join(REPO, 'img/portada.jpg'))); }
   res.writeHead(404); res.end();
 });
 let pass = 0, failN = 0;
@@ -48,7 +49,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   console.log('SDK real, sin red');
   ok(await page.waitForFunction(() => __t.Nube._st().sdk && __t.Nube._st().known, null, {timeout: 8000}).then(() => true, () => false), 'los tres archivos del SDK cargan y la sesión se resuelve', await page.evaluate(() => __t.Nube._st()));
   ok(await page.evaluate(() => firebase.SDK_VERSION) === '12.19.0', 'versión del SDK', await page.evaluate(() => firebase.SDK_VERSION));
-  ok(/Sin cuenta/.test(await page.textContent('#homeAccTxt')), 'sin sesión: «Sin cuenta»');
+  ok(await page.isVisible('#welSkip'), 'sin sesión: aparece la bienvenida');
+  await page.click('#welSkip');
+  ok(/Sin cuenta/.test(await page.textContent('#homeAccTxt')), 'al seguir sin cuenta: «Sin cuenta»');
   await page.click('#homeAcc');
   await page.fill('#accMail', 'vicen@example.com'); await page.fill('#accPass', 'secreto1');
   await page.click('#accIn');

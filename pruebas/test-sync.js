@@ -64,7 +64,7 @@ function appHtml(withCfg){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
   if (!CFG_RE.test(h)) throw new Error('falta NUBE_CFG');
   h = h.replace(CFG_RE, 'const NUBE_CFG = ' + (withCfg ? CFG : 'null') + ';');
-  const hook = "window.__t = {Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, renderList, store};\nNube.bind();";
+  const hook = "window.__t = {get view(){ return view; }, Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, renderList, store};\nNube.bind();";
   if (!h.includes('Nube.bind();')) throw new Error('falta bind');
   return h.replace('Nube.bind();', hook);
 }
@@ -73,6 +73,7 @@ const server = http.createServer((req, res) => {
   const u = req.url.split('?')[0];
   if (u === '/piano/Piano.html'){ res.writeHead(200, {'content-type': 'text/html; charset=utf-8'}); return res.end(appHtml(serveCfg)); }
   if (u === '/piano/lib/firebase-app-compat.js'){ res.writeHead(200, {'content-type': 'text/javascript'}); return res.end(FAKE); }
+  if (u === '/piano/img/portada.jpg'){ res.writeHead(200, {'content-type': 'image/jpeg'}); return res.end(fs.readFileSync(path.join(REPO, 'img/portada.jpg'))); }
   if (u.startsWith('/piano/lib/')){ res.writeHead(200, {'content-type': 'text/javascript'}); return res.end('/* vacío */'); }
   res.writeHead(404); res.end();
 });
@@ -87,7 +88,8 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   const URL = `http://localhost:${server.address().port}/piano/Piano.html`;
   const browser = await chromium.launch(process.env.CHROMIUM ? {executablePath: process.env.CHROMIUM} : {});
   const errors = [];
-  async function device(name, viewport, dev, seed){
+  const skipWelcome = async p => { if (await p.isVisible('#welSkip')) await p.click('#welSkip'); };
+  async function device(name, viewport, dev, seed, stay){
     const ctx = await browser.newContext({viewport, hasTouch: dev !== 'pc'});
     await ctx.exposeBinding('__srv', srv);
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
@@ -105,6 +107,7 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
     page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_FAILED/.test(m.text())) errors.push(name + ' console: ' + m.text()); });
     await page.goto(URL);
     await page.waitForFunction(() => window.__t);
+    if (!stay) await skipWelcome(page);
     return page;
   }
   const prog = p => p.evaluate(() => __t.Data.progress);
@@ -277,7 +280,9 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   await C.screenshot({path: path.join(SHOTS, '9-cerrar-sesion.png')});
   await Promise.all([C.waitForEvent('load'), C.click('#accOut')]);
   await C.waitForFunction(() => window.__t);
-  ok(await waitFor(C, () => /Sin cuenta/.test(document.querySelector('#homeAccTxt').textContent)), 'tras cerrar sesión la app se recarga y vuelve a «Sin cuenta»');
+  ok(await C.isVisible('#welSkip') && await C.isVisible('#welImg'), 'tras cerrar sesión la app se recarga y vuelve a la bienvenida');
+  await skipWelcome(C);
+  ok(await waitFor(C, () => /Sin cuenta/.test(document.querySelector('#homeAccTxt').textContent)), 'y al seguir sin cuenta el inicio dice «Sin cuenta»');
   ok((await titles(C)).length === 0 && Object.keys(await prog(C)).length === 0, 'el computador queda limpio');
   await sleep(300);
   ok(S.docs.has(`usuarios/${uA}/canciones/lsame`) && Object.keys(S.docs.get('usuarios/' + uA).mejores).length > 5 && (await titles(A)).length === 4, 'la cuenta y los otros dispositivos conservan todo', await titles(A));
@@ -381,6 +386,7 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   ok(/se quedan guardadas aquí/.test(await F.textContent('#accWarn')), 'al cerrar sesión avisa que lo de aquí se queda aquí', await F.textContent('#accWarn'));
   await Promise.all([F.waitForEvent('load'), F.click('#accOut')]);
   await F.waitForFunction(() => window.__t);
+  await skipWelcome(F);
   const fp = await prog(F);
   ok(fp['cinco-do']?.stars === 2 && fp['escala']?.stars === 1 && (await titles(F)).join() === 'Mía' && (await F.evaluate(() => __t.teoStore.dias.length)) === 1 && (await F.evaluate(() => __t.settings.niveles['u:lmia'])) === 3, 'no se perdió nada: estrellas, teoría, canción y dificultad siguen en el dispositivo', {fp, t: await titles(F)});
   ok(/Sin cuenta/.test(await homeTxt(F)), 'y queda sin cuenta');
@@ -401,9 +407,60 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   await Promise.all([B.waitForEvent('load'), B2.waitForEvent('load'), B.click('#accOut')]);
   await B.waitForFunction(() => window.__t); await B2.waitForFunction(() => window.__t);
   await sleep(400);
+  ok(await B.isVisible('#welSkip'), 'la tablet vuelve a la bienvenida');
+  await skipWelcome(B); await skipWelcome(B2);
   ok(/Sin cuenta/.test(await homeTxt(B2)) && (await titles(B2)).length === 0 && Object.keys(await prog(B2)).length === 0, 'la otra pestaña se recarga sola y queda limpia', [await homeTxt(B2), await titles(B2)]);
   ok(Object.keys(await B.evaluate(() => JSON.parse(localStorage.getItem('piano:mejores') || '{}'))).length === 0, 'no queda avance de la cuenta guardado en el navegador');
   ok((await titles(A)).length > 0 && Object.keys(await prog(A)).length > 5 && await settled(A), 'el celular sigue con todo');
+
+  /* ============ 9. Pantalla de bienvenida ============ */
+  console.log('9. Bienvenida');
+  const W = await device('bienvenida', {width: 390, height: 800}, 'cel-v', {store: {'piano:mejores': {'cinco-do': {stars: 2, pct: 80}}}}, true);
+  ok(await W.evaluate(() => __t.view) === 'welcome' && await W.isVisible('#welImg') && await W.isHidden('.cab') && await W.isHidden('.board'), 'al abrir sin cuenta aparece la portada, sin barra ni teclado');
+  ok(await waitFor(W, () => { const i = document.querySelector('#welImg'); return i.complete && i.naturalWidth === 1024; }), 'la imagen carga');
+  const pos = await W.evaluate(() => ['#welImg', '#accGoogle', '#welMail', '#welSkip'].map(q => Math.round(document.querySelector(q).getBoundingClientRect().top)));
+  ok(pos[0] < pos[1] && pos[1] < pos[2] && pos[2] < pos[3], 'orden: imagen, registro y abajo «Seguir sin cuenta»', pos);
+  ok(await W.evaluate(() => document.querySelector('#welSkip').getBoundingClientRect().bottom <= innerHeight), 'en el celular «Seguir sin cuenta» se ve sin desplazar', await W.evaluate(() => [document.querySelector('#welSkip').getBoundingClientRect().bottom, innerHeight]));
+  ok(await W.isHidden('#accMail') && await W.isHidden('#accCancel'), 'los campos de correo empiezan plegados y no hay botón de cerrar');
+  await W.screenshot({path: path.join(SHOTS, '10-bienvenida-celular.png')});
+  await W.click('#welMail');
+  ok(await W.isVisible('#accMail') && await W.isVisible('#accNew') && await W.isHidden('#welMail'), '«Usar correo y contraseña» abre los campos');
+  await W.screenshot({path: path.join(SHOTS, '11-bienvenida-correo.png'), fullPage: true});
+  await W.fill('#accMail', 'vicen@example.com'); await W.fill('#accPass', 'mala'); await W.click('#accIn');
+  ok(await waitFor(W, () => /no coinciden/.test(document.querySelector('#accMsg').textContent)) && await W.evaluate(() => __t.view) === 'welcome', 'clave equivocada: el mensaje sale en la bienvenida');
+  await W.keyboard.press('a');
+  ok(await W.evaluate(() => __t.view) === 'welcome', 'escribir en los campos no toca notas ni cambia de pantalla');
+  await W.fill('#accPass', 'secreto1'); await W.click('#accIn');
+  ok(await waitFor(W, () => __t.view === 'home') && await settled(W), 'al entrar pasa al inicio con la cuenta abierta', await homeTxt(W));
+  ok(await W.isVisible('.cab') && await W.evaluate(() => document.querySelector('#accForm').parentElement.id) === 'accDlg', 'vuelve la barra y el formulario regresa a su ventana');
+  await W.reload(); await W.waitForFunction(() => window.__t);
+  ok(await W.evaluate(() => __t.view) === 'home', 'con la cuenta abierta, al recargar no vuelve a pedir registro');
+  await W.context().close();
+  // seguir sin cuenta
+  const W2 = await device('bienvenida-2', {width: 1180, height: 760}, 'tab-h', {}, true);
+  await waitFor(W2, () => document.querySelector('#welImg').complete);
+  await W2.screenshot({path: path.join(SHOTS, '12-bienvenida-tablet.png')});
+  const box = await W2.evaluate(() => { const a = document.querySelector('#welImg').getBoundingClientRect(), b = document.querySelector('#welSlot').getBoundingClientRect(), c = document.querySelector('#welSkip').getBoundingClientRect(); return {img: [a.left, a.right, a.top, a.bottom].map(Math.round), form: [b.left, b.top].map(Math.round), skip: Math.round(c.bottom), h: innerHeight, sw: document.documentElement.scrollWidth, w: innerWidth}; });
+  ok(box.img[1] <= box.form[0] && box.skip <= box.h && box.img[3] <= box.h && box.sw <= box.w, 'tablet horizontal: imagen a la izquierda, registro a la derecha, todo en pantalla', box);
+  await W2.click('#welSkip');
+  ok(await W2.evaluate(() => __t.view) === 'home' && /Sin cuenta/.test(await homeTxt(W2)), '«Seguir sin cuenta» lleva al inicio');
+  await W2.click('#homeAcc');
+  ok(await W2.evaluate(() => document.querySelector('#accDlg').open) && await W2.isVisible('#accMail') && await W2.isVisible('#accCancel') && (await W2.textContent('#accTitle')) === 'Tu cuenta', 'el botón «Entrar» del inicio sigue abriendo la ventana completa');
+  await W2.click('#accCancel');
+  await W2.reload(); await W2.waitForFunction(() => window.__t);
+  ok(await W2.evaluate(() => __t.view) === 'home', 'en la misma visita no vuelve a preguntar al recargar');
+  await W2.context().close();
+  // dispositivo nuevo: después de la bienvenida viene la elección de dispositivo
+  const ctx3 = await browser.newContext({viewport: {width: 1366, height: 768}});
+  await ctx3.exposeBinding('__srv', srv); await ctx3.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  const W3 = await ctx3.newPage(); W3.on('pageerror', e => errors.push('nuevo: ' + e.message));
+  await W3.goto(URL); await W3.waitForFunction(() => window.__t);
+  ok(await W3.evaluate(() => __t.view) === 'welcome', 'dispositivo nuevo: primero la bienvenida');
+  await waitFor(W3, () => document.querySelector('#welImg').complete);
+  await W3.screenshot({path: path.join(SHOTS, '13-bienvenida-computador.png')});
+  await W3.click('#welSkip');
+  ok(await W3.evaluate(() => __t.view) === 'device', 'y luego la pantalla para elegir dispositivo');
+  await ctx3.close();
 
   console.log('\nErrores de página:', errors.length ? errors : 'ninguno');
   console.log(`\n${pass} ok, ${failN} fallos, ${S.writes.length} escrituras en total`);
