@@ -64,7 +64,7 @@ function appHtml(withCfg){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
   if (!CFG_RE.test(h)) throw new Error('falta NUBE_CFG');
   h = h.replace(CFG_RE, 'const NUBE_CFG = ' + (withCfg ? CFG : 'null') + ';');
-  const hook = "window.__t = {get view(){ return view; }, Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, renderList, store};\nNube.bind();";
+  const hook = "window.__t = {get view(){ return view; }, Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, goFree, renderList, store, Hist};\nNube.bind();";
   if (!h.includes('Nube.bind();')) throw new Error('falta bind');
   return h.replace('Nube.bind();', hook);
 }
@@ -461,6 +461,65 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   await W3.click('#welSkip');
   ok(await W3.evaluate(() => __t.view) === 'device', 'y luego la pantalla para elegir dispositivo');
   await ctx3.close();
+
+  /* ============ 10. Historial de práctica ============ */
+  console.log('10. Historial de práctica');
+  const H1 = await device('hist-celular', {width: 390, height: 800}, 'cel-v', {});
+  await signIn(H1, 'historial@example.com', 'secreto1', true);
+  ok(await settled(H1), 'cuenta nueva para el historial');
+  const H2 = await device('hist-tablet', {width: 1180, height: 760}, 'tab-h', {});
+  await signIn(H2, 'historial@example.com', 'secreto1', false);
+  ok(await settled(H2), 'la tablet entra a la misma cuenta');
+  const uH = S.accounts.get('historial@example.com').uid, docH = () => (S.docs.get('usuarios/' + uH) || {}).historial || {};
+  const hoyDe = p => p.evaluate(() => __t.Hist.total(__t.dayStr(new Date())));
+  const dia = await H1.evaluate(() => __t.dayStr(new Date())), d1 = await H1.evaluate(() => __t.Hist.dev), d2 = await H2.evaluate(() => __t.Hist.dev);
+  ok(d1 !== d2 && /^[a-z0-9]{8}$/.test(d1), 'cada dispositivo tiene su propia casilla', [d1, d2]);
+  let wH = S.writes.length;
+  await H1.evaluate(() => { for (let i = 0; i < 6; i++) __t.Hist.tick(5); });
+  await sleep(350);
+  ok(S.writes.length === wH && /Todo guardado/.test(await homeTxt(H1)), 'los segundos sueltos no se suben uno por uno, y el aviso sigue en «Todo guardado»', await homeTxt(H1));
+  await H1.evaluate(() => __t.Hist.run(90));
+  ok(await waitFor(H2, () => __t.Hist.total(__t.dayStr(new Date())).n === 1), 'al terminar una pieza en el celular, la tablet la ve');
+  ok(S.writes.length === wH + 1 && JSON.stringify(docH()[dia]) === JSON.stringify({[d1]: {s: 30, n: 1, p: 90}}), 'en la cuenta queda la casilla del celular, con una sola escritura', [S.writes.length - wH, docH()]);
+  await H2.evaluate(() => { for (let i = 0; i < 4; i++) __t.Hist.tick(5); __t.Hist.run(70); });
+  ok(await waitFor(H1, () => { const t = __t.Hist.total(__t.dayStr(new Date())); return t.n === 2 && t.p === 160 && t.s === 50; }), 'lo de la tablet se suma en el celular sin contarse dos veces', await hoyDe(H1));
+  ok(JSON.stringify(docH()[dia][d1]) === JSON.stringify({s: 30, n: 1, p: 90}) && JSON.stringify(docH()[dia][d2]) === JSON.stringify({s: 20, n: 1, p: 70}), 'cada dispositivo solo escribió su casilla', docH()[dia]);
+  // Los dos practicando a la vez: no se contestan sin parar
+  wH = S.writes.length;
+  for (let i = 0; i < 10; i++){ await H1.evaluate(() => __t.Hist.tick(5)); await H2.evaluate(() => __t.Hist.tick(5)); await sleep(50); }
+  await sleep(500);
+  ok(S.writes.length === wH, 'dos dispositivos practicando a la vez no generan escrituras en cadena', S.writes.length - wH);
+  await H1.evaluate(() => { __t.goFree(); __t.goHome(); });
+  ok(await waitFor(H2, () => __t.Hist.total(__t.dayStr(new Date())).s === 150), 'al salir de la práctica se sube lo pendiente', await hoyDe(H2));
+  await sleep(300);
+  ok(S.writes.length === wH + 1 && docH()[dia][d1].s === 80 && docH()[dia][d2].s === 20, 'con una sola escritura, y la tablet no responde con otra', [S.writes.length - wH, docH()[dia]]);
+  await H2.evaluate(() => { __t.goFree(); __t.goHome(); }); await sleep(300);
+  ok(docH()[dia][d2].s === 70 && (await hoyDe(H1)).s === 150, 'la tablet sube lo suyo al salir', docH()[dia]);
+  // Recargar no escribe; cerrar sesión no pierde lo pendiente
+  wH = S.writes.length;
+  await H1.reload(); await H1.waitForFunction(() => window.__t);
+  ok(await settled(H1), 'el celular recarga con la sesión abierta'); await sleep(400);
+  ok(S.writes.length === wH && (await hoyDe(H1)).s === 150, 'recargar no escribe nada y el historial sigue ahí', S.writes.slice(wH).map(w => JSON.stringify(w.data).slice(0, 160)));
+  await H1.evaluate(() => { for (let i = 0; i < 3; i++) __t.Hist.tick(5); });
+  await H1.click('#homeAcc'); await H1.click('#accOut');
+  await Promise.all([H1.waitForEvent('load'), H1.click('#accOut')]);
+  await H1.waitForFunction(() => window.__t);
+  ok(docH()[dia][d1].s === 95, 'al cerrar sesión se suben los segundos que faltaban', docH()[dia]);
+  ok(await H1.evaluate(() => __t.Hist.days().length === 0 && __t.Hist.dev) === d1, 'el celular queda sin historial, pero conserva su casilla');
+  await skipWelcome(H1);
+  await signIn(H1, 'historial@example.com', 'secreto1', false);
+  ok(await settled(H1) && (await hoyDe(H1)).s === 165, 'al volver a entrar recupera todo', await hoyDe(H1));
+  await H1.evaluate(() => { __t.Hist.tick(5); __t.Hist.run(100); });
+  ok(await waitFor(H2, () => { const t = __t.Hist.total(__t.dayStr(new Date())); return t.s === 170 && t.n === 3 && t.p === 260; }), 'y sigue sumando sobre lo que ya tenía, no desde cero', [await hoyDe(H2), docH()[dia]]);
+  // Datos viejos o dañados en la cuenta
+  serverEdit('usuarios/' + uH, {historial: {'2020-01-01': {}, basura: {x: 1}, '2026-09-01': {[d2]: {s: 600, n: 2, p: 150, raro: 7}, 'no vale': {s: 9}}}});
+  ok(await waitFor(H1, () => __t.Hist.total('2026-09-01').s === 600), 'un día que llega de la cuenta se incorpora');
+  await H1.evaluate(() => __t.Hist.run(80));
+  ok(await waitFor(H1, () => /Todo guardado/.test(document.querySelector('#homeAccTxt').textContent)), 'sigue «Todo guardado»'); await sleep(300);
+  ok(!('basura' in docH()) && !('2020-01-01' in docH()) && docH()['2026-09-01'][d2].s === 600, 'lo dañado se limpia de la cuenta y lo bueno se respeta', Object.keys(docH()));
+  wH = S.writes.length; await sleep(700);
+  ok(S.writes.length === wH, 'y después no quedan escrituras repitiéndose', S.writes.slice(wH).map(w => JSON.stringify(w.data).slice(0, 200)));
+  await H1.context().close(); await H2.context().close();
 
   console.log('\nErrores de página:', errors.length ? errors : 'ninguno');
   console.log(`\n${pass} ok, ${failN} fallos, ${S.writes.length} escrituras en total`);
