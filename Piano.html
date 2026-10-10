@@ -2054,6 +2054,7 @@ function freeWhiteCount(){
 /* ---------- Entrada: toque, mouse, teclado del computador, MIDI ---------- */
 const down = new Map();
 function press(m, src, vel = 0.8){
+  touchWake();
   const c = (down.get(m) || 0) + 1; down.set(m, c);
   if (c === 1){
     keyEls.get(m)?.classList.add('down');
@@ -4657,6 +4658,7 @@ function setTabs(){
   $('#viewLearn').hidden = !learn;
   // En horizontal las listas ocupan toda la pantalla: el teclado aparece al tocar.
   $('.board').hidden = view === 'home' || view === 'welcome' || view === 'teoList' || view === 'device' || (view === 'list' && DEV.pos === 'h');
+  syncWake();
 }
 function leaveAll(){
   leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); clearQuiz();
@@ -4797,6 +4799,29 @@ $('#btnMidi').onclick = () => {
     attach(); acc.onstatechange = attach;
   }).catch(() => { st.textContent = 'El navegador no dio permiso para usar teclados MIDI en esta página.'; });
 };
+
+/* ---------- Pantalla encendida ----------
+   Con las manos en el piano nadie toca la pantalla: mientras se practica, la app pide que no se apague.
+   Se suelta al salir de la práctica, al ocultar la app, o tras cinco minutos sin tocar nada. */
+const WAKE_VIEWS = ['player', 'reto', 'teo', 'free'], WAKE_IDLE = 5 * 60 * 1000;
+let wake = null, wakeBusy = false, lastAct = Date.now();
+const wakeWanted = () => !document.hidden && WAKE_VIEWS.includes(view) && Date.now() - lastAct < WAKE_IDLE;
+async function syncWake(){
+  if (!navigator.wakeLock || wakeBusy) return;
+  if (wakeWanted() && !wake){
+    wakeBusy = true;
+    try { const w = await navigator.wakeLock.request('screen'); wake = w; w.addEventListener('release', () => { if (wake === w) wake = null; }); } catch(e){}
+    wakeBusy = false;
+    if (!wakeWanted()) syncWake();
+  } else if (!wakeWanted() && wake){
+    const w = wake; wake = null;
+    try { await w.release(); } catch(e){}
+  }
+}
+function touchWake(){ const idle = Date.now() - lastAct >= WAKE_IDLE; lastAct = Date.now(); if (idle || !wake) syncWake(); }
+document.addEventListener('pointerdown', touchWake, true);
+document.addEventListener('visibilitychange', syncWake);
+setInterval(syncWake, 30000);
 
 /* ---------- Pantalla completa ----------
    El botón solo aparece donde el navegador lo permite (en iPhone no). El navegador exige que sea con un toque. */
