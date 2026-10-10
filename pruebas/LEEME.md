@@ -15,6 +15,8 @@ No forman parte de la app: sirven para comprobar la sincronización entre dispos
 - `test-canciones.js`: revisa las 21 canciones (compases, acordes, dedos, armaduras, niveles) y toca las nuevas en sus tres niveles,
   bien y mal, para comprobar los matices y la articulación.
 - `test-varios.js`: pantalla encendida, historial de práctica y la pantalla «Tu progreso» en varios tamaños.
+- `test-grabar.js`: «Crear canción» en Tocar libre: graba tramos con un teclado simulado (acordes, pausas largas, teclas que quedan
+  apretadas), los corrige, los escucha, guarda la canción en «Tus canciones», la reemplaza y comprueba que el borrador no se pierde.
 - `pianista.js`: el «pianista virtual» que comparten las pruebas.
 
 Cómo correrlas (Node 18 o más):
@@ -28,5 +30,6 @@ Cómo correrlas (Node 18 o más):
     node pruebas/test-teoria.js
     node pruebas/test-canciones.js
     node pruebas/test-varios.js
+    node pruebas/test-grabar.js
 
 Las dos primeras usan una configuración de mentira dentro de la prueba (reemplazan `NUBE_CFG` al servir la página), así que nunca tocan el proyecto real de Firebase.

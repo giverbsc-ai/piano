@@ -64,7 +64,7 @@ function appHtml(withCfg){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
   if (!CFG_RE.test(h)) throw new Error('falta NUBE_CFG');
   h = h.replace(CFG_RE, 'const NUBE_CFG = ' + (withCfg ? CFG : 'null') + ';');
-  const hook = "window.__t = {get view(){ return view; }, Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, goFree, renderList, store, Hist};\nNube.bind();";
+  const hook = "window.__t = {get view(){ return view; }, Data, settings, teoStore, sesStore, Nube, encodeNotes, saveTeo, saveSes, saveSettings, getSession, sesMark, sesId, dayStr, TEO, LESSONS, goLearn, goHome, goTheory, goFree, renderList, store, Hist, press, release, mk};\nNube.bind();";
   if (!h.includes('Nube.bind();')) throw new Error('falta bind');
   return h.replace('Nube.bind();', hook);
 }
@@ -527,6 +527,35 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   wH = S.writes.length; await sleep(700);
   ok(S.writes.length === wH, 'y después no quedan escrituras repitiéndose', S.writes.slice(wH).map(w => JSON.stringify(w.data).slice(0, 200)));
   await H1.context().close(); await H2.context().close();
+
+  /* ============ Canción grabada por tramos en «Tocar libre» ============ */
+  console.log('\nG. Canción grabada por tramos: llega al otro dispositivo, y al reemplazarla también');
+  const G1 = await device('g-tablet', {width: 1180, height: 760}, 'tab-h', {});
+  await signIn(G1, 'tramos@example.com', 'secreto1', true);
+  ok(await settled(G1), 'la tablet crea la cuenta');
+  const G2 = await device('g-celular', {width: 390, height: 800}, 'cel-v', {});
+  await signIn(G2, 'tramos@example.com', 'secreto1', false);
+  ok(await settled(G2), 'el celular entra con la misma cuenta');
+  const uG = S.accounts.get('tramos@example.com').uid;
+  const songDocs = () => [...S.docs.keys()].filter(k => k.startsWith(`usuarios/${uG}/canciones/`));
+  const tocar = async (p, ms) => { for (const m of ms){ await p.evaluate(m => __t.press(m, 'midi', 0.7), m); await sleep(40); await p.evaluate(m => __t.release(m), m); await sleep(40); } };
+  await G1.evaluate(() => __t.goFree()); await G1.click('#btnMaker');
+  await G1.click('[data-mk="rec"]'); await tocar(G1, [60, 62, 64]); await G1.click('[data-mk="stop"]');
+  await G1.click('[data-mk="save"]'); await G1.fill('#impName', 'Grabada por tramos'); await G1.click('#impSave');
+  ok(await waitFor(G2, () => __t.Data.items.length === 1 && __t.Data.items[0].title === 'Grabada por tramos'), 'la canción grabada en la tablet aparece en el celular', await titles(G2));
+  ok((await G2.evaluate(() => __t.Data.items[0].notas.split(' ').map(t => +t.split(':')[0]))).join() === '60,62,64', 'con las mismas notas');
+  ok(await waitFor(G1, () => __t.Data.items[0].nube === 2) && songDocs().length === 1, 'y la cuenta la confirma', songDocs());
+  ok((await G2.evaluate(() => localStorage.getItem('piano:borrador'))) === null, 'el borrador se queda en la tablet: no viaja al celular');
+  await G1.evaluate(() => __t.goFree());
+  await G1.click('[data-mk="rec"]'); await tocar(G1, [65, 67]); await G1.click('[data-mk="stop"]');
+  await G1.click('[data-mk="save"]');
+  ok(await G1.isChecked('#impReplace'), 'al guardar otra vez propone reemplazar la anterior');
+  await G1.click('#impSave');
+  ok(await waitFor(G2, () => __t.Data.items.length === 1 && __t.Data.items[0].notas.split(' ').length === 5), 'el celular se queda con una sola canción, la nueva de cinco notas', await G2.evaluate(() => __t.Data.items.map(s => s.notas)));
+  ok(await waitFor(G1, () => __t.Data.items.length === 1 && __t.Data.items[0].nube === 2), 'la tablet también'); await sleep(300);
+  ok(songDocs().length === 1 && S.docs.get(songDocs()[0]).notas.split(' ').length === 5, 'y en la cuenta queda solo la nueva', songDocs());
+  ok((await G1.evaluate(() => __t.mk.song)) === (await G1.evaluate(() => __t.Data.items[0].id)), 'el borrador de la tablet apunta a la canción nueva');
+  await G1.context().close(); await G2.context().close();
 
   console.log('\nErrores de página:', errors.length ? errors : 'ninguno');
   console.log(`\n${pass} ok, ${failN} fallos, ${S.writes.length} escrituras en total`);

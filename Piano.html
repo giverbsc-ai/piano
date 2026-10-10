@@ -103,6 +103,26 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .btn.recording{border-color:var(--bad);color:var(--bad)}
 .btn.recording .rec-dot{animation:blink 1s steps(2,start) infinite}
 @keyframes blink{50%{opacity:.2}}
+/* Crear canción: se graba por tramos en «Tocar libre» */
+.maker{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface);max-height:64%;overflow-y:auto}
+.mk-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+.mk-t{font-family:"Alegreya",Georgia,serif;font-size:1.25rem;font-weight:700;line-height:1.2;margin:0}
+.mk-s{flex:1 1 240px;margin:0;color:var(--ink-soft)}
+.mk-s.rec{color:var(--bad);font-weight:500}
+.mk-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.mk-act .linkbtn{margin-left:auto}
+.mk-act .btn.armed{border-color:var(--bad);color:var(--bad)}
+.btn.primary .rec-dot{background:#FFF5F2}
+.maker .chip.now{border-color:var(--felt);color:var(--felt-ink);box-shadow:inset 0 0 0 1px var(--felt)}
+#viewFree .toolbar .group{flex-wrap:wrap}
+#viewFree.making .sub{display:none}
+#viewFree.making .big{font-size:clamp(1.8rem,7vmin,3.4rem)}
+#viewFree.making #btnRec,#viewFree.making #btnPlayRec{display:none}
+@media (max-height:560px){
+  #viewFree.making .display{display:none}
+  #viewFree.making .maker{flex:1 1 auto;max-height:none;border-bottom:0;padding-top:6px;padding-bottom:2px;gap:6px}
+  #viewFree.making .mk-t{font-size:1.05rem}
+}
 
 /* Aprender: listas */
 .songlist{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 16px 28px;-webkit-overflow-scrolling:touch}
@@ -595,6 +615,14 @@ body[data-view="welcome"] .cab{display:none}
   </section>
 
   <section class="view" id="viewFree" hidden>
+    <div class="maker" id="maker" hidden>
+      <div class="mk-head">
+        <h2 class="mk-t">Crear canción</h2>
+        <p class="mk-s" id="mkStatus" role="status"></p>
+      </div>
+      <div class="chips row" id="mkChips" role="group" aria-label="Tramos grabados" hidden></div>
+      <div class="mk-act" id="mkAct"></div>
+    </div>
     <div class="display">
       <div class="big idle" id="bigName">Toca una tecla</div>
       <div class="sub" id="subName"></div>
@@ -614,6 +642,7 @@ body[data-view="welcome"] .cab{display:none}
         <button class="btn" id="btnPedal" aria-pressed="false" title="Pedal: las notas siguen sonando al soltar la tecla">Pedal</button>
         <button class="btn" id="btnRec"></button>
         <button class="btn" id="btnPlayRec"></button>
+        <button class="btn" id="btnMaker" aria-pressed="false" title="Graba una canción por tramos y guárdala para practicarla">Crear canción</button>
       </div>
     </div>
   </section>
@@ -789,9 +818,14 @@ body[data-view="welcome"] .cab{display:none}
       <label class="flabel" for="impName">Nombre</label>
       <input type="text" id="impName" class="txt" maxlength="80" autocomplete="off">
     </div>
-    <div class="field">
+    <div class="field" id="impPartsField">
       <div class="flabel">¿Qué parte quieres practicar?</div>
       <div class="parts" id="impParts"></div>
+    </div>
+    <div class="field" id="impSpeedField" hidden>
+      <div class="flabel" id="impSpeedLabel">Velocidad de la canción</div>
+      <div class="seg" id="impSpeed" role="group" aria-labelledby="impSpeedLabel"></div>
+      <p class="fhelp">Si la grabaste despacio, aquí la dejas más rápida. Al practicar siempre puedes bajarla al 50 % o al 75 %.</p>
     </div>
     <div class="field">
       <div class="flabel" id="impHandsLabel">¿Con cuántas manos?</div>
@@ -804,6 +838,7 @@ body[data-view="welcome"] .cab{display:none}
       <p class="fhelp" id="impLevelDesc"></p>
     </div>
     <p class="fhelp" id="impInfo"></p>
+    <label class="chk" id="impReplaceBox" hidden><input type="checkbox" id="impReplace"> <span id="impReplaceTxt"></span></label>
     <div class="dlg-actions">
       <button class="btn" id="impCancel">Cancelar</button>
       <button class="btn primary" id="impSave">Guardar y practicar</button>
@@ -2331,6 +2366,7 @@ function onPress(m, src, vel){
   if (view === 'free'){
     lastNote = m; updateDisplay();
     if (rec.on) rec.events.push({t: performance.now() - rec.start, m, on: true});
+    mkKey(m, true);
   } else if (view === 'player') judge(m, src, vel);
   else if (view === 'reto') judgeReto(m);
   else if (view === 'teo') teoPress(m);
@@ -2339,6 +2375,7 @@ function onRelease(m){
   if (view === 'free'){
     updateDisplay();
     if (rec.on) rec.events.push({t: performance.now() - rec.start, m, on: false});
+    mkKey(m, false);
   } else if (view === 'player') releaseJudge(m);
 }
 
@@ -2478,7 +2515,7 @@ function stopPlayback(){
 }
 $('#btnRec').onclick = () => {
   if (rec.on){ stopRec(); return; }
-  stopPlayback(); audio();
+  stopPlayback(); mkStopPlay(); audio();
   rec.on = true; rec.start = performance.now(); rec.events = [];
   recTick = setInterval(updateRecUI, 250);
   updateRecUI();
@@ -2486,7 +2523,7 @@ $('#btnRec').onclick = () => {
 $('#btnPlayRec').onclick = () => {
   if (playingRec){ stopPlayback(); return; }
   if (!saved || !saved.events.length) return;
-  audio(); playingRec = true; updateRecUI();
+  mkStopPlay(); audio(); playingRec = true; updateRecUI();
   for (const ev of saved.events){
     playTimers.push(setTimeout(() => {
       if (ev.on){ startVoice(ev.m, 0.8); autoKey(ev.m, true); lastNote = ev.m; }
@@ -2496,6 +2533,243 @@ $('#btnPlayRec').onclick = () => {
   }
   playTimers.push(setTimeout(() => { playingRec = false; clearAuto(); updateRecUI(); updateDisplay(); }, (saved.len || 0) + 600));
 };
+
+/* ---------- Crear canción: grabarla por tramos y guardarla en «Tus canciones» ----------
+   Cada tramo guarda las teclas tal como se tocaron: [nota, inicio, duración], en milisegundos desde su primera nota.
+   El borrador vive en este navegador (piano:borrador) y no se pierde al salir. Al guardarlo pasa a ser una canción
+   propia, igual que una importada: 1 segundo de grabación = 2 pulsos a 120 por minuto. */
+const MK_CHORD = 80;        // notas que empiezan con menos de 80 ms de diferencia se tocan juntas, como acorde
+const MK_GAP = 2000;        // un silencio más largo que esto se acorta: es una pausa para buscar la tecla
+const MK_JOIN = 300;        // respiro entre el final de un tramo y el comienzo del siguiente
+const MK_MAX = 5 * 60000;   // duración máxima de un tramo
+const MK_SPEEDS = [[1, 'Como la grabé'], [1.25, '×1,25'], [1.5, '×1,5'], [2, '×2']];
+function mkClean(d){
+  const out = {tramos: [], song: '', name: '', speed: 1, dirty: false};
+  if (!d || !Array.isArray(d.tramos)) return out;
+  for (const t of d.tramos){
+    const n = (Array.isArray(t && t.n) ? t.n : []).filter(Array.isArray)
+      .map(a => [Math.round(+a[0]), Math.max(0, Math.round(+a[1])), Math.max(1, Math.round(+a[2]))])
+      .filter(a => a[0] >= 21 && a[0] <= 108 && isFinite(a[1]) && isFinite(a[2]));
+    if (n.length) out.tramos.push({n, len: n.reduce((m, a) => Math.max(m, a[1] + a[2]), 0)});
+  }
+  out.song = String(d.song || ''); out.name = String(d.name || '').slice(0, 80);
+  out.speed = MK_SPEEDS.some(x => x[0] === +d.speed) ? +d.speed : 1;
+  out.dirty = !!d.dirty && out.tramos.length > 0;
+  return out;
+}
+const mk = mkClean(store.get('piano:borrador', null));
+const Mk = {open: false, rec: null, sel: -1, play: null, timers: [], tick: 0, msg: '', armed: '', armT: 0, scroll: null};
+const mkSave = () => store.set('piano:borrador', mk);
+const mkCount = () => mk.tramos.reduce((a, t) => a + t.n.length, 0);
+const mkLen = () => mk.tramos.reduce((a, t) => a + t.len, 0) + MK_JOIN * Math.max(0, mk.tramos.length - 1);
+const mkSong = () => mk.song ? Data.items.find(s => s.id === mk.song) || null : null;
+const notasTxt = n => n === 1 ? '1 nota' : n + ' notas';
+/* De las teclas apretadas y soltadas a las notas de un tramo. */
+function mkTramo(ev, tEnd){
+  const open = new Map(), notes = [];
+  const close = (m, t) => { const t0 = open.get(m); open.delete(m); notes.push([m, t0, Math.max(60, t - t0)]); };
+  for (const e of ev){
+    if (e.on){ if (open.has(e.m)) close(e.m, e.t); open.set(e.m, e.t); }
+    else if (open.has(e.m)) close(e.m, e.t);
+  }
+  for (const m of [...open.keys()]) close(m, tEnd);
+  if (!notes.length) return null;
+  notes.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  // Acordes: las notas apretadas casi a la vez empiezan juntas.
+  let g0 = notes[0][1];
+  for (const n of notes){ if (n[1] - g0 <= MK_CHORD){ n[2] += n[1] - g0; n[1] = g0; } else g0 = n[1]; }
+  // El tramo empieza en su primera nota, y los silencios largos se acortan.
+  let shift = notes[0][1], cover = notes[0][1], len = 0;
+  for (const n of notes){
+    const gap = n[1] - cover;
+    if (gap > MK_GAP) shift += gap - MK_GAP;
+    cover = Math.max(cover, n[1] + n[2]);
+    n[1] = Math.round(n[1] - shift); n[2] = Math.round(n[2]);
+    len = Math.max(len, n[1] + n[2]);
+  }
+  return {n: notes, len};
+}
+/* Todas las notas en fila, un tramo detrás de otro (o solo el tramo «only»). */
+function mkFlat(only){
+  const notes = [], marks = []; let off = 0;
+  mk.tramos.forEach((t, i) => {
+    if (only >= 0 && i !== only) return;
+    marks.push({i, at: off});
+    for (const [m, s, d] of t.n) notes.push({m, at: off + s, d});
+    off += t.len + MK_JOIN;
+  });
+  return {notes, marks, len: Math.max(0, off - MK_JOIN)};
+}
+function mkStatus(){
+  const el = $('#mkStatus'), r = Mk.rec, n = mk.tramos.length;
+  let t;
+  if (r){
+    const k = (r.idx >= 0 ? r.idx : n) + 1;
+    t = r.t0 ? `Grabando el tramo ${k}: ${fmtTime(performance.now() - r.t0)}, ${notasTxt(r.n)}.`
+      : `Grabando el tramo ${k}. Empieza cuando quieras: el tiempo corre desde tu primera nota.`;
+  }
+  else if (Mk.play) t = Mk.play.only >= 0 ? `Suena el tramo ${Mk.play.only + 1}.` : `Suena la canción completa: va por el tramo ${Mk.play.cur + 1} de ${n}.`;
+  else if (Mk.msg) t = Mk.msg;
+  else if (!n) t = 'Graba un pedazo de la canción, detén y sigue con el siguiente. Al final la guardas en «Tus canciones» para practicarla.';
+  else if (Mk.sel >= 0 && mk.tramos[Mk.sel]){
+    const tr = mk.tramos[Mk.sel];
+    t = `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Puedes escucharlo, grabarlo de nuevo o borrarlo.`;
+  } else {
+    const s = mkSong();
+    t = `${n === 1 ? '1 tramo' : n + ' tramos'}, ${notasTxt(mkCount())}, ${fmtTime(mkLen())}. `
+      + (s && !mk.dirty ? `Guardada como «${s.title}».` : s ? `Tiene cambios que «${s.title}» todavía no tiene: guárdala otra vez.` : 'Todavía no está guardada como canción.');
+  }
+  el.setAttribute('aria-live', r ? 'off' : 'polite');
+  el.textContent = t; el.classList.toggle('rec', !!r);
+}
+function mkChips(){
+  const row = $('#mkChips'), sl = row.scrollLeft, busy = !!(Mk.rec || Mk.play);
+  const now = Mk.play ? Mk.play.cur : Mk.rec ? Mk.rec.idx : -1;
+  row.hidden = !mk.tramos.length;
+  row.innerHTML = mk.tramos.map((t, i) => `<button type="button" class="chip${i === now ? ' now' : ''}" data-tr="${i}" aria-pressed="${i === Mk.sel}"${busy ? ' disabled' : ''}>Tramo ${i + 1} · ${notasTxt(t.n.length)}</button>`).join('');
+  row.scrollLeft = sl;
+  const go = Mk.scroll != null ? Mk.scroll : now;
+  Mk.scroll = null;
+  const el = go >= 0 ? row.children[go] : null;
+  if (!el) return;
+  const rr = row.getBoundingClientRect(), er = el.getBoundingClientRect();
+  if (er.left < rr.left || er.right > rr.right) row.scrollLeft = Math.max(0, row.scrollLeft + er.left - rr.left - 12);
+}
+function mkActions(){
+  const n = mk.tramos.length, dot = '<span class="rec-dot"></span>';
+  let h;
+  if (Mk.rec) h = `<button class="btn recording" data-mk="stop">${dot}Detener tramo</button><button class="btn" data-mk="cancel">Descartar</button>`;
+  else if (Mk.play) h = `<button class="btn" data-mk="quiet">${ICON.stop}Parar</button>`;
+  else if (Mk.sel >= 0){
+    const k = Mk.sel + 1, arm = Mk.armed === 'del';
+    h = `<button class="btn" data-mk="play1">${ICON.play}Escuchar tramo ${k}</button><button class="btn" data-mk="redo">${dot}Grabar de nuevo</button>`
+      + `<button class="btn${arm ? ' armed' : ''}" data-mk="del">${arm ? `¿Borrar el tramo ${k}?` : ICON.trash + 'Borrar'}</button><button class="btn" data-mk="back">Volver</button>`;
+  } else {
+    const pend = !mkSong() || mk.dirty, arm = Mk.armed === 'new';
+    h = `<button class="btn${n ? '' : ' primary'}" data-mk="rec">${dot}Grabar tramo ${n + 1}</button>`;
+    if (n) h += `<button class="btn" data-mk="play">${ICON.play}Escuchar todo</button><button class="btn${pend ? ' primary' : ''}" data-mk="save">Guardar canción</button>`
+      + `<button class="linkbtn" data-mk="new">${arm ? '¿Borrar estos tramos y empezar otra?' : 'Empezar otra canción'}</button>`;
+  }
+  $('#mkAct').innerHTML = h;
+}
+function mkRender(){ if (!Mk.open) return; mkStatus(); mkChips(); mkActions(); }
+function mkDisarm(){ clearTimeout(Mk.armT); Mk.armed = ''; }
+/* Lo que borra pide dos toques, como al eliminar una canción de la lista. */
+function mkArm(what){
+  if (Mk.armed === what){ mkDisarm(); return true; }
+  mkDisarm(); Mk.armed = what;
+  Mk.armT = setTimeout(() => { Mk.armed = ''; if (Mk.open) mkActions(); }, 3500);
+  mkActions();
+  return false;
+}
+function mkStopPlay(){
+  Mk.timers.forEach(clearTimeout); Mk.timers = [];
+  if (!Mk.play) return;
+  Mk.play = null; clearAuto(); updateDisplay(); mkRender();
+}
+function mkPlay(only){
+  mkStopPlay(); stopRec(); stopPlayback();
+  const f = mkFlat(only);
+  if (!f.notes.length) return;
+  audio();
+  Mk.msg = ''; mkDisarm();
+  Mk.play = {only, cur: f.marks[0].i};
+  for (const k of f.marks.slice(1)) Mk.timers.push(setTimeout(() => { if (Mk.play){ Mk.play.cur = k.i; mkStatus(); mkChips(); } }, k.at));
+  for (const n of f.notes){
+    Mk.timers.push(setTimeout(() => { startVoice(n.m, 0.8); autoKey(n.m, true); lastNote = n.m; updateDisplay(); }, n.at));
+    Mk.timers.push(setTimeout(() => { autoKey(n.m, false); if (!autoCount.has(n.m) && !down.has(n.m)) releaseVoice(n.m); updateDisplay(); }, n.at + Math.min(n.d, 8000)));
+  }
+  Mk.timers.push(setTimeout(mkStopPlay, f.len + 500));
+  mkRender();
+}
+function mkStartRec(idx){
+  if (Mk.rec) return;
+  if (idx < 0 && mkCount() >= MAX_NOTAS){ Mk.msg = `La canción ya tiene ${MAX_NOTAS} notas, que es el máximo. Guárdala y sigue en otra canción.`; mkRender(); return; }
+  mkStopPlay(); stopRec(); stopPlayback(); audio();
+  Mk.msg = ''; mkDisarm();
+  Mk.rec = {idx, ev: [], t0: 0, n: 0};
+  Mk.tick = setInterval(() => { const r = Mk.rec; if (r && r.t0 && performance.now() - r.t0 >= MK_MAX) mkStopRec(); else if (r) mkStatus(); }, 500);
+  mkRender();
+}
+/* Cada tecla apretada o soltada mientras se graba un tramo (desde onPress y onRelease). */
+function mkKey(m, on){
+  const r = Mk.rec; if (!r) return;
+  const t = performance.now();
+  if (on){ if (!r.t0) r.t0 = t; r.n++; }
+  else if (!r.t0) return;
+  r.ev.push({t, m, on});
+  if (on) mkStatus();
+}
+function mkStopRec(keep = true){
+  const r = Mk.rec; if (!r) return;
+  Mk.rec = null; clearInterval(Mk.tick);
+  const t = keep ? mkTramo(r.ev, performance.now()) : null;
+  if (t){
+    if (r.idx >= 0 && r.idx < mk.tramos.length) mk.tramos[r.idx] = t; else mk.tramos.push(t);
+    mk.dirty = true; mkSave();
+    Mk.scroll = r.idx >= 0 && r.idx < mk.tramos.length ? r.idx : mk.tramos.length - 1;
+  } else if (keep) Mk.msg = 'En ese tramo no se grabó ninguna nota.';
+  Mk.sel = -1;
+  mkRender();
+}
+function mkSaveSong(){
+  const f = mkFlat(-1);
+  if (!f.notes.length) return;
+  let lo = 127, hi = 0, sum = 0;
+  const notes = f.notes.map(n => { lo = Math.min(lo, n.m); hi = Math.max(hi, n.m); sum += n.m; return {midi: n.m, start: n.at / 500, dur: n.d / 500}; });
+  const old = mkSong();
+  openImportDialog({bpm: 120, parts: [{name: 'Tu grabación', notes, count: notes.length, lo, hi, avg: sum / notes.length}]}, (old && old.title) || mk.name || 'Mi canción', {maker: true});
+}
+function mkToggle(on){
+  on = !!on;
+  if (Mk.open === on) return;
+  if (on){ stopRec(); stopPlayback(); } else { mkStopRec(); mkStopPlay(); }
+  Mk.open = on; Mk.sel = -1; Mk.msg = ''; mkDisarm();
+  $('#maker').hidden = !on;
+  $('#viewFree').classList.toggle('making', on);
+  $('#btnMaker').setAttribute('aria-pressed', on ? 'true' : 'false');
+  mkRender();
+}
+/* Al salir de «Tocar libre»: lo que se estaba grabando queda guardado como tramo. */
+function mkLeave(){ mkStopRec(); mkStopPlay(); }
+$('#btnMaker').onclick = () => mkToggle(!Mk.open);
+$('#mkChips').addEventListener('click', e => {
+  const b = e.target.closest('[data-tr]');
+  if (!b || Mk.rec || Mk.play) return;
+  const i = +b.dataset.tr;
+  Mk.sel = Mk.sel === i ? -1 : i; Mk.msg = ''; mkDisarm();
+  mkRender();
+});
+$('#mkAct').addEventListener('click', e => {
+  const b = e.target.closest('[data-mk]');
+  if (!b) return;
+  const a = b.dataset.mk;
+  if (a !== 'del' && a !== 'new') mkDisarm();
+  if (a === 'rec') mkStartRec(-1);
+  else if (a === 'redo') mkStartRec(Mk.sel);
+  else if (a === 'stop') mkStopRec();
+  else if (a === 'cancel') mkStopRec(false);
+  else if (a === 'play') mkPlay(-1);
+  else if (a === 'play1') mkPlay(Mk.sel);
+  else if (a === 'quiet') mkStopPlay();
+  else if (a === 'back'){ Mk.sel = -1; Mk.msg = ''; mkRender(); }
+  else if (a === 'save') mkSaveSong();
+  else if (a === 'del'){
+    if (!mkArm('del')) return;
+    mk.tramos.splice(Mk.sel, 1);
+    mk.dirty = mk.tramos.length > 0; mkSave();
+    Mk.sel = -1; Mk.msg = '';
+    mkRender();
+  }
+  else if (a === 'new'){
+    // Si todo lo grabado ya está en una canción guardada, no hay nada que perder.
+    if ((mk.dirty || !mkSong()) && !mkArm('new')) return;
+    mkDisarm();
+    Object.assign(mk, {tramos: [], song: '', name: '', speed: 1, dirty: false}); mkSave();
+    Mk.sel = -1; Mk.msg = 'Lista para una canción nueva. La anterior, si la guardaste, sigue en «Tus canciones».';
+    mkRender(); Mk.msg = '';
+  }
+});
 
 /* ---------- Aprender: listas ---------- */
 let listMsg = '';
@@ -2564,9 +2838,9 @@ function renderSongs(){
   const mine = Data.items.filter(s => s.kind === 'midi');
   h += `<section class="lvl"><h2>Tus canciones</h2>
     <p class="lead">${IN_CLAUDE
-      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, y practícalo igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges si la tocas con una mano o con las dos, y la dificultad, de «Muy fácil» a «Completa».'
-      : 'Importa un archivo MIDI (.mid), o crea la canción desde una grabación: pones la música a sonar y la app la convierte en notas. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges si la tocas con una mano o con las dos, y la dificultad, de «Muy fácil» a «Completa».'}</p>
-    <div class="imp-row"><button class="btn primary" id="btnImport">Importar archivo MIDI</button>${IN_CLAUDE ? '' : '<a class="btn" id="btnFromAudio" href="AudioMIDI.html">Crear desde una grabación</a>'}</div>`;
+      ? 'Importa un archivo MIDI (.mid) o el .zip que descargas de la app Audio a MIDI, o graba la canción tú mismo, tecla por tecla y por tramos. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges si la tocas con una mano o con las dos, y la dificultad, de «Muy fácil» a «Completa».'
+      : 'Importa un archivo MIDI (.mid), crea la canción desde una grabación (pones la música a sonar y la app la convierte en notas) o grábala tú mismo, tecla por tecla y por tramos. Luego la practicas igual que las demás: con notas que caen, modo Esperar y velocidad ajustable. En cada canción eliges si la tocas con una mano o con las dos, y la dificultad, de «Muy fácil» a «Completa».'}</p>
+    <div class="imp-row"><button class="btn primary" id="btnImport">Importar archivo MIDI</button>${IN_CLAUDE ? '' : '<a class="btn" id="btnFromAudio" href="AudioMIDI.html">Crear desde una grabación</a>'}<button class="btn" id="btnFromKeys">Grabarla tecla por tecla</button></div>`;
   if (listMsg) h += `<p class="msg" role="status">${esc(listMsg)}</p>`;
   h += mine.length ? mine.map(rowItem).join('')
     : '<p class="empty">Puedes descargar archivos MIDI gratuitos de música clásica en mutopiaproject.org, o buscar en internet el nombre de una canción junto a la palabra «MIDI».</p>';
@@ -2601,6 +2875,7 @@ $('#songList').addEventListener('click', e => {
   const t = e.target.closest('[data-tab]');
   if (t){ settings.learnTab = t.dataset.tab; saveSettings(); listMsg = ''; renderList(); $('#songList').scrollTop = 0; return; }
   if (e.target.closest('#btnImport')){ listMsg = ''; $('#midiFile').click(); return; }
+  if (e.target.closest('#btnFromKeys')){ goFree(); mkToggle(true); return; }
   const sb = e.target.closest('[data-ses]');
   if (sb){ openSesItem(+sb.dataset.ses); return; }
   if (e.target.closest('[data-go="teoria"]')){ goTheory(); return; }
@@ -2935,7 +3210,7 @@ async function unzipMidi(buf){
   throw new Error('zip-sin-midi');
 }
 const impDlg = $('#impDlg');
-let impData = null, impLv = 2, impHands = 1;
+let impData = null, impLv = 2, impHands = 1, impOpt = null, impVel = 1;
 function takePending(){
   let raw = null;
   try { raw = localStorage.getItem('piano:pendiente'); if (raw) localStorage.removeItem('piano:pendiente'); } catch(e){}
@@ -2981,8 +3256,12 @@ $('#midiFile').addEventListener('change', async e => {
     if (view === 'list') renderList();
   }
 });
-function openImportDialog(mid, fileName){
-  impData = mid;
+/* opt.maker: la canción viene del grabador por tramos de «Tocar libre», no de un archivo. */
+function openImportDialog(mid, fileName, opt){
+  impData = mid; impOpt = opt || null;
+  const mkr = !!(impOpt && impOpt.maker);
+  $('#impTitle').textContent = mkr ? 'Guardar canción' : 'Importar canción';
+  $('#impPartsField').hidden = mkr; $('#impSpeedField').hidden = !mkr;
   $('#impName').value = fileName.replace(/\.(mid|midi|kar)$/i, '').replace(/[_]+/g, ' ').trim().slice(0, 80) || 'Mi canción';
   let def = 0, bestAvg = -1;
   mid.parts.forEach((p, i) => { if (p.count >= 8 && p.avg > bestAvg){ bestAvg = p.avg; def = i; } });
@@ -2991,7 +3270,15 @@ function openImportDialog(mid, fileName){
   if (mid.parts.length > 1) h += `<label class="part"><input type="radio" name="impPart" value="all">
     <span><span class="pn">Todas las partes juntas</span><span class="pd">Para tocar con las dos manos</span></span></label>`;
   $('#impParts').innerHTML = h;
-  impLv = 2; impHands = 1;
+  impLv = 2; impHands = 1; impVel = 1;
+  if (mkr){
+    // Lo que uno mismo grabó se guarda completo: con las dos manos si hay notas graves.
+    impLv = 4; impHands = 2; impVel = mk.speed;
+    impData.bpm = Math.round(120 * impVel);
+  }
+  const old = mkr ? mkSong() : null;
+  $('#impReplaceBox').hidden = !old; $('#impReplace').checked = !!old;
+  if (old) $('#impReplaceTxt').textContent = `Reemplazar «${old.title}», la versión que guardaste antes. Sus estrellas se borran.`;
   updateImpInfo();
   impDlg.showModal();
 }
@@ -3014,7 +3301,11 @@ function updateImpInfo(){
   desc.textContent = NIVELES[cur].desc + ' Podrás cambiar las manos y la dificultad cuando quieras al practicar.';
   let lo = 127, hi = 0;
   for (const n of ns){ lo = Math.min(lo, n.midi); hi = Math.max(hi, n.midi); }
-  let t = `Con esta dificultad tocas ${ns.length} notas, de ${fullName(lo)} a ${fullName(hi)}. Tempo: ${impData.bpm} pulsos por minuto.`;
+  const mkr = !!(impOpt && impOpt.maker);
+  if (mkr) $('#impSpeed').innerHTML = MK_SPEEDS.map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${v === impVel}">${t}</button>`).join('');
+  let t = `Con esta dificultad tocas ${ns.length} notas, de ${fullName(lo)} a ${fullName(hi)}.`;
+  if (mkr) t += ` Dura ${fmtTime(ns.reduce((a, n) => Math.max(a, n.start + n.dur), 0) * 60000 / impData.bpm)}.`;
+  else t += ` Tempo: ${impData.bpm} pulsos por minuto.`;
   if (r.truncated) t += ` Es una canción larga: se guardan las primeras ${MAX_NOTAS} notas.`;
   if (countWhites(lo, hi) > 22) t += ' Las notas están muy separadas: en el celular gira la pantalla para ver las teclas más grandes.';
   info.textContent = t;
@@ -3023,6 +3314,7 @@ function updateImpInfo(){
 $('#impParts').addEventListener('change', updateImpInfo);
 $('#impLevel').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ impLv = +b.dataset.v; updateImpInfo(); } });
 $('#impHands').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled){ impHands = +b.dataset.v; updateImpInfo(); } });
+$('#impSpeed').addEventListener('click', e => { const b = e.target.closest('button'); if (b && impData){ impVel = +b.dataset.v; impData.bpm = Math.round(120 * impVel); updateImpInfo(); } });
 $('#impCancel').onclick = () => impDlg.close();
 impDlg.addEventListener('click', e => { if (e.target === impDlg) impDlg.close(); });
 $('#impSave').onclick = async () => {
@@ -3032,6 +3324,12 @@ $('#impSave').onclick = async () => {
   const btn = $('#impSave');
   btn.disabled = true; btn.textContent = 'Guardando…';
   const s = await Data.addItem({kind: 'midi', title: $('#impName').value.trim() || 'Mi canción', bpm: impData.bpm, notas: encodeNotes(r.notes), nivel: sel.level});
+  if (impOpt && impOpt.maker){
+    // El borrador recuerda qué canción salió de él, para poder seguir grabando y reemplazarla después.
+    const old = mkSong();
+    if (old && old.id !== s.id && $('#impReplace').checked) await Data.deleteItem(old.id);
+    Object.assign(mk, {song: s.id, name: s.title, speed: impVel, dirty: false}); mkSave();
+  }
   btn.disabled = false; btn.textContent = 'Guardar y practicar';
   impDlg.close();
   settings.learnTab = 'canciones'; saveSettings(); listMsg = '';
@@ -5108,7 +5406,7 @@ function setTabs(){
   syncWake(); histView();
 }
 function leaveAll(){
-  leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); clearQuiz();
+  leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); mkLeave(); clearQuiz();
   $('#player').hidden = true; $('#reto').hidden = true; $('#songList').hidden = false;
 }
 function goHome(){
@@ -5341,7 +5639,7 @@ function goTheory(){
 }
 function goFree(){
   leaveAll(); TL = null;
-  area = 'practice'; view = 'free'; setTabs(); buildFree(); updateDisplay();
+  area = 'practice'; view = 'free'; setTabs(); buildFree(); updateDisplay(); mkRender();
 }
 function goLearn(){
   leaveAll(); TL = null;
