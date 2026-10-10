@@ -917,7 +917,7 @@ const LESSONS = [
    left:'C3+E3+G3:4:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:4:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1'},
   /* ----- Nivel 2 ----- */
   {id:'cinco-fa', bpm:80, sig:-1, title:'Cinco dedos en Fa', summary:'Tu primer bemol: Si♭.',
-   goal:'Pon el pulgar en Fa: dedo 1 en Fa, 2 en Sol, 3 en La, 4 en Si♭ y 5 en Do. Si♭ es la tecla negra que está justo a la izquierda de Si: un bemol (♭) baja la nota a la tecla de al lado. En la partitura el bemol aparece una sola vez, al principio, junto a la clave: es la armadura de Fa mayor.',
+   goal:'Pon el pulgar en Fa: dedo 1 en Fa, 2 en Sol, 3 en La, 4 en Si♭ y 5 en Do. Si♭ es la tecla negra que está justo a la izquierda de Si: un bemol (♭) baja la nota medio tono, a la tecla más cercana hacia la izquierda, sea negra o blanca. En la partitura el bemol aparece una sola vez, al principio, junto a la clave: es la armadura de Fa mayor.',
    notes:'F4:1:1 G4:1:2 A4:1:3 Bb4:1:4 C5:2:5 C5:2:5 Bb4:1:4 A4:1:3 G4:1:2 F4:1:1 F4:2:1 A4:2:3 C5:1:5 Bb4:1:4 A4:1:3 Bb4:1:4 A4:1:3 G4:1:2 F4:2:1 G4:1:2 Bb4:1:4 A4:1:3 G4:1:2 F4:4:1'},
   {id:'escala-fa', bpm:72, sig:-1, title:'Escala de Fa mayor', summary:'El pulgar pasa después del dedo 4.',
    goal:'En esta escala el pulgar no pasa después del dedo 3 sino después del 4: Fa, Sol, La y Si♭ con los dedos 1, 2, 3 y 4; el pulgar pasa por debajo para tocar Do, y siguen Re, Mi y Fa con 2, 3 y 4. Al bajar, el dedo 4 cruza por encima del pulgar para tocar Si♭.',
@@ -929,7 +929,7 @@ const LESSONS = [
    goal:'La armadura ahora tiene dos sostenidos: Fa♯ y Do♯. Los dedos son los mismos de la escala de Do: 1, 2 y 3 en Re, Mi y Fa♯; el pulgar pasa por debajo para tocar Sol, y siguen La, Si, Do♯ y Re con 2, 3, 4 y 5.',
    notes:'D4:1:1 E4:1:2 F#4:1:3 G4:1:1 A4:1:2 B4:1:3 C#5:1:4 D5:1:5 C#5:1:4 B4:1:3 A4:1:2 G4:1:1 F#4:1:3 E4:1:2 D4:2:1'},
   {id:'re-mayor-menor', bpm:76, title:'Re mayor y Re menor', summary:'Una sola tecla cambia el color.',
-   goal:'Compara dos posiciones con el pulgar en Re. Con Fa♯ suena Re mayor, luminoso; con Fa natural suena Re menor, más oscuro. Lo único que cambia es el dedo 3: toca la tecla negra o la blanca de al lado.',
+   goal:'Compara dos posiciones con el pulgar en Re. Con Fa♯ suena Re mayor, luminoso; con Fa natural suena Re menor, más oscuro. Lo único que cambia es el dedo 3: toca la tecla negra o la blanca de al lado. En la partitura, el signo ♮ (becuadro) delante de un Fa anula el sostenido.',
    notes:'D4:1:1 E4:1:2 F#4:1:3 G4:1:4 A4:2:5 F#4:2:3 D4:1:1 E4:1:2 F4:1:3 G4:1:4 A4:2:5 F4:2:3 D4+F#4+A4:2:1+3+5 D4+F4+A4:2:1+3+5 A4:1:5 G4:1:4 F4:1:3 E4:1:2 D4+F4+A4:4:1+3+5'},
   {id:'escala-izq', bpm:66, hand:'L', title:'Escala de Do con la izquierda', summary:'El dedo 3 cruza por encima del pulgar.',
    goal:'La mano izquierda sube al revés que la derecha: empieza con el meñique en Do y llega al pulgar en Sol; entonces el dedo 3 cruza por encima para tocar La, y siguen Si y Do con 2 y 1. Al bajar, después de La el pulgar pasa por debajo para tocar Sol.',
@@ -943,8 +943,8 @@ const LESSONS = [
   {id:'semicorcheas', bpm:60, title:'Semicorcheas', summary:'Cuatro notas en un solo pulso.',
    goal:'La semicorchea dura un cuarto de pulso: caben cuatro en cada clic del metrónomo. Di «ca-fe-ci-to» en cada pulso para repartirlas parejas. Empieza al 50 % y con los dedos muy cerca de las teclas.',
    notes:'C4:0.25:1 D4:0.25:2 E4:0.25:3 F4:0.25:4 G4:1:5 G4:0.25:5 F4:0.25:4 E4:0.25:3 D4:0.25:2 C4:1:1 C4:0.25:1 D4:0.25:2 E4:0.25:3 F4:0.25:4 G4:0.25:5 F4:0.25:4 E4:0.25:3 D4:0.25:2 C4:2:1 E4:0.25:3 F4:0.25:4 G4:0.25:5 F4:0.25:4 E4:1:3 D4:0.25:2 E4:0.25:3 F4:0.25:4 E4:0.25:3 D4:1:2 C4:0.25:1 E4:0.25:3 D4:0.25:2 F4:0.25:4 E4:0.25:3 G4:0.25:5 F4:0.25:4 D4:0.25:2 C4:2:1'},
-  {id:'galope', bpm:72, title:'Corchea y dos semicorcheas', summary:'El ritmo de galope.',
-   goal:'Una nota larga y dos rápidas en cada pulso: «pan, pa-ra, pan, pa-ra». La corchea ocupa la primera mitad del pulso y las dos semicorcheas, la segunda. Mantén el pulso parejo aunque las notas rápidas te quieran empujar.',
+  {id:'galope', bpm:60, title:'Corchea y dos semicorcheas', summary:'El ritmo de galope.',
+   goal:'Una nota larga y dos rápidas en cada pulso: «pan, pa-ra, pan, pa-ra». La corchea ocupa la primera mitad del pulso y las dos semicorcheas, la segunda. Mantén el pulso parejo aunque las notas rápidas te quieran empujar. Empieza al 50 %.',
    notes:'C4:0.5:1 C4:0.25:1 C4:0.25:1 E4:0.5:3 E4:0.25:3 E4:0.25:3 G4:0.5:5 G4:0.25:5 G4:0.25:5 E4:1:3 F4:0.5:4 F4:0.25:4 F4:0.25:4 D4:0.5:2 D4:0.25:2 D4:0.25:2 E4:2:3 C4:0.5:1 D4:0.25:2 E4:0.25:3 F4:0.5:4 E4:0.25:3 D4:0.25:2 E4:0.5:3 F4:0.25:4 G4:0.25:5 E4:1:3 D4:0.5:2 E4:0.25:3 F4:0.25:4 D4:1:2 C4:2:1'},
   {id:'seis-octavos', bpm:100, pulse:1.5, meter:2, title:'El compás de 6/8', summary:'Dos pulsos, cada uno con tres corcheas.',
    goal:'En el compás de 6/8 cada pulso se divide en tres corcheas en lugar de dos: cuenta «1, 2, 3, 4, 5, 6» con un pequeño acento en el 1 y en el 4. El metrónomo marca solo esos dos pulsos. Se siente como mecerse.',
@@ -956,13 +956,13 @@ const LESSONS = [
    goal:'En las teclas blancas hay tres acordes menores: Re menor (Re, Fa, La), Mi menor (Mi, Sol, Si) y La menor (La, Do, Mi). Los tres se tocan con los dedos 1, 3 y 5, moviendo toda la mano de un acorde al otro. Compáralos con Do mayor, que suena al principio y al final.',
    notes:'C4+E4+G4:4:1+3+5 D4+F4+A4:4:1+3+5 E4+G4+B4:4:1+3+5 D4+F4+A4:4:1+3+5 D4:1:1 F4:1:3 A4:2:5 E4:1:1 G4:1:3 B4:2:5 A3+C4+E4:4:1+3+5 C4+E4+G4:4:1+3+5'},
   {id:'sol-siete', bpm:66, title:'El acorde de Sol7', summary:'El acorde que pide volver a Do.',
-   goal:'Sol7 es el acorde de Sol con una nota más: Fa. Sin sacar la mano de la posición de Do se toca con Si, Fa y Sol: el pulgar baja a Si y los dedos 4 y 5 tocan Fa y Sol. Suena tenso, como una pregunta, y el acorde de Do la responde. Escucha esa tensión y ese descanso.',
+   goal:'Sol7 es el acorde de Sol con una nota más: Fa (el Re se deja fuera para que quepa en la mano). Sin sacar la mano de la posición de Do se toca con Si, Fa y Sol: el pulgar baja a Si y los dedos 4 y 5 tocan Fa y Sol. Suena tenso, como una pregunta, y el acorde de Do la responde. Escucha esa tensión y ese descanso.',
    notes:'C4+E4+G4:4:1+3+5 B3+F4+G4:4:1+4+5 C4+E4+G4:4:1+3+5 B3+F4+G4:2:1+4+5 C4+E4+G4:2:1+3+5 C4+F4+A4:4:1+3+5 B3+F4+G4:4:1+4+5 C4+E4+G4:2:1+3+5 B3+F4+G4:2:1+4+5 C4+E4+G4:4:1+3+5'},
   {id:'enlace', bpm:66, title:'Enlazar acordes', summary:'Do, La menor, Fa y Sol casi sin mover la mano.',
    goal:'Con inversiones se pasa de un acorde a otro moviendo muy poco. De Do (Do, Mi, Sol) a La menor solo sube el meñique, de Sol a La. De La menor a Fa solo cambia Mi por Fa. Para Sol baja toda la mano un paso: Si, Re, Sol. Antes de cada cambio, busca qué notas se quedan en su lugar.',
-   notes:'C4+E4+G4:4:1+3+5 C4+E4+A4:4:1+2+5 C4+F4+A4:4:1+3+5 B3+D4+G4:4:1+2+5 C4+E4+G4:2:1+3+5 C4+E4+A4:2:1+2+5 C4+F4+A4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:4:1+3+5'},
+   notes:'C4+E4+G4:4:1+3+5 C4+E4+A4:4:1+3+5 C4+F4+A4:4:1+3+5 B3+D4+G4:4:1+2+5 C4+E4+G4:2:1+3+5 C4+E4+A4:2:1+3+5 C4+F4+A4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:4:1+3+5'},
   {id:'alberti', bpm:72, hand:'L', title:'El bajo Alberti', summary:'El acorde repartido: abajo, arriba, medio, arriba.',
-   goal:'Un acompañamiento clásico: las notas del acorde una por una, en el orden abajo, arriba, medio, arriba. Para Do: Do, Sol, Mi, Sol con los dedos 5, 1, 3 y 1. La mano no se desplaza; la muñeca gira un poco hacia cada lado, como al abrir una puerta.',
+   goal:'Un acompañamiento clásico: las notas del acorde una por una, en el orden abajo, arriba, medio, arriba. Para Do: Do, Sol, Mi, Sol con los dedos 5, 1, 3 y 1. La mano no se desplaza; la muñeca gira un poco hacia cada lado, como al girar la perilla de una puerta.',
    notes:'C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3+E3+G3:4:5+3+1'},
   {id:'alberti-melodia', bpm:72, title:'Melodía con bajo Alberti', summary:'La derecha canta notas largas sobre el acompañamiento.',
    goal:'Junta las dos manos: la izquierda toca el bajo Alberti del ejercicio anterior y la derecha, una melodía de notas largas. Practica primero cada mano sola con la ayuda «Por partes». La izquierda debe sonar más suave que la melodía.',
@@ -975,17 +975,17 @@ const LESSONS = [
    goal:'Un juego de contraste: cada compás se toca fuerte y enseguida se repite suave, como un eco entre montañas. Prepara el cambio antes de tocar: para el eco, acerca los dedos a las teclas y casi no levantes la mano.',
    notes:'C4:1:1 E4:1:3 G4:2:5 C4:1:1 E4:1:3 G4:2:5 G4:1:5 F4:1:4 E4:2:3 G4:1:5 F4:1:4 E4:2:3 E4:1:3 F4:1:4 G4:1:5 E4:1:3 E4:1:3 F4:1:4 G4:1:5 E4:1:3 D4:1:2 E4:1:3 C4:2:1 D4:1:2 E4:1:3 C4:2:1'},
   {id:'staccato', bpm:84, art:'0:s 28:n', title:'Staccato: notas cortas', summary:'Toca y suelta, como si la tecla quemara.',
-   goal:'El punto encima o debajo de una nota es el staccato: la nota suena corta y separada de la siguiente. Toca la tecla y suéltala enseguida, con un pequeño rebote de la muñeca, pero sin apurar el pulso: el silencio entre las notas también cuenta. Las barras se ven cortas para recordártelo. La última nota es larga.',
+   goal:'El punto encima o debajo de una nota es el staccato, que también se dice picado: la nota suena corta y separada de la siguiente. Toca la tecla y suéltala enseguida, con un pequeño rebote de la muñeca, pero sin apurar el pulso: el silencio entre las notas también cuenta. Las barras se ven cortas para recordártelo. La última nota es larga.',
    notes:'C4:1:1 E4:1:3 G4:1:5 E4:1:3 C4:1:1 E4:1:3 G4:1:5 R:1 F4:1:4 D4:1:2 F4:1:4 D4:1:2 E4:1:3 C4:1:1 E4:1:3 R:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 C4:1:1 D4:1:2 E4:1:3 R:1 D4:1:2 F4:1:4 E4:1:3 D4:1:2 C4:4:1'},
   {id:'legato', bpm:76, art:'0:l', title:'Legato: notas ligadas', summary:'No sueltes una nota hasta que suene la siguiente.',
-   goal:'Legato es lo contrario del staccato: las notas se unen sin huecos, como al cantar con una sola respiración. No sueltes una tecla hasta que la siguiente ya esté sonando; por un instante las dos están abajo. En este ejercicio la app revisa que mantengas cada nota hasta el final de su barra.',
+   goal:'Legato es lo contrario del staccato: las notas se unen sin huecos, como al cantar con una sola respiración. No sueltes una tecla hasta que la siguiente ya esté sonando; por un instante las dos están abajo. En este ejercicio la app revisa que no quede silencio entre una nota y la siguiente. En la partitura, la curva debajo de las notas es la ligadura: todo lo que abarca va unido, y donde termina puedes levantar la mano para respirar.',
    notes:'C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:2:5 E4:2:3 F4:1:4 E4:1:3 D4:1:2 C4:1:1 D4:4:2 E4:1:3 F4:1:4 G4:1:5 E4:1:3 F4:2:4 D4:2:2 E4:1:3 D4:1:2 C4:1:1 D4:1:2 C4:4:1'},
   {id:'ligado-picado', bpm:80, art:'0:l 8:s 16:l 24:s', title:'Ligado y picado', summary:'Dos maneras de decir la misma frase.',
    goal:'La misma melodía, primero ligada y después en staccato. Fíjate cómo cambia el carácter: ligada suena tranquila y cantada; picada, juguetona. Mira las barras: las largas se mantienen hasta el final, las cortas se sueltan enseguida.',
    notes:'C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:1:5 E4:1:3 C4:2:1 C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:1:5 E4:1:3 C4:1:1 R:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 E4:1:3 D4:1:2 C4:2:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 E4:1:3 D4:1:2 C4:1:1 R:1'},
   {id:'pedal', bpm:72, ped:'0-4 4-8 8-12 12-16 16-20 20-24 24-28 28-32', title:'El pedal derecho', summary:'Deja sonar el acorde y cambia el pedal en cada compás.',
    goal:'El pedal derecho deja sonando las notas aunque sueltes las teclas. Písalo con el pie derecho, con el talón apoyado en el suelo. En cada compás nuevo se cambia: toca la primera nota, levanta el pie y vuelve a pisar enseguida, para que el acorde anterior no se mezcle con el nuevo. La franja de la derecha muestra cuándo va pisado. Si tu teclado no tiene pedal conectado, toca las notas igual: la app califica solo eso.',
-   notes:'C4:1:1 E4:1:2 G4:1:3 C5:1:5 A3:1:1 C4:1:2 E4:1:3 A4:1:5 A3:1:1 C4:1:2 F4:1:4 A4:1:5 B3:1:1 D4:1:2 G4:1:4 B4:1:5 C4:1:1 E4:1:2 G4:1:3 C5:1:5 A3:1:1 C4:1:2 F4:1:4 A4:1:5 B3:1:1 D4:1:2 G4:1:4 B4:1:5 C4+E4+G4:4:1+3+5'},
+   notes:'C4:1:1 E4:1:3 G4:1:5 E4:1:3 C4:1:1 E4:1:3 A4:1:5 E4:1:3 C4:1:1 F4:1:3 A4:1:5 F4:1:3 B3:1:1 D4:1:2 G4:1:5 D4:1:2 C4:1:1 E4:1:3 G4:1:5 E4:1:3 C4:1:1 F4:1:3 A4:1:5 F4:1:3 B3:1:1 D4:1:2 G4:1:5 D4:1:2 C4+E4+G4:4:1+3+5'},
   {id:'estudio-fa', bpm:76, sig:-1, dyn:'0:p 16:f', title:'Pequeño estudio en Fa', summary:'Todo junto: dos manos, armadura, bajo Alberti y matices.',
    goal:'Una pieza corta para reunir lo aprendido en este nivel. Está en Fa mayor, con Si♭ en la armadura; la izquierda acompaña con bajo Alberti; la primera mitad va suave y la segunda, fuerte. Trabájala por partes y sin prisa: es tu pieza de graduación del Nivel 2.',
    notes:'A4:2:3 C5:2:5 Bb4:2:4 G4:2:2 A4:1:3 G4:1:2 F4:1:1 A4:1:3 G4:4:2 A4:2:3 C5:2:5 Bb4:1:4 A4:1:3 G4:1:2 Bb4:1:4 A4:2:3 G4:2:2 F4:4:1',
@@ -1128,6 +1128,13 @@ function songData(s){
       const d = markAt(dy, n.start), a = markAt(ar, n.start);
       if (d === 'f' || d === 'p') n.dyn = d;
       if (a === 's' || a === 'l') n.art = a;
+    }
+    // Fin de frase: una nota ligada larga que termina justo en la barra de compás. Ahí la mano puede respirar.
+    const mlen = (s.pulse || 1) * (s.meter || 4);
+    for (const n of out){
+      if (n.art !== 'l' || n.dur < 2) continue;
+      const end = n.start + n.dur;
+      if (Math.abs(end / mlen - Math.round(end / mlen)) < 1e-6) n.legEnd = true;
     }
   }
   s._cache = {notes: out, length: len};
@@ -1966,12 +1973,14 @@ function releaseVoice(m){
   if (!pedal) stopVoice(m, m > 84 ? 0.15 : 0.09);
 }
 const pedalSrc = new Set();
+let pedalKnown = false;   // el teclado ya envió alguna vez la señal de su pedal
 function setPedal(src, on){
+  const was = pedalSrc.has(src);
   if (on) pedalSrc.add(src); else pedalSrc.delete(src);
   pedal = pedalSrc.size > 0;
   $('#btnPedal').setAttribute('aria-pressed', pedal ? 'true' : 'false');
   if (!pedal) for (const [m, v] of [...voices]) if (!v.held) stopVoice(m, 0.12);
-  if (src === 'midi' && view === 'player' && P) pedalMark(on);
+  if (src === 'midi'){ pedalKnown = true; if (was && !on && view === 'player' && P) pedalLift(); }
 }
 
 /* ---------- Teclado en pantalla ---------- */
@@ -2863,7 +2872,8 @@ const tolBeats = () => Math.min(0.45, 0.28 * bps());
 const handOf = n => n.hand === 'L' ? 'L' : 'R';
 /* Expresión: cómo suena una nota cuando la toca la app, y los límites para calificarla. */
 const EXPR = {f: 'fuerte', p: 'suave', s: 'corto', l: 'ligado'};
-const DYN_GAP = 12;   // diferencia mínima entre fuerte y suave, en la escala de 0 a 127 que envía el teclado
+const DYN_GAP = 20;   // diferencia mínima entre fuerte y suave, en la escala de 0 a 127 que envía el teclado
+const LEG_GAP = 0.18; // segundos de silencio que se toleran entre dos notas ligadas
 const velOf = n => n.dyn === 'f' ? 0.98 : n.dyn === 'p' ? 0.42 : 0.75;
 const stacLimit = n => Math.max(0.2, Math.min(0.5, 0.5 * n.dur / bps()));   // segundos que puede durar una nota corta
 function soundLen(n){
@@ -2930,7 +2940,10 @@ function buildRun(){
   const inRun = t => t >= a - 1e-6 && t < b - 1e-6;
   P.hasDyn = mine.some(n => n.dyn);
   P.dynMarks = P.level ? [] : marksOf(s.dyn).filter(k => (k.v === 'f' || k.v === 'p') && inRun(k.t));
-  P.ped = P.level ? [] : pedSpans(s.ped).filter(sp => inRun(sp.a)).map(sp => ({a: sp.a, b: Math.min(sp.b, b), down: 0, lift: false}));
+  // Una parte que empieza a mitad de un matiz lo muestra igual al principio.
+  const d0 = P.level ? '' : markAt(marksOf(s.dyn), a);
+  if ((d0 === 'f' || d0 === 'p') && !P.dynMarks.some(k => Math.abs(k.t - a) < 1e-6)) P.dynMarks.unshift({t: a, v: d0});
+  P.ped = P.level ? [] : pedSpans(s.ped).filter(sp => inRun(sp.a)).map(sp => ({a: sp.a, b: Math.min(sp.b, b), down: 0, lift: false, cut: false}));
   P.sig = keySig(s);
   buildSheet();
 }
@@ -2967,7 +2980,7 @@ function layoutScore(){
   let h = 0, k = DEV.k;
   if (P && aidOn('score')){
     // Con un solo pentagrama, los matices y el pedal se escriben debajo: hace falta un renglón más.
-    const base = P.sheet.staves.length === 2 ? 150 : 90 + (P.dynMarks.length || P.ped.length ? 14 : 0);
+    const base = P.sheet.staves.length === 2 ? 150 : 90 + (P.dynMarks.length || P.ped.length || P.sheet.slurs.length ? 14 : 0);
     // La partitura grande solo se usa si deja lugar suficiente para las barras.
     if (stage.clientHeight < base * k + 150) k = 1;
     h = Math.round(base * k);
@@ -3010,7 +3023,7 @@ function openSong(key, ctx, ses){
   P = {song: s, ctx: ctx ? Object.assign({}, ctx, {force: Object.assign({parts: false}, ctx.st.force || {})}) : null,
        level: hasLevels(s) ? curLevel(s) : 0, notes: [], mode: ctx ? (ctx.st.mode || 'esperar') : settings.mode, speed: settings.speed, t: 0, playing: false, waiting: false,
        hits: 0, errors: 0, shorts: 0, longs: 0, finished: false, timers: [], lastTs: 0, held: new Map(), fb: new Map(), offs: [], lap: 1, lapMsg: '', scoreH: 0,
-       ped: [], dynMarks: [], pedSeen: false,
+       ped: [], dynMarks: [], legPend: [], clock: 0,
        ses: ses == null || ctx ? null : ses};
   aidInfo = '';
   view = 'player'; setTabs();
@@ -3103,9 +3116,9 @@ function leavePlayer(){
 function clearRun(){
   P.timers.forEach(clearTimeout); P.timers = []; clearAuto();
   P.notes.forEach(n => { n.state = 0; n.short = false; n.long = false; n.sung = false; n.src = ''; n.vel = 0; });
-  P.held.clear(); P.fb = new Map(); P.offs = [];
-  P.ped.forEach(sp => { sp.down = 0; sp.lift = false; });
-  Object.assign(P, {t: P.t0, waiting: false, hits: 0, errors: 0, shorts: 0, longs: 0, finished: false, pedSeen: pedalSrc.has('midi')});
+  P.held.clear(); P.fb = new Map(); P.offs = []; P.legPend = [];
+  P.ped.forEach(sp => { sp.down = 0; sp.lift = false; sp.cut = false; });
+  Object.assign(P, {t: P.t0, waiting: false, hits: 0, errors: 0, shorts: 0, longs: 0, finished: false, clock: 0});
 }
 function reset(){
   if (!P) return;
@@ -3118,7 +3131,7 @@ function reset(){
   $('#soTitle').textContent = s.title;
   $('#soGoal').hidden = !s.goal; $('#soGoal').textContent = s.goal || '';
   $('#soDesc').textContent = MODE_DESC[P.mode] + (P.ctx ? ` Para aprobar: ${reqText(P.ctx.st)}.` : '')
-    + (P.hasDyn ? ' La fuerza de cada nota se mide con un teclado sensible conectado por USB.' : '')
+    + (P.hasDyn ? ' La fuerza se mide con un teclado con sensibilidad al toque conectado por USB.' : '')
     + (P.ped.length ? ' El pedal se revisa si tu teclado tiene uno conectado.' : '');
   renderLevelPick(); renderAids();
   guideKey = '*'; updateGuide(); updateProgress(); setPlayIcon();
@@ -3184,13 +3197,23 @@ function fbOf(start){
   return f;
 }
 const needHold = n => n.dur * 0.7 / bps() >= 0.3;
+/* P.clock son los segundos tocados de verdad (no avanza en pausa): con él se miden las notas cortas y los huecos del ligado. */
 function hitNote(n, m, src, vel){
   n.state = 1; P.hits++; flashKey(m, 'ok');
-  n.src = src || ''; n.vel = vel || 0; n.at = performance.now();
-  // Se vigila cuándo se suelta la tecla: las notas cortas siempre, las ligadas siempre, y las demás con la ayuda «Duración».
-  if (n.art === 's' || ((aidOn('dur') || n.art === 'l') && needHold(n))) P.held.set(m, n);
+  n.src = src || ''; n.vel = vel || 0; n.at = P.clock;
+  // Ligado: si la nota anterior de esta mano ya se había soltado, cuenta cuánto silencio hubo entre las dos.
+  if (P.legPend.length){
+    const h = handOf(n);
+    P.legPend = P.legPend.filter(e => {
+      if (e.h !== h || Math.abs(e.t - n.start) > 1e-6) return true;
+      if (P.clock - e.at > LEG_GAP && !e.n.short){ e.n.short = true; P.shorts++; }
+      return false;
+    });
+  }
+  // Se vigila cuándo se suelta la tecla: las notas cortas y las ligadas siempre, y las demás con la ayuda «Duración».
+  if (n.art === 's' || n.art === 'l' || (aidOn('dur') && needHold(n))) P.held.set(m, n);
 }
-function tooLong(n){ return n.art === 's' && !n.long && (performance.now() - n.at) / 1000 > stacLimit(n); }
+function tooLong(n){ return n.art === 's' && !n.long && P.clock - n.at > stacLimit(n); }
 function releaseJudge(m){
   if (!P) return;
   const n = P.held.get(m); if (!n) return;
@@ -3198,17 +3221,23 @@ function releaseJudge(m){
   if (P.finished || !P.playing) return;
   if (n.art === 's'){ if (tooLong(n)){ n.long = true; P.longs++; } }
   else if (n.art === 'l'){
-    // Ligada: vale si se mantuvo casi toda su duración, o si la nota siguiente de esa mano ya estaba sonando al soltarla.
     const h = handOf(n), nx = P.notes.find(x => !x.auto && handOf(x) === h && x.start > n.start + 1e-6);
-    if (P.t < n.start + n.dur * 0.8 - 1e-6 && !(nx && nx.state === 1)){ n.short = true; P.shorts++; }
+    if (nx && !n.legEnd && nx.start - (n.start + n.dur) < 0.01){
+      // La nota siguiente va pegada: lo que cuenta es que no quede un hueco entre las dos.
+      if (nx.state === 0) P.legPend.push({n, t: nx.start, h, at: P.clock});
+    } else if (P.t < n.start + n.dur * 0.8 - 1e-6 && !(nx && nx.state === 1)){ n.short = true; P.shorts++; }   // antes de un silencio o al final de la frase: mantenerla
   }
   else if (P.t < n.start + n.dur * 0.7 - 1e-6){ n.short = true; P.shorts++; }
 }
-/* El pedal del teclado: se anota que existe y, al soltarlo, si fue un cambio hecho cerca del inicio de un tramo. */
-function pedalMark(on){
-  P.pedSeen = true;
-  if (on || !P.playing || P.finished) return;
-  for (const sp of P.ped) if (Math.abs(P.t - sp.a) <= 0.6) sp.lift = true;
+/* Al soltar el pedal: es un cambio bien hecho si ocurre al empezar un tramo (desde un poco antes hasta un pulso o un
+   segundo después, lo que sea más largo). Soltarlo a mitad del tramo lo estropea. */
+function pedalLift(){
+  if (!P.playing || P.finished) return;
+  const win = Math.max(1, bps());
+  P.ped.forEach((sp, i) => {
+    if (P.t >= sp.a - 0.2 && P.t <= sp.a + win + 1e-6){ if (i > 0) sp.lift = true; }
+    else if (P.t > sp.a + win && P.t < sp.a + 0.75 * (sp.b - sp.a)) sp.cut = true;
+  });
 }
 function judge(m, src, vel){
   if (!P || !P.playing || P.finished || P.mode === 'escuchar') return;
@@ -3248,6 +3277,7 @@ function judge(m, src, vel){
 }
 function step(dt){
   const adv = dt * bps(), tPrev = P.t, M = P.M;
+  P.clock += dt;
   if (P.mode === 'esperar'){
     const grp = pendingGroup();
     if (grp.length && P.t + adv >= grp[0].start){ P.t = Math.max(P.t, grp[0].start); P.waiting = true; fbOf(grp[0].start).wait += dt; }
@@ -3258,7 +3288,6 @@ function step(dt){
     if (k1 > k0) tick(((k1 % M.meter) + M.meter) % M.meter === 0);
   }
   if (P.ped.length && pedalSrc.has('midi')){
-    P.pedSeen = true;
     for (const sp of P.ped){ const x = Math.min(P.t, sp.b) - Math.max(tPrev, sp.a); if (x > 0) sp.down += x; }
   }
   const listen = P.mode === 'escuchar', duo = P.mode === 'juntos';
@@ -3315,22 +3344,39 @@ function updateProgress(){
   $('#pProg').style.width = (Math.max(0, Math.min(1, (P.t - P.a) / Math.max(0.01, P.end - P.a))) * 100) + '%';
 }
 /* Fuerte y suave, y pedal: solo se califican si el teclado los envía. La fuerza se compara entre las notas
-   marcadas f y las marcadas p, así no depende de qué tan sensible sea cada teclado. */
+   marcadas f y las marcadas p, así no depende de qué tan sensible sea cada teclado; con dos manos decide la
+   derecha, que lleva la melodía. */
 function exprResult(){
-  const out = {dyn: null, ped: null};
+  const out = {dyn: null, ped: null, art: null};
+  const mine = P.notes.filter(n => !n.auto);
   if (P.hasDyn){
-    const mine = P.notes.filter(n => !n.auto && n.dyn && n.state === 1), mi = mine.filter(n => n.src === 'midi');
+    const dn = mine.filter(n => n.dyn && n.state === 1), mi = dn.filter(n => n.src === 'midi');
     const raw = n => Math.round((n.vel - 0.35) / 0.65 * 127), avg = a => a.reduce((x, y) => x + y, 0) / a.length;
-    const f = mi.filter(n => n.dyn === 'f').map(raw), p = mi.filter(n => n.dyn === 'p').map(raw), all = mi.map(raw);
-    if (f.length < 2 || p.length < 2 || mi.length < mine.length * 0.6 || Math.max(...all) - Math.min(...all) < 4) out.dyn = {measured: false};
-    else { const d = avg(f) - avg(p); out.dyn = {measured: true, ok: d >= DYN_GAP, diff: d}; }
+    const all = mi.map(raw);
+    const side = h => {
+      const xs = mi.filter(n => handOf(n) === h), f = xs.filter(n => n.dyn === 'f').map(raw), p = xs.filter(n => n.dyn === 'p').map(raw);
+      return f.length >= 2 && p.length >= 2 ? avg(f) - avg(p) : null;
+    };
+    if (!all.length || mi.length < dn.length * 0.6 || Math.max(...all) - Math.min(...all) < 4) out.dyn = {measured: false, why: 'device'};
+    else {
+      const dR = side('R'), d = dR != null ? dR : side('L');
+      out.dyn = d == null ? {measured: false, why: 'one'} : {measured: true, ok: d >= DYN_GAP, diff: d};
+    }
   }
   if (P.ped.length){
-    if (!P.pedSeen) out.ped = {measured: false};
+    if (!pedalKnown) out.ped = {measured: false};
     else {
-      const good = P.ped.filter((sp, i) => sp.down >= 0.6 * (sp.b - sp.a) && (i === 0 || sp.lift)).length;
-      out.ped = {measured: true, good, total: P.ped.length, ok: good >= Math.ceil(P.ped.length * 0.6)};
+      const st = P.ped.map((sp, i) => ({cov: sp.down >= 0.8 * (sp.b - sp.a), lift: i === 0 || sp.lift, cut: sp.cut}));
+      const good = st.filter(x => x.cov && x.lift && !x.cut).length;
+      const why = [['lift', st.filter(x => !x.lift).length], ['cut', st.filter(x => x.cut).length], ['cov', st.filter(x => !x.cov && x.lift && !x.cut).length]].sort((a, b) => b[1] - a[1])[0][0];
+      out.ped = {measured: true, good, total: st.length, ok: good >= Math.ceil(st.length * 0.6), why};
     }
+  }
+  // Notas cortas y ligadas: si más de la cuarta parte sale al revés, falta la expresión aunque las notas estén bien.
+  const sN = mine.filter(n => n.art === 's' && n.state === 1), lN = mine.filter(n => n.art === 'l' && n.state === 1);
+  if (sN.length || lN.length){
+    const sBad = sN.filter(n => n.long).length, lBad = lN.filter(n => n.short).length;
+    out.art = {ok: !(sN.length && sBad > sN.length * 0.25) && !(lN.length && lBad > lN.length * 0.25)};
   }
   return out;
 }
@@ -3340,22 +3386,29 @@ function runResult(){
   const acc = Math.max(0, (P.hits - 0.5 * P.shorts - 0.5 * P.longs) / den);
   let stars = acc >= 0.95 ? 3 : acc >= 0.8 ? 2 : acc >= 0.5 ? 1 : 0, capped = false;
   if (aidOn('tempo') && P.mode === 'esperar' && stars === 3){ stars = 2; capped = true; }
-  // Con las notas bien pero sin el matiz o el pedal que pide el ejercicio, se queda en una estrella.
+  // Con las notas bien pero sin el matiz, la articulación o el pedal que pide el ejercicio, se queda en una estrella.
   const ex = exprResult();
-  const weak = stars >= 2 && ((!!ex.dyn && ex.dyn.measured && !ex.dyn.ok) || (!!ex.ped && ex.ped.measured && !ex.ped.ok));
-  if (weak) stars = 1;
-  return {acc, pct: Math.round(acc * 100), stars, capped, ex, weak};
+  const miss = (!!ex.dyn && ex.dyn.measured && !ex.dyn.ok) || (!!ex.ped && ex.ped.measured && !ex.ped.ok) || (!!ex.art && !ex.art.ok);
+  if (miss && stars > 1) stars = 1;
+  return {acc, pct: Math.round(acc * 100), stars, capped, ex, weak: miss && P.hits / den >= 0.8};
 }
 /* Frases del resultado sobre duración, notas cortas, fuerza y pedal. */
+const PED_WHY = {
+  lift: ' Cámbialo en cada compás: levanta el pie justo después de tocar la primera nota y vuelve a pisar enseguida.',
+  cut: ' No lo sueltes a mitad del compás: se cambia solo al empezar el siguiente.',
+  cov: ' Mantenlo pisado durante todo el compás.'
+};
 function exprText(r){
   const b = [], mine = P.notes.filter(n => !n.auto);
-  if (aidOn('dur') || mine.some(n => n.art === 'l')) b.push(P.shorts === 0 ? 'Todas con su duración.' : P.shorts === 1 ? '1 nota soltada antes de tiempo.' : `${P.shorts} notas soltadas antes de tiempo.`);
+  if (mine.some(n => n.art === 'l')) b.push(P.shorts === 0 ? 'Las notas ligadas salieron unidas.' : P.shorts === 1 ? '1 nota ligada quedó separada de la siguiente.' : `${P.shorts} notas ligadas quedaron separadas de la siguiente.`);
+  else if (aidOn('dur')) b.push(P.shorts === 0 ? 'Todas con su duración.' : P.shorts === 1 ? '1 nota soltada antes de tiempo.' : `${P.shorts} notas soltadas antes de tiempo.`);
   if (mine.some(n => n.art === 's')) b.push(P.longs === 0 ? 'Las notas cortas salieron cortas.' : P.longs === 1 ? '1 nota corta quedó sonando de más.' : `${P.longs} notas cortas quedaron sonando de más.`);
   const d = r.ex.dyn, p = r.ex.ped;
-  if (d) b.push(!d.measured ? 'La fuerza no se pudo medir: hace falta un teclado sensible conectado por USB. Aquí se calificaron solo las notas.'
-    : d.ok ? 'Se nota la diferencia entre fuerte y suave.' : 'Casi no hay diferencia entre fuerte y suave: exagera el contraste.');
+  if (d) b.push(d.measured ? (d.ok ? 'Se nota la diferencia entre fuerte y suave.' : 'Casi no hay diferencia entre fuerte y suave: exagera el contraste.')
+    : d.why === 'one' ? 'En estos compases hay un solo matiz: el contraste entre fuerte y suave se califica con la pieza completa.'
+    : 'La fuerza no se pudo medir: hace falta un teclado con sensibilidad al toque conectado por USB. Aquí se calificaron solo las notas.');
   if (p) b.push(!p.measured ? 'No se detectó un pedal: se calificaron solo las notas.'
-    : `Pedal: ${p.good} de ${p.total} ${p.total === 1 ? 'tramo' : 'tramos'} bien ${p.ok ? '' : '(písalo todo el compás y cámbialo al empezar el siguiente)'}`.trim() + '.');
+    : `Pedal: ${p.good} de ${p.total} ${p.total === 1 ? 'tramo' : 'tramos'} bien.` + (p.ok ? '' : PED_WHY[p.why]));
   return b.length ? ' ' + b.join(' ') : '';
 }
 
@@ -3405,7 +3458,7 @@ function feedback(){
       if (f.early) bits.push(grp.length > 1 ? 'lo tocaste antes de tiempo' : 'la tocaste antes de tiempo');
       else if (f.late) bits.push(grp.length > 1 ? 'lo tocaste tarde' : 'la tocaste tarde');
       else if (missed) bits.push('se te pasó');
-      if (short) bits.push(grp.length > 1 ? 'lo soltaste antes de tiempo' : 'la soltaste antes de tiempo');
+      if (short) bits.push(grp[0].art === 'l' ? 'quedó separada de la siguiente' : grp.length > 1 ? 'lo soltaste antes de tiempo' : 'la soltaste antes de tiempo');
       if (long) bits.push(grp.length > 1 ? 'lo dejaste sonar y va corto' : 'la dejaste sonar y va corta');
       if (slow && !f.errs) bits.push('tardaste en encontrarla');
       const mk = measureAt(grp[0].start);
@@ -3508,7 +3561,7 @@ function finish(){
     } else if (s.lesson){
       if (stars >= 2){
         tip = !nextL ? 'Terminaste toda la ruta de ejercicios. Sigue con las canciones.'
-          : nextL.lvl !== s.lvl ? `Completaste el último ejercicio del Nivel ${s.lvl}. Sigue el Nivel ${nextL.lvl}.` : 'Ya puedes pasar al siguiente ejercicio.';
+          : nextL.lvl !== s.lvl ? `Completaste el último ejercicio del Nivel ${s.lvl}. Sigue con el Nivel ${nextL.lvl}.` : 'Ya puedes pasar al siguiente ejercicio.';
         if (r.capped) tip += ' La tercera estrella se gana en modo Ritmo.';
         buttons = nextL ? '<button class="btn primary" data-act="next">Siguiente ejercicio</button><button class="btn" data-act="again">Repetir</button>'
                         : '<button class="btn primary" data-act="songs">Ir a las canciones</button><button class="btn" data-act="again">Repetir</button>';
@@ -3682,7 +3735,22 @@ function buildSheet(){
     }
     rests.sort((a, b) => a.t - b.t);
   }
-  P.sheet = {chords, rests, staves, midi, ppu: gap <= 0.25 ? 60 : gap <= 0.5 ? 42 : 32};
+  // Ligaduras de frase: una curva debajo de cada grupo de notas ligadas seguidas, sin silencios en medio.
+  const slurs = [];
+  for (const st of staves){
+    let run = null;
+    const close = () => { if (run && run.n > 1) slurs.push(run); run = null; };
+    for (const c of chords){
+      if (c.st !== st || !c.items[0].first) continue;
+      const n = c.items[0].n, low = Math.min(...c.items.map(it => staffStep(it.midi)));
+      if (n.art !== 'l'){ close(); continue; }
+      if (run && Math.abs(n.start - run.end) < 0.01){ run.t2 = n.start; run.end = n.start + n.dur; run.low = Math.min(run.low, low); run.n++; }
+      else { close(); run = {st, t1: n.start, t2: n.start, end: n.start + n.dur, low, n: 1}; }
+      if (n.legEnd) close();
+    }
+    close();
+  }
+  P.sheet = {chords, rests, staves, slurs, midi, ppu: gap <= 0.25 ? 60 : gap <= 0.5 ? 42 : 32};
 }
 function drawScore(grp){
   if (!P || !P.scoreH) return;
@@ -3780,6 +3848,13 @@ function drawScore(grp){
       sg.fillText(c.fingers, x, two && st === 'B' ? H - 4 : Math.round(11 * K));
     }
   }
+  sg.strokeStyle = COL.ink; sg.lineWidth = 1.4 * K; sg.lineCap = 'round';
+  for (const sl of sh.slurs){
+    if (sl.t2 < tMin || sl.t1 > tMax) continue;
+    const x1 = xOf(sl.t1), x2 = xOf(sl.t2), y = yOf(sl.st, Math.min(sl.low, BOT[sl.st] - 1)) + 1.6 * sp;
+    sg.beginPath(); sg.moveTo(x1, y); sg.quadraticCurveTo((x1 + x2) / 2, y + Math.min(2 * sp, 0.9 * sp + (x2 - x1) * 0.03), x2, y); sg.stroke();
+  }
+  sg.lineCap = 'butt';
   // Matices (p, f) y pedal, debajo del pentagrama de arriba o del único que haya.
   const yMark = two ? (yb.T + yb.B - 4 * sp) / 2 + 4 * K : H - 6 * K;
   sg.fillStyle = COL.hi;
@@ -3881,7 +3956,7 @@ function draw(grp){
     for (const k of P.dynMarks){
       const y = Math.round(H - (k.t - P.t) * ppb);
       if (y < -4 || y > H + 30) continue;
-      const strong = k.v === 'f', label = strong ? 'f  fuerte' : 'p  suave';
+      const strong = k.v === 'f', label = W < 520 ? (strong ? 'f' : 'p') : strong ? 'f  fuerte' : 'p  suave';
       g.font = `italic 700 ${Math.round(14 * kk)}px "Alegreya", Georgia, serif`;
       const tw = g.measureText(label).width + 14 * kk, bh = 22 * kk;
       g.fillStyle = COL.hi; g.globalAlpha = strong ? 0.9 : 0.45; g.fillRect(0, y - 1, W, 2);

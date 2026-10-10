@@ -10,7 +10,7 @@ function appHtml(){
   if (!/const NUBE_CFG = [^;]*;/.test(h)) throw new Error('falta NUBE_CFG');
   h = h.replace(/const NUBE_CFG = [^;]*;/, 'const NUBE_CFG = null;');
   const hook = `window.__t = {get P(){ return P; }, get view(){ return view; }, LESSONS, UNITS, RUTA, SONGS, TSONGS, Data, settings, aids, songData, findSong, openSong, start, step, press, release, setPedal,
-    pendingGroup, setMode, setSpeed, meterOf, keySig, isBlack, pc, goLearn, goHome, renderList, reset,
+    pendingGroup, setMode, setSpeed, togglePlay, rebuild, get partSel(){ return partSel; }, meterOf, keySig, isBlack, pc, goLearn, goHome, renderList, reset,
     paint(){ const grp = new Set(P && P.mode !== 'escuchar' ? pendingGroup() : []); draw(grp); drawScore(grp); }};\nNube.bind();`;
   if (!h.includes('Nube.bind();')) throw new Error('falta bind');
   return h.replace('Nube.bind();', hook);
@@ -27,41 +27,64 @@ const ok = (c, name, extra) => { if (c){ pass++; console.log('  ok   ' + name); 
 function pianist(){
   window.__play = (key, o = {}) => {
     const t = window.__t;
-    t.goLearn();
-    t.aids.dur = !!o.dur; t.aids.tempo = false; t.aids.parts = false;
-    t.setSpeed(1);
-    t.openSong(key); t.setMode(o.mode || 'esperar'); t.start();
+    if (!o.keep){ t.goLearn(); t.aids.dur = !!o.dur; t.aids.tempo = false; t.aids.parts = false; t.setSpeed(1); t.openSong(key); t.setMode(o.mode || 'esperar'); }
+    t.start();
     const P = t.P, dt = 1 / 120, held = new Map();
-    const bps = P.song.bpm / 60;
+    const handOf = n => n.hand === 'L' ? 'L' : 'R';
     const velFor = n => {
       const jitter = o.jitter == null ? 3 : o.jitter, j = Math.round((Math.sin(n.start * 7.3 + n.midi) * 0.5) * 2 * jitter);
-      const v = o.flat != null ? o.flat + j : n.dyn === 'f' ? (o.f || 104) + j : n.dyn === 'p' ? (o.p || 46) + j : 76 + j;
+      const h = handOf(n), F = o['f' + h] != null ? o['f' + h] : o.f || 104, Pn = o['p' + h] != null ? o['p' + h] : o.p || 46;
+      const v = o.flat != null ? o.flat + j : n.dyn === 'f' ? F + j : n.dyn === 'p' ? Pn + j : 76 + j;
       return 0.35 + 0.65 * Math.max(1, Math.min(127, v)) / 127;
     };
-    const releaseDue = () => { for (const [m, h] of [...held]) if ((h.ms != null && performance.now() >= h.ms) || (h.t != null && P.t >= h.t)){ held.delete(m); t.release(m); } };
+    const releaseDue = () => { for (const [m, h] of [...held]) if ((h.c != null && P.clock >= h.c) || (h.t != null && P.t >= h.t)){ held.delete(m); t.release(m); } };
+    let count = 0;
     const hit = n => {
+      count++;
       if (held.has(n.midi)){ held.delete(n.midi); t.release(n.midi); }
       t.press(n.midi, o.src || 'midi', o.src && o.src !== 'midi' ? 0.8 : velFor(n));
-      const hold = o.hold || 'good';
-      if (hold === 'tap') held.set(n.midi, {ms: performance.now() + 90});
+      const hold = o.badEvery && count % o.badEvery === 0 ? (n.art === 's' ? 'full' : 'tap') : (o.hold || 'good');
+      // Ligado bien hecho: la nota anterior de esa mano se suelta después de tocar la nueva.
+      for (const [m, h] of [...held]) if (h.leg && h.hand === handOf(n) && m !== n.midi){ held.delete(m); t.release(m); }
+      if (hold === 'tap') held.set(n.midi, {c: P.clock + 0.09});
       else if (hold === 'full') held.set(n.midi, {t: n.start + n.dur * 0.97});
-      else if (hold === 'half') held.set(n.midi, {t: n.start + n.dur * 0.45});
-      else if (n.art === 's') held.set(n.midi, {ms: performance.now() + 90});
+      else if (n.art === 's') held.set(n.midi, {c: P.clock + 0.09});
+      else if (n.art === 'l') held.set(n.midi, {leg: true, hand: handOf(n), t: n.start + n.dur * 3});
       else held.set(n.midi, {t: n.start + n.dur * 0.93});
+      if (o.ped === 'everynote'){ t.setPedal('midi', false); t.setPedal('midi', true); }
     };
-    const ped = o.ped || 'none'; let pedOn = false, repress = -1;
-    let guard = 0;
+    // Pedal: 'good' lo cambia justo después de empezar cada tramo; 'late' espera lateSec segundos; 'early' lo cambia
+    // antes de la barra; 'hold' no lo suelta nunca; 'gap' lo suelta a mitad de cada tramo y vuelve a pisar en la barra.
+    const ped = o.ped || 'none'; let pedOn = false, repress = -1; const seenAt = new Map();
+    let guard = 0, wSince = null, wT = null;
     while (!P.finished && guard++ < 400000){
       if (ped !== 'none' && P.ped.length){
-        if (!pedOn && repress < 0 && P.t >= P.ped[0].a - 0.2){ t.setPedal('midi', true); pedOn = true; }
-        if (ped === 'good' && pedOn) for (const sp of P.ped.slice(1)) if (!sp._done && P.t >= sp.a + 0.05){ sp._done = true; t.setPedal('midi', false); pedOn = false; repress = guard + 8; }
+        if (!pedOn && repress < 0 && ped !== 'gap' && P.t >= P.ped[0].a - 0.2){ t.setPedal('midi', true); pedOn = true; }
+        for (const sp of P.ped){
+          if (!seenAt.has(sp.a) && P.notes.some(n => Math.abs(n.start - sp.a) < 1e-6 && n.state === 1)) seenAt.set(sp.a, P.clock);
+          if (sp._done) continue;
+          const i = P.ped.indexOf(sp);
+          if (ped === 'good' && i > 0 && pedOn && P.t >= sp.a + 0.05){ sp._done = true; t.setPedal('midi', false); pedOn = false; repress = guard + 8; }
+          if (ped === 'late' && i > 0 && pedOn && seenAt.has(sp.a) && P.clock - seenAt.get(sp.a) >= o.lateSec){ sp._done = true; t.setPedal('midi', false); pedOn = false; repress = guard + 8; }
+          if (ped === 'early' && i > 0 && pedOn && P.t >= sp.a - 0.55){ sp._done = true; t.setPedal('midi', false); pedOn = false; repress = guard + 8; }
+          if (ped === 'gap'){
+            if (!pedOn && P.t >= sp.a - 0.01 && P.t < sp.a + 2.4){ t.setPedal('midi', true); pedOn = true; }
+            if (pedOn && P.t >= sp.a + 2.5){ sp._done = true; t.setPedal('midi', false); pedOn = false; }
+          }
+        }
         if (repress >= 0 && guard >= repress){ t.setPedal('midi', true); pedOn = true; repress = -1; }
       }
       releaseDue();
       t.step(dt); window.__tick(dt * 1000);
       if (P.finished) break;
       if (P.mode === 'esperar'){
-        if (P.waiting){ const grp = t.pendingGroup(); for (const n of grp){ if (o.wrong && !n._w){ n._w = true; t.press(n.midi + 1, o.src || 'midi', 0.8); t.release(n.midi + 1); } hit(n); } }
+        if (P.waiting){
+          if (wSince == null || wT !== P.t){ wSince = P.clock; wT = P.t; }
+          if (!o.think || P.clock - wSince >= o.think){
+            for (const n of t.pendingGroup()){ if (o.wrong && !n._w){ n._w = true; t.press(n.midi + 1, o.src || 'midi', 0.8); t.release(n.midi + 1); } hit(n); }
+            wSince = null;
+          }
+        } else wSince = null;
       } else {
         for (const n of P.notes){ if (n.start > P.t + 1e-9) break; if (n.state === 0 && !n.auto) hit(n); }
       }
@@ -183,10 +206,10 @@ function pianist(){
   ok(/^3 de 3/.test(r.stars) && /Se nota la diferencia entre fuerte y suave/.test(r.text), 'con contraste claro: tres estrellas y lo dice', r.text.slice(0, 200));
   r = await A.evaluate(() => __play('fuerte-suave', {flat: 80, jitter: 4}));
   ok(/^1 de 3/.test(r.stars) && /Casi no hay diferencia/.test(r.text) && r.title === 'Falta la expresión' && /lo que falta es la expresión/.test(r.text), 'todo con la misma fuerza: una estrella y explica qué falta', [r.stars, r.title, r.text.slice(0, 220)]);
-  r = await A.evaluate(() => __play('fuerte-suave', {f: 70, p: 62}));
-  ok(/^1 de 3/.test(r.stars), 'contraste muy pequeño (8 puntos): no alcanza', r.stars);
-  r = await A.evaluate(() => __play('fuerte-suave', {f: 78, p: 60}));
-  ok(/^3 de 3/.test(r.stars), 'contraste moderado (18 puntos): alcanza', r.stars);
+  r = await A.evaluate(() => __play('fuerte-suave', {f: 67, p: 55}));
+  ok(/^1 de 3/.test(r.stars), 'contraste pequeño (12 puntos): no alcanza', r.stars);
+  r = await A.evaluate(() => __play('fuerte-suave', {f: 88, p: 60}));
+  ok(/^3 de 3/.test(r.stars), 'contraste claro aunque no extremo (28 puntos): alcanza', r.stars);
   r = await A.evaluate(() => __play('fuerte-suave', {f: 50, p: 100}));
   ok(/^1 de 3/.test(r.stars), 'al revés (suave donde va fuerte): no aprueba', r.stars);
   r = await A.evaluate(() => __play('fuerte-suave', {flat: 100, jitter: 0}));
@@ -197,18 +220,41 @@ function pianist(){
   ok(/^3 de 3/.test(r.stars) && /Se nota la diferencia/.test(r.text), '«El eco» en modo Ritmo con contraste: tres estrellas', r.stars);
   r = await A.evaluate(() => __play('estudio-fa', {flat: 70, jitter: 5}));
   ok(/^1 de 3/.test(r.stars), 'el estudio final sin matices: una estrella', r.stars);
+  r = await A.evaluate(() => __play('estudio-fa', {fR: 95, pR: 50, fL: 45, pL: 45}));
+  ok(/^3 de 3/.test(r.stars) && /Se nota la diferencia/.test(r.text), 'estudio final: melodía con matices y la izquierda pareja y suave: aprueba', [r.stars, r.text.slice(0, 160)]);
+  r = await A.evaluate(() => __play('estudio-fa', {fR: 70, pR: 70, fL: 66, pL: 42}));
+  ok(/^1 de 3/.test(r.stars) && /Casi no hay diferencia/.test(r.text), 'estudio final: solo el acompañamiento cambia de fuerza: no aprueba', [r.stars, r.text.slice(0, 160)]);
+  r = await A.evaluate(() => {
+    // «Por partes»: los dos primeros compases tienen un solo matiz.
+    const t = __t; t.goLearn(); t.aids.parts = true; t.openSong('fuerte-suave'); t.partSel.idx = 0; t.rebuild();
+    const marks = t.P.dynMarks.map(k => k.t + k.v).join();
+    const res = __play('fuerte-suave', {keep: true}); t.aids.parts = false; res.marks = marks; return res;
+  });
+  ok(/un solo matiz/.test(r.text) && !/La fuerza no se pudo medir/.test(r.text) && r.marks === '0p', 'practicando una parte con un solo matiz, no culpa al teclado', [r.marks, r.text.slice(0, 220)]);
+  r = await A.evaluate(() => { const t = __t; t.goLearn(); t.aids.parts = true; t.openSong('estudio-fa'); t.partSel.idx = 1; t.rebuild(); const m = t.P.dynMarks.map(k => k.t + k.v).join(); t.aids.parts = false; return m; });
+  ok(r === '8p', 'una parte que empieza a mitad de un matiz lo muestra al principio', r);
 
   console.log('4. Notas cortas y ligadas');
   r = await A.evaluate(() => __play('staccato', {}));
   ok(/^3 de 3/.test(r.stars) && r.longs === 0 && /Las notas cortas salieron cortas/.test(r.text), 'staccato bien tocado', r.text.slice(0, 160));
   r = await A.evaluate(() => __play('staccato', {hold: 'full'}));
-  ok(/^1 de 3/.test(r.stars) && r.longs >= 24 && /quedaron sonando de más/.test(r.text) && /la dejaste sonar y va corta/.test(r.text), 'staccato con notas largas: una estrella y dice cuáles', [r.stars, r.longs, r.text.slice(0, 260)]);
+  ok(/^1 de 3/.test(r.stars) && r.longs >= 24 && r.title === 'Falta la expresión' && /quedaron sonando de más/.test(r.text) && /la dejaste sonar y va corta/.test(r.text) && /lo que falta es la expresión/.test(r.text), 'staccato con todas las notas largas: una estrella, «Falta la expresión» y dice cuáles', [r.stars, r.longs, r.title, r.text.slice(0, 260)]);
   r = await A.evaluate(() => __play('staccato', {hold: 'full', mode: 'ritmo'}));
   ok(/^1 de 3/.test(r.stars) && r.longs >= 24, 'lo mismo en modo Ritmo', [r.stars, r.longs]);
+  r = await A.evaluate(() => __play('staccato', {badEvery: 3}));
+  ok(/^1 de 3/.test(r.stars) && r.longs >= 7 && r.longs <= 9 && r.title === 'Falta la expresión', 'staccato con una de cada tres notas larga: ya no aprueba', [r.stars, r.longs, r.title]);
+  r = await A.evaluate(() => __play('staccato', {badEvery: 6}));
+  ok(/^[23] de 3/.test(r.stars) && r.longs >= 3 && r.longs <= 5, 'con algún descuido aislado sí aprueba', [r.stars, r.longs]);
   r = await A.evaluate(() => __play('legato', {}));
-  ok(/^3 de 3/.test(r.stars) && r.shorts === 0 && /Todas con su duración/.test(r.text), 'legato bien tocado, sin activar la ayuda «Duración»', r.text.slice(0, 160));
+  ok(/^3 de 3/.test(r.stars) && r.shorts === 0 && /Las notas ligadas salieron unidas/.test(r.text), 'legato bien tocado, sin activar la ayuda «Duración»', r.text.slice(0, 160));
+  r = await A.evaluate(() => __play('legato', {mode: 'ritmo'}));
+  ok(/^3 de 3/.test(r.stars) && r.shorts === 0, 'legato en modo Ritmo', [r.stars, r.shorts]);
   r = await A.evaluate(() => __play('legato', {hold: 'tap'}));
-  ok(/^1 de 3/.test(r.stars) && r.shorts >= 20 && /soltadas antes de tiempo/.test(r.text), 'legato tocado picado: una estrella', [r.stars, r.shorts]);
+  ok(/^1 de 3/.test(r.stars) && r.shorts >= 18 && r.title === 'Falta la expresión' && /quedaron separadas de la siguiente/.test(r.text), 'legato tocado picado: una estrella y «Falta la expresión»', [r.stars, r.shorts, r.title]);
+  r = await A.evaluate(() => __play('legato', {badEvery: 3}));
+  ok(/^1 de 3/.test(r.stars) && r.title === 'Falta la expresión', 'legato con una de cada tres notas suelta: no aprueba', [r.stars, r.shorts]);
+  r = await A.evaluate(() => __play('legato', {hold: 'full', think: 1.5}));
+  ok(/^1 de 3/.test(r.stars) && r.shorts >= 15, 'soltar cada nota y tardar segundo y medio en tocar la siguiente no cuenta como ligado', [r.stars, r.shorts]);
   const early = await A.evaluate(() => {
     // Ligado más rápido que el pulso: cada nota se toca antes de que llegue su barra y la anterior se suelta después.
     const t = __t; t.goLearn(); t.aids.dur = false; t.openSong('legato'); t.setMode('esperar'); t.start();
@@ -220,33 +266,74 @@ function pianist(){
     }
     return {shorts: P.shorts, hits: P.hits, total: P.total, fin: P.finished};
   });
-  ok(early.fin && early.hits === early.total && early.shorts <= 1, 'legato tocado más rápido que el pulso, pero ligando de verdad, también vale', early);
+  ok(early.fin && early.hits === early.total && early.shorts === 0, 'legato tocado más rápido que el pulso, pero ligando de verdad, también vale', early);
+  const gap = await A.evaluate(() => {
+    // Modo Ritmo, un cuarto de pulso adelantado y con un hueco de 20 ms entre notas: sigue siendo ligado.
+    const t = __t; t.goLearn(); t.openSong('legato'); t.setMode('ritmo'); t.start();
+    const P = t.P; let prev = null, g = 0, relAt = -1;
+    while (!P.finished && g++ < 200000){
+      t.step(1 / 120); window.__tick(1000 / 120);
+      const n = P.notes.find(x => x.state === 0 && x.start - P.t <= 0.25);
+      if (n && relAt < 0 && prev != null){ t.release(prev); prev = null; relAt = P.clock + 0.02; }
+      if (n && (relAt < 0 || P.clock >= relAt)){ t.press(n.midi, 'midi', 0.7); prev = n.midi; relAt = -1; }
+    }
+    return {shorts: P.shorts, hits: P.hits, total: P.total};
+  });
+  ok(gap.hits === gap.total && gap.shorts === 0, 'un hueco de 20 milésimas tocando algo adelantado no se castiga', gap);
+  const paused = await A.evaluate(() => {
+    // Pausa con una nota corta abajo: el tiempo en pausa no cuenta.
+    const t = __t; t.goLearn(); t.openSong('staccato'); t.setMode('esperar'); t.start();
+    const P = t.P; let g = 0;
+    while (!P.waiting && g++ < 5000){ t.step(1 / 120); window.__tick(1000 / 120); }
+    const n = t.pendingGroup()[0]; t.press(n.midi, 'midi', 0.7);
+    t.togglePlay(); window.__tick(5000); t.togglePlay();
+    t.step(1 / 120); t.release(n.midi);
+    return {longs: P.longs, playing: P.playing};
+  });
+  ok(paused.longs === 0 && paused.playing, 'pausar con una nota corta presionada no la cuenta como larga', paused);
   r = await A.evaluate(() => __play('ligado-picado', {}));
   ok(/^3 de 3/.test(r.stars) && r.shorts === 0 && r.longs === 0, 'ligado y picado, cada frase a su manera', [r.stars, r.shorts, r.longs]);
   r = await A.evaluate(() => __play('ligado-picado', {hold: 'tap'}));
-  ok(r.shorts >= 12 && r.longs === 0 && /^[12] de 3/.test(r.stars), 'todo picado: fallan solo las frases ligadas', [r.stars, r.shorts, r.longs]);
+  ok(r.shorts >= 10 && r.longs === 0 && /^1 de 3/.test(r.stars), 'todo picado: fallan solo las frases ligadas', [r.stars, r.shorts, r.longs]);
   r = await A.evaluate(() => __play('ligado-picado', {hold: 'full'}));
-  ok(r.longs >= 12 && r.shorts === 0, 'todo ligado: fallan solo las frases picadas', [r.stars, r.shorts, r.longs]);
+  ok(r.longs >= 12 && r.shorts === 0 && /^1 de 3/.test(r.stars), 'todo ligado: fallan solo las frases picadas', [r.stars, r.shorts, r.longs]);
   r = await A.evaluate(() => __play('cinco-do', {hold: 'tap'}));
   ok(/^3 de 3/.test(r.stars) && r.shorts === 0, 'un ejercicio sin marcas no califica la duración si la ayuda está apagada (como antes)', [r.stars, r.shorts]);
   r = await A.evaluate(() => __play('cinco-do', {hold: 'tap', dur: true}));
-  ok(r.shorts > 5, 'y con la ayuda «Duración» encendida sí (como antes)', [r.stars, r.shorts]);
+  ok(r.shorts > 5 && /soltadas antes de tiempo/.test(r.text), 'y con la ayuda «Duración» encendida sí (como antes)', [r.stars, r.shorts]);
 
   console.log('5. Pedal');
+  const D = await open({width: 1366, height: 768}, 'pc', true);
+  r = await D.evaluate(() => __play('pedal', {ped: 'none'}));
+  ok(/^3 de 3/.test(r.stars) && /No se detectó un pedal/.test(r.text), 'teclado sin pedal: califica solo las notas y lo avisa', r.text.slice(0, 200));
+  await D.context().close();
   r = await A.evaluate(() => __play('pedal', {ped: 'good'}));
   ok(/^3 de 3/.test(r.stars) && /Pedal: 8 de 8 tramos bien\./.test(r.text), 'pedal cambiado en cada compás: 8 de 8', r.text.slice(0, 200));
   r = await A.evaluate(() => __play('pedal', {ped: 'good', mode: 'ritmo'}));
   ok(/^3 de 3/.test(r.stars) && /Pedal: 8 de 8/.test(r.text), 'igual en modo Ritmo', r.text.slice(0, 160));
+  r = await A.evaluate(() => __play('pedal', {ped: 'late', lateSec: 0.6}));
+  ok(/^3 de 3/.test(r.stars) && /Pedal: 8 de 8/.test(r.text), 'cambio sin apuro, 0,6 s después de la primera nota (modo Esperar): vale', r.text.slice(0, 160));
+  r = await A.evaluate(() => __play('pedal', {ped: 'late', lateSec: 0.75, mode: 'ritmo'}));
+  ok(/^3 de 3/.test(r.stars) && /Pedal: 8 de 8/.test(r.text), 'cambio 0,75 s después en modo Ritmo: vale', r.text.slice(0, 160));
+  r = await A.evaluate(() => __play('pedal', {ped: 'late', lateSec: 3, think: 4}));
+  ok(/^3 de 3/.test(r.stars) && /Pedal: [78] de 8/.test(r.text), 'alumno lento en modo Esperar: cambia el pedal 3 s después, antes de la segunda nota: vale', r.text.slice(0, 160));
+  r = await A.evaluate(() => __play('pedal', {ped: 'late', lateSec: 1.6, mode: 'ritmo'}));
+  ok(/^1 de 3/.test(r.stars) && /Pedal: 1 de 8 tramos bien\. Cámbialo en cada compás: levanta el pie justo después/.test(r.text), 'cambio tardío, a mitad del compás (modo Ritmo): no vale y dice cuándo hacerlo', r.text.slice(0, 240));
   r = await A.evaluate(() => __play('pedal', {ped: 'hold'}));
-  ok(/^1 de 3/.test(r.stars) && /Pedal: 1 de 8 tramos bien \(písalo/.test(r.text), 'pedal pisado sin cambiarlo: 1 de 8 y una estrella', r.text.slice(0, 240));
+  ok(/^1 de 3/.test(r.stars) && r.title === 'Falta la expresión' && /Pedal: 1 de 8 tramos bien\. Cámbialo en cada compás/.test(r.text), 'pedal pisado sin cambiarlo: 1 de 8, una estrella y dice qué hacer', r.text.slice(0, 260));
+  r = await A.evaluate(() => __play('pedal', {ped: 'early', mode: 'ritmo'}));
+  ok(/^1 de 3/.test(r.stars) && /Pedal: 1 de 8/.test(r.text), 'cambiarlo medio pulso antes de la barra: no vale', r.text.slice(0, 200));
+  r = await A.evaluate(() => __play('pedal', {ped: 'everynote'}));
+  ok(/^1 de 3/.test(r.stars) && /No lo sueltes a mitad del compás/.test(r.text), 'cambiarlo en cada nota: no vale', r.text.slice(0, 240));
+  r = await A.evaluate(() => __play('pedal', {ped: 'gap', mode: 'ritmo'}));
+  ok(/^1 de 3/.test(r.stars), 'soltarlo a mitad de cada compás: no vale', r.text.slice(0, 240));
   r = await A.evaluate(() => __play('pedal', {ped: 'none'}));
-  ok(/^3 de 3/.test(r.stars) && /No se detectó un pedal/.test(r.text), 'sin pedal: califica solo las notas y lo avisa', r.text.slice(0, 200));
+  ok(/^1 de 3/.test(r.stars) && /Pedal: 0 de 8/.test(r.text), 'teclado que ya mostró tener pedal: repetir sin pisarlo no aprueba', r.text.slice(0, 200));
 
-  /* ============ 6. Sesión de hoy y mensajes de la ruta ============ */
   console.log('6. Ruta');
   await A.evaluate(() => { const t = __t; t.Data.progress = {}; for (const l of t.LESSONS.slice(0, 23)) t.Data.progress[l.key] = {stars: 3, pct: 100}; });
   r = await A.evaluate(() => __play('estrellita-acordes', {}));
-  ok(/Completaste el último ejercicio del Nivel 1\. Sigue el Nivel 2\./.test(r.text) && /Siguiente ejercicio/.test(r.text), 'al terminar el Nivel 1 anuncia el Nivel 2', r.text.slice(-200));
+  ok(/Completaste el último ejercicio del Nivel 1\. Sigue con el Nivel 2\./.test(r.text) && /Siguiente ejercicio/.test(r.text), 'al terminar el Nivel 1 anuncia el Nivel 2', r.text.slice(-200));
   await A.click('#doneCard [data-act="next"]');
   ok((await A.textContent('#soTitle')) === 'Cinco dedos en Fa' && /Ejercicio 25 de 48/.test(await A.textContent('#soKicker')), '«Siguiente ejercicio» abre el 25: Cinco dedos en Fa');
   await A.evaluate(() => { const t = __t; for (const l of t.LESSONS.slice(0, 47)) t.Data.progress[l.key] = {stars: 3, pct: 100}; });
@@ -260,7 +347,7 @@ function pianist(){
   await B.evaluate(() => { const t = __t; t.Data.progress = {}; for (const l of t.LESSONS.slice(0, 26)) t.Data.progress[l.key] = {stars: l.index % 3 ? 3 : 2, pct: 96}; t.settings.learnTab = 'ejercicios'; t.goLearn(); });
   const txt = await B.textContent('#songList');
   ok(/Nivel 1 · Primeros pasos/.test(txt) && /Completo/.test(txt) && /Nivel 2 · Tocar con soltura/.test(txt) && /2 de 24/.test(txt) && /¿Y después de los ejercicios\?/.test(txt) && /26 de 48 completados/.test(txt), 'la lista muestra los dos niveles, su avance y qué sigue');
-  ok((await B.locator('#songList .song.is-next .t').textContent()) === 'Escala de Re mayor' || true, 'marca el siguiente ejercicio');
+  ok((await B.locator('#songList .song.is-next .t').textContent()) === 'La armadura de Sol', 'marca el siguiente ejercicio');
   await B.evaluate(() => { const el = [...document.querySelectorAll('#songList .ruta-lv')][1]; document.querySelector('#songList').scrollTop = el.offsetTop - 80; });
   await B.screenshot({path: path.join(SHOTS, '20-ruta-nivel2.png')});
   const shot = async (page, id, name, advance, extra) => {
@@ -289,6 +376,8 @@ function pianist(){
   ok(/^Derecha: Do \(5\)\. Izquierda: Fa \(5\) · suave$/.test(v.hint), 'estudio final: dos manos y matiz en la pista', v.hint);
   v = await shot(B, 'seis-octavos', '27-seis-octavos.png', 1.2);
   v = await shot(B, 'semicorcheas', '28-semicorcheas.png', 0.6);
+  v = await shot(B, 'legato', '34-legato.png', 2.2);
+  v = await shot(B, 'ligado-picado', '35-ligado-picado.png', 5.2);
   v = await shot(B, 're-mayor-menor', '29-re-mayor-menor.png', 9.2);
   ok(/Fa con el dedo 3/.test(v.hint), 'al salir de un ejercicio con bemoles, los nombres vuelven a ser los normales', v.hint);
   const accs = id => B.evaluate(id => { const t = __t; t.goLearn(); t.openSong(id); const c = {sh: 0, fl: 0, na: 0}; for (const ch of t.P.sheet.chords) for (const it of ch.items) if (it.acc) c[it.acc]++; return c; }, id);
@@ -301,9 +390,9 @@ function pianist(){
   ac = await accs('fa-sost');
   ok(ac.sh === 5 && ac.na === 0 && ac.fl === 0, 'un ejercicio de antes con Fa♯ se dibuja igual que antes', ac);
   await B.evaluate(() => { __t.goLearn(); __t.openSong('legato'); });
-  ok(!/teclado sensible/.test(await B.textContent('#soDesc')), 'un ejercicio sin matices no menciona la fuerza');
+  ok(!/sensibilidad al toque/.test(await B.textContent('#soDesc')), 'un ejercicio sin matices no menciona la fuerza');
   await B.evaluate(() => { __t.openSong('fuerte-suave'); });
-  ok(/La fuerza de cada nota se mide con un teclado sensible/.test(await B.textContent('#soDesc')), 'el de matices avisa cómo se mide la fuerza antes de empezar');
+  ok(/La fuerza se mide con un teclado con sensibilidad al toque/.test(await B.textContent('#soDesc')), 'el de matices avisa cómo se mide la fuerza antes de empezar');
   await B.screenshot({path: path.join(SHOTS, '30-inicio-fuerte-suave.png')});
   await B.context().close();
   // celular: lista y un ejercicio
