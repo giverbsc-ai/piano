@@ -1102,7 +1102,7 @@ const SONGS = [
   {id:'korobeiniki', level:3, bpm:120, pos:'A', title:'Korobéiniki', origin:'Canción popular rusa',
    notes:'E5:1:5 B4:0.5:2 C5:0.5:3 D5:1:4 C5:0.5:3 B4:0.5:2 A4:1:1 A4:0.5:1 C5:0.5:3 E5:1:5 D5:0.5:4 C5:0.5:3 B4:1.5:2 C5:0.5:3 D5:1:4 E5:1:5 C5:1:3 A4:1:1 A4:2:1 R:0.5 D5:1:1 F5:0.5:3 A5:1:5 G5:0.5:4 F5:0.5:3 E5:1.5:2 C5:0.5:1 E5:1:3 D5:0.5:2 C5:0.5:1 B4:1:2 B4:0.5:2 C5:0.5:3 D5:1:4 E5:1:5 C5:1:3 A4:1:1 A4:2:1',
    chords:'E:4 Am:4 E:4 Am:4 Dm:4 C:4 E:4 Am:4'},
-  {id:'minueto', level:3, bpm:100, meter:3, pos:'G', title:'Minueto en Sol', origin:'Christian Petzold, atribuido a J. S. Bach',
+  {id:'minueto', level:3, bpm:100, meter:3, sig:1, pos:'G', title:'Minueto en Sol', origin:'Christian Petzold, atribuido a J. S. Bach',
    notes:'D5:1:5 G4:0.5:1 A4:0.5:2 B4:0.5:3 C5:0.5:4 D5:1:5 G4:1:1 G4:1:1 E5:1:3 C5:0.5:1 D5:0.5:2 E5:0.5:3 F#5:0.5:4 G5:1:5 G4:1:1 G4:1:1 C5:1:4 D5:0.5:5 C5:0.5:4 B4:0.5:3 A4:0.5:2 B4:1:3 C5:0.5:4 B4:0.5:3 A4:0.5:2 G4:0.5:1 F#4:1:1 G4:0.5:2 A4:0.5:3 B4:0.5:4 G4:0.5:2 A4:3:3 D5:1:5 G4:0.5:1 A4:0.5:2 B4:0.5:3 C5:0.5:4 D5:1:5 G4:1:1 G4:1:1 E5:1:3 C5:0.5:1 D5:0.5:2 E5:0.5:3 F#5:0.5:4 G5:1:5 G4:1:1 G4:1:1 C5:1:4 D5:0.5:5 C5:0.5:4 B4:0.5:3 A4:0.5:2 B4:1:3 C5:0.5:4 B4:0.5:3 A4:0.5:2 G4:0.5:1 A4:1:3 B4:0.5:4 A4:0.5:3 G4:0.5:2 F#4:0.5:1 G4:3:2',
    chords:'G:3 G:3 C:3 G:3 C:3 G:3 D:3 D:3 G:3 G:3 C:3 G:3 C:3 G:3 D:3 G:3'},
   {id:'greensleeves', level:3, bpm:100, meter:3, pickup:1, pos:'A', bass:{Am:'A2:1', G:'G2:2', F:'F2:3', E:'E2:4'}, title:'Greensleeves', origin:'Canción popular inglesa',
@@ -1110,16 +1110,47 @@ const SONGS = [
    chords:'R:1 Am:3 Am:3 G:3 G:3 F:3 Am:3 E:3 E:3 Am:3 Am:3 G:3 G:3 Am:3 E:3 Am:3'},
   {id:'elisa', level:3, bpm:110, meter:3, pickup:1, pos:'A', title:'Para Elisa', origin:'Ludwig van Beethoven, tema principal',
    notes:'E5:0.5:5 D#5:0.5:4 E5:0.5:5 D#5:0.5:4 E5:0.5:5 B4:0.5:2 D5:0.5:4 C5:0.5:3 A4:1.5:1 C4:0.5:1 E4:0.5:2 A4:0.5:4 B4:1.5:5 E4:0.5:1 G#4:0.5:2 B4:0.5:4 C5:1.5:5 E4:0.5:1 E5:0.5:5 D#5:0.5:4 E5:0.5:5 D#5:0.5:4 E5:0.5:5 B4:0.5:2 D5:0.5:4 C5:0.5:3 A4:1.5:1 C4:0.5:1 E4:0.5:2 A4:0.5:4 B4:1.5:5 E4:0.5:1 C5:0.5:5 B4:0.5:4 A4:3:3',
-   chords:'R:1 R:3 Am:3 E:3 Am:3 R:3 Am:3 E:3 Am:3'}
+   chords:'R:1 R:3 Am:3 E:3 Am:3 R:3 Am:3 E:3 Am:3'},
+  /* Canciones que usan lo del Nivel 2: armaduras, ritmos nuevos, matices y articulación. */
+  {id:'pollitos', level:4, bpm:100, sig:-1, pos:'F', dyn:'0:f 16:p', title:'Los pollitos dicen', origin:'Canción infantil tradicional', skills:'Fa mayor, fuerte y suave',
+   goal:'Está en Fa mayor: el Si♭ de la armadura vale para toda la canción. La primera vez va fuerte y la segunda, suave. Para alcanzar el Re, estira el meñique una tecla.',
+   notes:'F4:0.5:1 G4:0.5:2 A4:0.5:3 Bb4:0.5:4 C5:1:5 C5:1:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 C5:2:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 A4:1:3 A4:1:3 G4:0.5:2 G4:0.5:2 G4:0.5:2 G4:0.5:2 F4:2:1 F4:0.5:1 G4:0.5:2 A4:0.5:3 Bb4:0.5:4 C5:1:5 C5:1:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 C5:2:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 A4:1:3 A4:1:3 G4:0.5:2 G4:0.5:2 G4:0.5:2 G4:0.5:2 F4:2:1',
+   chords:'F:4 Bb:2 F:2 Bb:2 F:2 C:2 F:2 F:4 Bb:2 F:2 Bb:2 F:2 C:2 F:2'},
+  {id:'susana', level:4, bpm:110, sig:2, pos:'D', pickup:1, dyn:'0:p 33:f', title:'Oh, Susana', origin:'Stephen Foster', skills:'Re mayor, puntillo y síncopa',
+   goal:'Está en Re mayor: todos los Fa son Fa♯. Fíjate en las negras con puntillo y, en el estribillo, en la nota larga que entra en el segundo pulso. La estrofa va suave y el estribillo, fuerte.',
+   notes:'D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:2 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 D4:1:1 E4:3:2 D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:2 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 E4:1:2 D4:4:1 G4:2:3 G4:2:3 B4:1:5 B4:2:5 B4:1:5 A4:1:4 A4:1:4 F#4:1:2 D4:1:1 E4:3:2 D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:2 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 E4:1:2 D4:4:1',
+   chords:'R:1 D:4 D:4 D:4 A:4 D:4 D:4 D:2 A:2 D:4 G:4 G:4 D:4 A:4 D:4 D:4 D:2 A:2 D:4'},
+  {id:'sorpresa', level:4, bpm:84, meter:2, dyn:'0:p 31:f', art:'0:s 3:n 4:s 7:n 8:s 11:n 12:s 14:n 16:s 19:n 20:s 23:n 24:s 27:n 28:s 30:n',
+   title:'La sorpresa', origin:'Joseph Haydn, Sinfonía n.º 94', skills:'Staccato, suave y un fuerte de golpe',
+   goal:'Haydn escribió esta melodía muy suave y con notas cortas… y al final un acorde fuerte para despertar al público. Toca las corcheas en staccato y guarda toda la fuerza para el último acorde.',
+   notes:'C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 F4:0.5:5 F4:0.5:5 D4:0.5:3 D4:0.5:3 B3:0.5:2 B3:0.5:2 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 C5:0.5:5 C5:0.5:5 F#4:0.5:2 F#4:0.5:2 G4:1:3 R:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 F4:0.5:5 F4:0.5:5 D4:0.5:3 D4:0.5:3 B3:0.5:2 B3:0.5:2 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 C5:0.5:5 C5:0.5:5 F#4:0.5:2 F#4:0.5:2 G4:1:3 B3+D4+G4:1:1+2+5',
+   chords:'C:2 C:2 G:2 G:2 C:2 C:2 D:2 G:2 C:2 C:2 G:2 G:2 C:2 C:2 D:2 G:1 G:1'},
+  {id:'primavera', level:4, bpm:72, sig:-1, pos:'F', pickup:0.5, dyn:'0:f 12:p', title:'La primavera', origin:'Antonio Vivaldi, tema de «Las cuatro estaciones»', skills:'Fa mayor, semicorcheas y eco',
+   goal:'El tema se toca dos veces: fuerte y después suave, como un eco. Así lo escribió Vivaldi. Cuida las dos semicorcheas de cada compás: van parejas y sin correr. La mano no sale de la posición de Fa.',
+   notes:'F4:0.5:1 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 Bb4:0.25:4 C5:0.25:5 Bb4:0.5:4 A4:0.5:3 G4:1.5:2 F4:0.5:1 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 Bb4:0.25:4 C5:0.25:5 Bb4:0.5:4 A4:0.5:3 G4:1:2 F4:1:1',
+   chords:'R:0.5 F:4 F:4 F:2 C:2 F:4 F:4 F:2 C:1 F:1'},
+  {id:'canon', level:4, bpm:80, sig:2, pos:'D', dyn:'0:p 16:c 32:f', art:'0:l 32:n', title:'Canon en Re', origin:'Johann Pachelbel, tema', skills:'Re mayor, legato y crescendo',
+   goal:'Está en Re mayor, con Fa♯ y Do♯. Las notas largas del principio van ligadas y suaves; en la segunda frase crece poco a poco hasta llegar fuerte a las negras. Después del pulgar en Re, el dedo 4 cruza por encima para tocar Do♯.',
+   notes:'F#5:2:3 E5:2:2 D5:2:1 C#5:2:4 B4:2:3 A4:2:2 B4:2:3 C#5:2:4 D5:2:5 C#5:2:4 B4:2:3 A4:2:2 G4:2:1 F#4:2:3 G4:2:4 E4:2:2 D5:1:1 F#5:1:3 A5:1:5 G5:1:4 F#5:1:3 D5:1:1 F#5:1:3 E5:1:2 D5:1:5 B4:1:3 D5:1:5 A4:1:2 G4:1:1 B4:1:3 A4:1:2 G4:1:1 D5:4:5',
+   chords:'D:2 A:2 Bm:2 F#m:2 G:2 D:2 G:2 A:2 D:2 A:2 Bm:2 F#m:2 G:2 D:2 G:2 A:2 D:2 A:2 Bm:2 F#m:2 G:2 D:2 G:2 A:2 D:4'},
+  {id:'sonata545', level:4, bpm:100, title:'Sonata en Do, K. 545', origin:'Wolfgang Amadeus Mozart, primeros compases', skills:'Bajo Alberti',
+   goal:'El comienzo de la sonata más conocida de Mozart, con el final adaptado. En el nivel «Original» la mano izquierda toca el bajo Alberti tal como él lo escribió. Que la izquierda suene más suave que la melodía.',
+   notes:'C5:2:1 E5:1:3 G5:1:5 B4:1.5:1 C5:0.25:2 D5:0.25:3 C5:1:2 R:1 A5:2:4 G5:1:3 C6:1:5 G5:1:3 F5:0.5:2 E5:0.25:1 F5:0.25:2 E5:1:1 R:1 C5:4:1',
+   left:'C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 D4:0.5:4 G4:0.5:1 F4:0.5:2 G4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 C4:0.5:5 A4:0.5:1 F4:0.5:2 A4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 B3:0.5:5 G4:0.5:1 D4:0.5:3 G4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 C4+E4+G4:4:5+3+1',
+   chords:'C:4 G:2 C:2 F:2 C:2 G:2 C:2 C:4'}
 ];
 SONGS.forEach(s => { s.key = s.id; s.nivel = 1; });
-const LEVELS = {1:'Primeros pasos', 2:'Fácil', 3:'Reto'};
+const LEVELS = {1:'Primeros pasos', 2:'Fácil', 3:'Reto', 4:'Con lo aprendido en el Nivel 2'};
 
 /* Acompañamiento de la mano izquierda en las canciones: la nota del bajo y el acorde de cada cifrado,
    según dónde se apoya la mano (pos). El dedo 5 es el meñique. */
 const LH = {
-  C: {bass: {C:'C3:5', Dm:'D3:4', Em:'E3:3', F:'F3:2', G:'G3:1', Am:'A3:1'},
-      ch: {C:'C3+E3+G3:5+3+1', F:'C3+F3+A3:5+2+1', G:'B2+D3+G3:5+3+1', Am:'C3+E3+A3:5+3+1', Dm:'D3+F3+A3:5+3+1', Em:'B2+E3+G3:5+2+1'}},
+  C: {bass: {C:'C3:5', D:'D3:4', Dm:'D3:4', Em:'E3:3', F:'F3:2', G:'G3:1', Am:'A3:1'},
+      ch: {C:'C3+E3+G3:5+3+1', F:'C3+F3+A3:5+2+1', G:'B2+D3+G3:5+3+1', Am:'C3+E3+A3:5+3+1', D:'D3+F#3+A3:5+3+1', Dm:'D3+F3+A3:5+3+1', Em:'B2+E3+G3:5+2+1'}},
+  F: {bass: {F:'F3:5', Bb:'Bb3:2', C:'C4:1'},
+      ch: {F:'F3+A3+C4:5+3+1', Bb:'F3+Bb3+D4:5+2+1', C:'E3+G3+C4:5+3+1'}},
+  D: {bass: {D:'D3:5', G:'G3:2', A:'A3:1', Bm:'B2:5', 'F#m':'F#3:3'},
+      ch: {D:'D3+F#3+A3:5+3+1', G:'D3+G3+B3:5+2+1', A:'C#3+E3+A3:5+3+1', Bm:'D3+F#3+B3:5+3+1', 'F#m':'C#3+F#3+A3:5+2+1'}},
   G: {bass: {G:'G2:5', C:'C3:2', D:'D3:1'},
       ch: {G:'G2+B2+D3:5+3+1', C:'G2+C3+E3:5+2+1', D:'F#2+A2+D3:5+3+1'}},
   A: {bass: {Am:'A2:5', E:'E3:1', Dm:'D3:2', C:'C3:3', G:'G2:5', F:'F3:1'},
@@ -1226,12 +1257,14 @@ const NIVELES_APP = [null,
   {name: 'Con bajo', desc: 'La mano izquierda toca una nota larga en cada acorde.'},
   {name: 'Con acordes', desc: 'La mano izquierda toca los acordes completos.'}
 ];
-const lvInfo = (s, n) => (s && s.chords ? NIVELES_APP : NIVELES)[n];
+const LV_ORIG = {name: 'Original', desc: 'La mano izquierda toca el acompañamiento tal como está escrito.'};
+const lvInfo = (s, n) => s && s.chords ? (n === 3 && s.left ? LV_ORIG : NIVELES_APP[n]) : NIVELES[n];
 const lvMax = s => s && s.chords ? 3 : 4;
 const lvRank = (s, n) => s && s.chords ? n : NIVELES[n].rank;
-const lvLabel = (s, n) => s && s.chords ? NIVELES_APP[n].name : `${NIVELES[n].name}, ${NIVELES[n].hands === 1 ? 'una mano' : 'dos manos'}`;
+const lvLabel = (s, n) => s && s.chords ? lvInfo(s, n).name : `${NIVELES[n].name}, ${NIVELES[n].hands === 1 ? 'una mano' : 'dos manos'}`;
 function chordLevels(s){
-  const mel = songData(s).notes, V = LH[s.pos || 'C'], bassMap = Object.assign({}, V.bass, s.bass || {});
+  const all = songData(s).notes, mel = s.left ? all.filter(n => n.hand !== 'L') : all;
+  const V = LH[s.pos || 'C'], bassMap = Object.assign({}, V.bass, s.bass || {});
   const one = tok => { const [ns, fs] = tok.split(':'); const f = fs.split('+'); return ns.split('+').map((nm, i) => ({midi: toMidi(nm), finger: +f[i] || 0})); };
   // La mano izquierda siempre queda por debajo de lo que toca la derecha en ese momento.
   const floor = (a, b) => { let lo = 999; for (const n of mel) if (n.start < b - 1e-6 && n.start + n.dur > a + 1e-6) lo = Math.min(lo, n.midi); return lo; };
@@ -1249,7 +1282,7 @@ function chordLevels(s){
     t += dur;
   }
   const mix = left => mel.map(n => Object.assign({}, n)).concat(left).sort((a, b) => a.start - b.start || a.midi - b.midi);
-  return {notes: [null, mel.map(n => Object.assign({}, n)), mix(bass), mix(full)], avail: [1, 2, 3]};
+  return {notes: [null, mel.map(n => Object.assign({}, n)), mix(bass), s.left ? all.map(n => Object.assign({}, n)) : mix(full)], avail: [1, 2, 3]};
 }
 function songLevels(s){
   if (s._lv) return s._lv;
@@ -2507,14 +2540,14 @@ function renderLessons(){
 function renderSongs(){
   const best = Data.progress;
   let h = '<p class="lead">Melodías conocidas, cada una con tres niveles: la melodía sola, con un bajo en la mano izquierda y con acordes. Sube de nivel cuando te salga. Abajo puedes importar tus propias canciones.</p>';
-  for (const lvl of [1, 2, 3]){
-    h += `<section class="lvl"><h2>${LEVELS[lvl]}</h2>`;
+  for (const lvl of [1, 2, 3, 4]){
+    h += `<section class="lvl"><h2>${LEVELS[lvl]}</h2>${lvl === 4 ? '<p class="lead">Música de verdad para usar las armaduras, los ritmos nuevos, los matices y la articulación del Nivel 2 de los ejercicios.</p>' : ''}`;
     for (const s of SONGS.filter(x => x.level === lvl)){
       const lv = [1, 2, 3].map(n => best[progKey(s, n)]), any = lv.some(Boolean);
       const keys = new Set(songData(s).notes.map(n => n.midi)).size;
       // Con algún nivel tocado, la segunda línea muestra las estrellas de los tres niveles.
-      const sub = any ? ['Melodía', 'Bajo', 'Acordes'].map((nm, i) => `<span class="lvs" aria-label="${nm}: ${lv[i] ? lv[i].stars + ' de 3 estrellas' : 'sin tocar'}">${nm} <b>${lv[i] ? '★'.repeat(lv[i].stars) + '☆'.repeat(3 - lv[i].stars) : '–'}</b></span>`).join('')
-        : `${s.origin}. Usa ${keys} teclas.`;
+      const sub = any ? ['Melodía', 'Bajo', s.left ? 'Original' : 'Acordes'].map((nm, i) => `<span class="lvs" aria-label="${nm}: ${lv[i] ? lv[i].stars + ' de 3 estrellas' : 'sin tocar'}">${nm} <b>${lv[i] ? '★'.repeat(lv[i].stars) + '☆'.repeat(3 - lv[i].stars) : '–'}</b></span>`).join('')
+        : s.skills ? `${s.origin}. ${s.skills}.` : `${s.origin}. Usa ${keys} teclas.`;
       h += `<button class="song" data-id="${s.key}">
         <span class="diff" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${i <= lvl ? 'on' : ''}"></i>`).join('')}</span>
         <span><span class="t">${s.title}</span><span class="o">${sub}</span></span>${any ? '' : '<span class="new">Nueva</span>'}</button>`;
@@ -3105,12 +3138,13 @@ function buildRun(){
   P.first = mine.length ? mine[0].start : P.notes.length ? P.notes[0].start : P.a;
   const inRun = t => t >= a - 1e-6 && t < b - 1e-6;
   P.hasDyn = mine.some(n => n.dyn || n.hair);
-  P.dynMarks = P.level ? [] : marksOf(s.dyn).filter(k => (k.v === 'f' || k.v === 'p') && inRun(k.t));
+  const marked = !P.level || !!s.chords;
+  P.dynMarks = !marked ? [] : marksOf(s.dyn).filter(k => (k.v === 'f' || k.v === 'p') && inRun(k.t));
   // Una parte que empieza a mitad de un matiz lo muestra igual al principio.
-  const d0 = P.level ? '' : markAt(marksOf(s.dyn), a);
+  const d0 = !marked ? '' : markAt(marksOf(s.dyn), a);
   if ((d0 === 'f' || d0 === 'p') && !P.dynMarks.some(k => Math.abs(k.t - a) < 1e-6)) P.dynMarks.unshift({t: a, v: d0});
   // Reguladores que caen dentro de lo que se va a tocar
-  const dyAll = P.level ? [] : marksOf(s.dyn);
+  const dyAll = !marked ? [] : marksOf(s.dyn);
   P.hairs = dyAll.map((k, i) => ({a: k.t, b: Math.min(b, i + 1 < dyAll.length ? dyAll[i + 1].t : full), v: k.v})).filter(h => (h.v === 'c' || h.v === 'd') && inRun(h.a) && h.b > h.a);
   P.sig = keySig(s);
   buildSheet();
