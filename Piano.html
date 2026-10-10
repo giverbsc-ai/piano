@@ -384,6 +384,10 @@ a.btn{text-decoration:none}
 .lbl{font-weight:700;font-size:clamp(10px,1.5vw,14px);color:#6A5C72;line-height:1;white-space:nowrap}
 .kb{font-size:10px;line-height:1;color:#A89EAF}
 .key.black .kb{color:#8D8496}
+/* Letra del teclado del computador que eligió el alumno: se ve como una tecla pequeña, también sobre las negras y las teclas iluminadas. */
+.kb.mine,.kbd-cap{font-size:11px;font-weight:700;color:#231B2B;background:#FFFDF8;border:1px solid rgba(40,28,50,.42);border-radius:4px;
+  box-shadow:0 1.5px 0 rgba(40,28,50,.42);padding:2px 3px 1px;min-width:17px;text-align:center;white-space:nowrap}
+.key.black .kb.mine{color:#231B2B}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--felt)}
 
 /* Diálogos */
@@ -404,6 +408,28 @@ input[type=range]{width:100%;accent-color:var(--felt)}
 .part .pn{display:block;font-weight:700}
 .part .pd{display:block;font-size:.9rem;color:var(--ink-soft)}
 .dlg-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+/* Teclas del computador: el alumno elige la letra o el número de cada tecla del piano */
+#kbdDlg{width:min(1060px,calc(100% - 24px))}
+.kbd-now{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--room)}
+.kbd-note{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:1.7rem;line-height:1}
+.kbd-with{color:var(--ink-soft)}
+.kbd-now .kbd-cap{font-size:1.1rem;min-width:36px;padding:5px 9px 4px;border-radius:7px}
+.kbd-now .kbd-cap.none{background:transparent;border-style:dashed;border-color:var(--ink-soft);box-shadow:none;color:var(--ink-soft);font-weight:500;font-size:.95rem}
+.kbd-msg{flex:1 1 100%;margin:0}
+.kbd-msg.warn{color:var(--bad);font-weight:500}
+.kbd-scroll{flex:none;overflow-x:auto;background:var(--lacquer);border-radius:10px;padding-bottom:8px}
+.kbd-scroll:focus-visible{outline:2px solid var(--felt-ink);outline-offset:2px}
+.kbd-board{min-width:936px}
+.kbd-keys{position:relative;height:clamp(112px,22vh,150px);cursor:pointer;user-select:none;-webkit-user-select:none}
+.kbd-keys .lbl{font-size:11px}
+.kbd-keys .kb:not(.mine){display:none}
+.kbd-keys .key.white{padding-bottom:8px}
+.key.white.sel{background:linear-gradient(180deg,#F1D79A,#F7E6BD);box-shadow:inset 0 0 0 2px var(--felt)}
+.key.black.sel{background:linear-gradient(180deg,#86601F,var(--brass));box-shadow:inset 0 0 0 2px #FFF5F2,0 3px 4px rgba(0,0,0,.45)}
+.kbd-opts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.kbd-opts .seg button{white-space:nowrap}
+#kbdReset.armed{border-color:var(--bad);color:var(--bad)}
+#kbdDlg .dlg-actions .btn:first-child{margin-right:auto}
 .dlg .done{align-self:flex-end}
 .acc-g{align-self:stretch}
 .acc-or{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:.9rem}
@@ -774,6 +800,11 @@ body[data-view="welcome"] .cab{display:none}
       <p class="fhelp" id="devNow"></p>
       <button class="btn" id="btnDevice">Cambiar dispositivo</button>
     </div>
+    <div class="field" id="kbdField" hidden>
+      <div class="flabel">Teclas del computador</div>
+      <p class="fhelp" id="kbdState"></p>
+      <button class="btn" id="btnKbd">Elegir las teclas</button>
+    </div>
     <div class="field">
       <div class="flabel">Teclado físico por USB</div>
       <p class="fhelp">Si tu teclado tiene salida USB-MIDI, conéctalo al computador y la app reconocerá lo que tocas, también en los ejercicios y canciones.</p>
@@ -842,6 +873,35 @@ body[data-view="welcome"] .cab{display:none}
     <div class="dlg-actions">
       <button class="btn" id="impCancel">Cancelar</button>
       <button class="btn primary" id="impSave">Guardar y practicar</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="kbdDlg" aria-labelledby="kbdTitle">
+  <div class="dlg">
+    <div class="acc-top"><h2 id="kbdTitle">Teclas del computador</h2><button type="button" class="btn icon" id="kbdX" aria-label="Cerrar">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="fhelp">Elige con qué letra o número del teclado del computador se toca cada tecla del piano. Toca una tecla del piano aquí abajo y presiona la letra que quieras para ella.</p>
+    <div class="kbd-now" role="status" aria-live="polite">
+      <span class="kbd-note" id="kbdNote"></span>
+      <span class="kbd-with">se toca con</span>
+      <span class="kbd-cap" id="kbdCap"></span>
+      <p class="kbd-msg" id="kbdMsg"></p>
+    </div>
+    <div class="kbd-scroll" id="kbdScroll" tabindex="0" aria-label="Teclas del piano, de Do2 a Do7. Con las flechas cambias de tecla.">
+      <div class="kbd-board"><div class="felt"></div><div class="kbd-keys" id="kbdKeys"></div></div>
+    </div>
+    <div class="kbd-opts">
+      <span class="flabel" id="kbdStepLbl">Después de cada letra, pasar a</span>
+      <div class="seg" id="kbdStep" role="group" aria-labelledby="kbdStepLbl">
+        <button data-v="todas">La tecla siguiente</button><button data-v="blancas">La blanca siguiente</button>
+      </div>
+    </div>
+    <p class="fhelp">Las teclas del piano a las que no les pongas letra siguen con la letra gris de siempre. Lo que elijas se guarda en este computador.</p>
+    <div class="dlg-actions">
+      <button class="btn" id="kbdReset">Volver a las de fábrica</button>
+      <button class="btn" id="kbdDel">Quitar esta letra</button>
+      <button class="btn primary" id="kbdDone">Listo</button>
     </div>
   </div>
 </dialog>
@@ -2232,16 +2292,42 @@ const KB_LOWER = ['KeyZ','KeyS','KeyX','KeyD','KeyC','KeyV','KeyG','KeyB','KeyH'
 const KB_UPPER = ['KeyQ','Digit2','KeyW','Digit3','KeyE','KeyR','Digit5','KeyT','Digit6','KeyY','Digit7','KeyU','KeyI','Digit9','KeyO','Digit0','KeyP'];
 const CODE_LABEL = {Comma:',', Period:'.', Semicolon:'Ñ', Slash:'-'};
 let kbBase = 60;
+/* Letras elegidas por el alumno: nota (MIDI) → [código físico de la tecla del computador, letra que se muestra].
+   Quedan fijas en esa nota y se guardan solo en este computador. Las notas sin letra propia siguen con la de fábrica
+   (que depende de la parte del piano en pantalla), salvo que esa tecla del computador ya esté ocupada por una letra propia. */
+const KBD_LO = 36, KBD_HI = 96;
+const teclas = {};
+{
+  const raw = settings.teclas && typeof settings.teclas === 'object' ? settings.teclas : {}, seen = new Set();
+  for (const k of Object.keys(raw)){
+    const m = +k, v = raw[k];
+    if (!Number.isInteger(m) || m < KBD_LO || m > KBD_HI || !Array.isArray(v) || typeof v[0] !== 'string' || !v[0] || seen.has(v[0])) continue;
+    seen.add(v[0]); teclas[m] = [v[0], String(v[1] || '?').slice(0, 3)];
+  }
+}
+let teclaDe = new Map();
+function reindexTeclas(){ teclaDe = new Map(Object.keys(teclas).map(m => [teclas[m][0], +m])); }
+reindexTeclas();
+const kbOn = () => fine || settings.device === 'pc' || teclaDe.size > 0;
 function codeToMidi(code){
-  let i = KB_LOWER.indexOf(code); if (i >= 0) return kbBase + i;
-  i = KB_UPPER.indexOf(code); if (i >= 0) return kbBase + 12 + i;
-  return null;
+  const t = teclaDe.get(code); if (t != null) return t;
+  let i = KB_LOWER.indexOf(code), m = null;
+  if (i >= 0) m = kbBase + i; else { i = KB_UPPER.indexOf(code); if (i >= 0) m = kbBase + 12 + i; }
+  return m != null && !teclas[m] ? m : null;
 }
 function codeLabel(c){ return CODE_LABEL[c] || (c.startsWith('Key') ? c.slice(3) : c.startsWith('Digit') ? c.slice(5) : ''); }
 function hintFor(m){
-  const i = m - kbBase; if (i >= 0 && i < KB_LOWER.length) return codeLabel(KB_LOWER[i]);
-  const j = m - kbBase - 12; if (j >= 0 && j < KB_UPPER.length) return codeLabel(KB_UPPER[j]);
+  if (teclas[m]) return teclas[m][1];
+  const i = m - kbBase;
+  for (const c of [KB_LOWER[i], KB_UPPER[i - 12]]) if (c && !teclaDe.has(c)) return codeLabel(c);
   return '';
+}
+function refreshKb(){
+  for (const [m, el] of keyEls){
+    let k = el.querySelector('.kb');
+    if (!k){ if (!kbOn()) continue; k = document.createElement('span'); el.insertBefore(k, el.firstChild); }
+    k.className = 'kb' + (teclas[m] ? ' mine' : ''); k.textContent = hintFor(m);
+  }
 }
 function countWhites(lo, hi){ let c = 0; for (let m = lo; m <= hi; m++) if (!isBlack(m)) c++; return c; }
 function rangeEnd(lo, n){ let m = lo, c = 1; while (c < n && m < 108){ m++; if (!isBlack(m)) c++; } return m; }
@@ -2266,7 +2352,7 @@ function buildKeyboard(lo, hi){
       el.style.width = ww + '%';
       wi++;
     }
-    if (fine){ const k = document.createElement('span'); k.className = 'kb'; k.textContent = hintFor(m); el.appendChild(k); }
+    if (kbOn()){ const k = document.createElement('span'); k.className = 'kb' + (teclas[m] ? ' mine' : ''); k.textContent = hintFor(m); el.appendChild(k); }
     if (!isBlack(m)){
       const lb = document.createElement('span'); lb.className = 'lbl'; el.appendChild(lb);
       if (m === 60){ const d = document.createElement('span'); d.className = 'dot'; d.title = 'Do central'; el.appendChild(d); }
@@ -2439,9 +2525,9 @@ function updateDisplay(){
   const big = $('#bigName'), sub = $('#subName');
   if (!notes.length){
     big.textContent = 'Toca una tecla'; big.className = 'big idle';
-    sub.textContent = fine
-      ? 'Usa el mouse o el teclado del computador: la fila Z X C V son teclas blancas y S D G H J las negras.'
-      : 'Toca con los dedos. Puedes presionar varias teclas a la vez.';
+    sub.textContent = !kbOn() ? 'Toca con los dedos. Puedes presionar varias teclas a la vez.'
+      : teclaDe.size ? 'Usa el mouse o el teclado del computador: cada tecla del piano muestra la letra que la toca. Las cambias en Ajustes, «Teclas del computador».'
+      : 'Usa el mouse o el teclado del computador: la fila Z X C V son teclas blancas y S D G H J las negras. En Ajustes puedes elegir otras letras.';
     drawStaff([]);
     return;
   }
@@ -5666,6 +5752,10 @@ function syncSettingsUI(){
   $('#vol').value = settings.volume;
   $('#midiMute').checked = !!settings.midiMute;
   $('#devNow').textContent = devLabel(settings.device) + '.';
+  const nk = teclaDe.size;
+  $('#kbdField').hidden = !kbOn();
+  $('#kbdState').textContent = nk ? `Elegiste la letra de ${nk} ${nk === 1 ? 'tecla' : 'teclas'} del piano. Las demás siguen con las de fábrica.`
+    : 'Tocas con las letras de fábrica: la fila Z X C V para las teclas blancas. Puedes elegir tú la letra o el número de cada tecla del piano.';
 }
 $('#btnSettings').onclick = () => {
   if (P && P.playing){ P.playing = false; setPlayIcon(); updateGuide(); }
@@ -5686,6 +5776,158 @@ $('#themeSeg').addEventListener('click', e => {
 });
 $('#vol').addEventListener('input', e => { settings.volume = +e.target.value; if (master) master.gain.value = settings.volume; saveSettings(); });
 $('#midiMute').addEventListener('change', e => { settings.midiMute = e.target.checked; saveSettings(); });
+
+/* ---------- Teclas del computador: el alumno elige la letra o el número de cada tecla del piano ---------- */
+const kbdDlg = $('#kbdDlg'), kbdKeys = $('#kbdKeys'), kbdScroll = $('#kbdScroll');
+const Kbd = {sel: 60, els: new Map(), msg: '', warn: false, armT: 0};
+const kbdName = m => PCN[sys()][pc(m)] + octave(m);
+const kbdPaso = () => settings.teclasPaso === 'blancas' ? 'blancas' : 'todas';
+function saveTeclas(){ settings.teclas = teclas; saveSettings(); reindexTeclas(); }
+/* La letra que se muestra es la que el alumno ve en su propio teclado; la tecla se reconoce por su posición física (e.code). */
+function kbdLabel(e){
+  const c = e.code || '', k = e.key || '';
+  if (!c || k.length !== 1 || k === ' ') return '';
+  if (/^Digit\d$/.test(c)) return c.slice(5);
+  if (c.startsWith('Numpad')) return 'N' + k;
+  if (e.shiftKey && !c.startsWith('Key')) return '';
+  return k.toLocaleUpperCase('es');
+}
+function kbdBuild(){
+  kbdKeys.innerHTML = ''; Kbd.els = new Map();
+  const ww = 100 / countWhites(KBD_LO, KBD_HI);
+  let wi = 0;
+  for (let m = KBD_LO; m <= KBD_HI; m++){
+    const el = document.createElement('div');
+    el.dataset.m = m;
+    if (isBlack(m)){
+      el.className = 'key black';
+      el.style.left = (wi * ww - ww * 0.3) + '%'; el.style.width = (ww * 0.6) + '%';
+    } else {
+      el.className = 'key white' + (wi === 0 ? ' first' : '');
+      el.style.left = (wi * ww) + '%'; el.style.width = ww + '%';
+      wi++;
+    }
+    const k = document.createElement('span'); k.className = 'kb'; el.appendChild(k);
+    if (!isBlack(m)){
+      const lb = document.createElement('span'); lb.className = 'lbl'; lb.textContent = pc(m) === 0 ? kbdName(m) : PCN[sys()][pc(m)]; el.appendChild(lb);
+      if (m === 60){ const d = document.createElement('span'); d.className = 'dot'; el.appendChild(d); }
+    }
+    kbdKeys.appendChild(el); Kbd.els.set(m, el);
+  }
+}
+function kbdRender(){
+  for (const [m, el] of Kbd.els){
+    const k = el.querySelector('.kb'), t = teclas[m];
+    k.className = 'kb' + (t ? ' mine' : ''); k.textContent = t ? t[1] : '';
+    el.classList.toggle('sel', m === Kbd.sel);
+  }
+  const m = Kbd.sel, t = teclas[m], cap = $('#kbdCap'), msg = $('#kbdMsg');
+  $('#kbdNote').textContent = kbdName(m) + (m === 60 ? `, el ${PCN[sys()][0]} central` : '');
+  cap.textContent = t ? t[1] : 'sin letra propia'; cap.classList.toggle('none', !t);
+  msg.textContent = Kbd.msg || 'Presiona en el teclado del computador la letra o el número que quieras para esta tecla.';
+  msg.classList.toggle('warn', Kbd.warn);
+  $('#kbdDel').textContent = `Quitar la letra de ${kbdName(m)}`;
+  $('#kbdDel').disabled = !t;
+  $('#kbdReset').disabled = !teclaDe.size;
+  for (const b of $('#kbdStep').children) b.setAttribute('aria-pressed', b.dataset.v === kbdPaso() ? 'true' : 'false');
+}
+function kbdReveal(center){
+  const el = Kbd.els.get(Kbd.sel); if (!el) return;
+  const l = el.offsetLeft, r = l + el.offsetWidth, w = kbdScroll.clientWidth;
+  if (center) kbdScroll.scrollLeft = Math.max(0, (l + r) / 2 - w / 2);
+  else if (l < kbdScroll.scrollLeft + 40) kbdScroll.scrollLeft = Math.max(0, l - 90);
+  else if (r > kbdScroll.scrollLeft + w - 40) kbdScroll.scrollLeft = r - w + 90;
+}
+function kbdTap(m){
+  startVoice(m, 0.7);
+  setTimeout(() => { if (!down.has(m) && !autoCount.has(m)) releaseVoice(m); }, 320);
+}
+function kbdDisarm(){
+  clearTimeout(Kbd.armT);
+  const b = $('#kbdReset'); b.classList.remove('armed'); b.textContent = 'Volver a las de fábrica';
+}
+function kbdSelect(m, sound){
+  Kbd.sel = Math.max(KBD_LO, Math.min(KBD_HI, m));
+  Kbd.msg = ''; Kbd.warn = false; kbdDisarm();
+  if (sound) kbdTap(Kbd.sel);
+  kbdRender(); kbdReveal();
+}
+function kbdAssign(e){
+  const label = kbdLabel(e);
+  kbdDisarm();
+  if (!label){
+    Kbd.msg = e.shiftKey ? 'Suelta la tecla de mayúsculas y presiona la tecla sola.' : 'Esa tecla no sirve para tocar. Prueba con una letra, un número o un signo.';
+    Kbd.warn = true; kbdRender(); return;
+  }
+  const m = Kbd.sel, prev = teclaDe.get(e.code);
+  if (prev != null && prev !== m) delete teclas[prev];
+  teclas[m] = [e.code, label]; saveTeclas();
+  kbdTap(m);
+  let msg = prev != null && prev !== m ? `La tecla ${label} antes tocaba ${kbdName(prev)}; ahora toca ${kbdName(m)}.` : `Listo: ${kbdName(m)} se toca con ${label}.`;
+  let nx = m + 1;
+  if (kbdPaso() === 'blancas') while (nx <= KBD_HI && isBlack(nx)) nx++;
+  if (nx <= KBD_HI){ Kbd.sel = nx; msg += ` Ahora presiona la de ${kbdName(nx)}, o toca otra tecla del piano.`; }
+  else msg += ' Era la última tecla del piano.';
+  Kbd.msg = msg; Kbd.warn = false;
+  kbdRender(); kbdReveal();
+}
+function kbdRemove(){
+  const m = Kbd.sel; if (!teclas[m]) return;
+  kbdDisarm();
+  delete teclas[m]; saveTeclas();
+  Kbd.msg = `${kbdName(m)} quedó sin letra propia. Presiona otra letra si quieres darle una.`; Kbd.warn = false;
+  kbdRender();
+}
+function openKbd(){
+  releaseAll();
+  kbdBuild();
+  Kbd.msg = ''; Kbd.warn = false; kbdDisarm();
+  kbdDlg.showModal();
+  kbdRender(); kbdReveal(true);
+  kbdScroll.focus({preventScroll: true});
+}
+$('#btnKbd').onclick = () => { dlg.close(); openKbd(); };
+$('#kbdX').onclick = $('#kbdDone').onclick = () => kbdDlg.close();
+kbdDlg.addEventListener('click', e => { if (e.target === kbdDlg) kbdDlg.close(); });
+kbdDlg.addEventListener('close', () => {
+  kbdDisarm(); refreshKb(); syncSettingsUI();
+  if (view === 'free') updateDisplay();
+});
+kbdKeys.addEventListener('pointerdown', e => {
+  const k = e.target.closest('.key'); if (!k) return;
+  kbdSelect(+k.dataset.m, true);
+  kbdScroll.focus({preventScroll: true});
+});
+$('#kbdStep').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  settings.teclasPaso = b.dataset.v; saveSettings(); kbdRender();
+});
+$('#kbdDel').onclick = kbdRemove;
+$('#kbdReset').onclick = () => {
+  const b = $('#kbdReset');
+  if (!b.classList.contains('armed')){
+    clearTimeout(Kbd.armT);
+    b.classList.add('armed'); b.textContent = 'Sí, quitar todas mis letras';
+    Kbd.armT = setTimeout(kbdDisarm, 4000);
+    return;
+  }
+  kbdDisarm();
+  for (const k of Object.keys(teclas)) delete teclas[k];
+  saveTeclas();
+  Kbd.msg = 'Todas las teclas del piano volvieron a las letras de fábrica.'; Kbd.warn = false;
+  kbdRender();
+};
+kbdDlg.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (k === 'ArrowRight' || k === 'ArrowLeft'){ e.preventDefault(); kbdSelect(Kbd.sel + (k === 'ArrowRight' ? 1 : -1), !e.repeat); return; }
+  if (k === 'Backspace' || k === 'Delete'){ e.preventDefault(); kbdRemove(); return; }
+  if (k === 'Dead'){ e.preventDefault(); if (!e.repeat) kbdAssign(e); return; }
+  if (k.length !== 1 || k === ' ') return;
+  e.preventDefault();
+  if (!e.repeat) kbdAssign(e);
+});
+
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 if (darkMQ.addEventListener) darkMQ.addEventListener('change', readColors);
 
