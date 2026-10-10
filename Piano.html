@@ -105,6 +105,7 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 @keyframes blink{50%{opacity:.2}}
 /* Crear canción: se graba por tramos en «Tocar libre» */
 .maker{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface);max-height:64%;overflow-y:auto}
+.maker > *{flex:none}
 .mk-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
 .mk-t{font-family:"Alegreya",Georgia,serif;font-size:1.25rem;font-weight:700;line-height:1.2;margin:0}
 .mk-s{flex:1 1 240px;margin:0;color:var(--ink-soft)}
@@ -122,6 +123,9 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
   #viewFree.making .display{display:none}
   #viewFree.making .maker{flex:1 1 auto;max-height:none;border-bottom:0;padding-top:6px;padding-bottom:2px;gap:6px}
   #viewFree.making .mk-t{font-size:1.05rem}
+  /* Con un tramo elegido hay siete botones: aquí los de mover quedan solo con la flecha para que quepan en una fila. */
+  #viewFree.making .mk-act .mk-w{display:none}
+  #viewFree.making .mk-act .btn{padding:0 10px}
 }
 
 /* Aprender: listas */
@@ -2570,7 +2574,10 @@ const ICON = {
   play: '<svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
   pause: '<svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z"/></svg>',
   stop: '<svg class="i" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
-  trash: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+  trash: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  copy: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+  left: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  right: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
 };
 const rec = {on: false, start: 0, events: []};
 let saved = store.get('piano:grabacion', null);
@@ -2699,7 +2706,7 @@ function mkStatus(){
   else if (!n) t = 'Graba un pedazo de la canción, detén y sigue con el siguiente. Al final la guardas en «Tus canciones» para practicarla.';
   else if (Mk.sel >= 0 && mk.tramos[Mk.sel]){
     const tr = mk.tramos[Mk.sel];
-    t = `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Puedes escucharlo, grabarlo de nuevo o borrarlo.`;
+    t = `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Puedes escucharlo, grabarlo de nuevo, copiarlo, moverlo o borrarlo.`;
   } else {
     const s = mkSong();
     t = `${n === 1 ? '1 tramo' : n + ' tramos'}, ${notasTxt(mkCount())}, ${fmtTime(mkLen())}. `
@@ -2729,6 +2736,9 @@ function mkActions(){
   else if (Mk.sel >= 0){
     const k = Mk.sel + 1, arm = Mk.armed === 'del';
     h = `<button class="btn" data-mk="play1">${ICON.play}Escuchar tramo ${k}</button><button class="btn" data-mk="redo">${dot}Grabar de nuevo</button>`
+      + `<button class="btn" data-mk="copy">${ICON.copy}Copiar</button>`
+      + `<button class="btn" data-mk="left" title="Mover antes" aria-label="Mover antes"${k === 1 ? ' disabled' : ''}>${ICON.left}<span class="mk-w">Mover antes</span></button>`
+      + `<button class="btn" data-mk="right" title="Mover después" aria-label="Mover después"${k === n ? ' disabled' : ''}><span class="mk-w">Mover después</span>${ICON.right}</button>`
       + `<button class="btn${arm ? ' armed' : ''}" data-mk="del">${arm ? `¿Borrar el tramo ${k}?` : ICON.trash + 'Borrar'}</button><button class="btn" data-mk="back">Volver</button>`;
   } else {
     const pend = !mkSong() || mk.dirty, arm = Mk.armed === 'new';
@@ -2840,6 +2850,29 @@ $('#mkAct').addEventListener('click', e => {
   else if (a === 'quiet') mkStopPlay();
   else if (a === 'back'){ Mk.sel = -1; Mk.msg = ''; mkRender(); }
   else if (a === 'save') mkSaveSong();
+  else if (a === 'copy'){
+    // La copia va al final, como un tramo recién grabado, y queda elegida para moverla a su lugar.
+    const t = mk.tramos[Mk.sel]; if (!t) return;
+    if (mkCount() + t.n.length > MAX_NOTAS){ Mk.msg = `La copia no cabe: la canción pasaría de ${MAX_NOTAS} notas, que es el máximo.`; mkRender(); Mk.msg = ''; return; }
+    const k = Mk.sel + 1;
+    mk.tramos.push({n: t.n.map(x => x.slice()), len: t.len});
+    mk.dirty = true; mkSave();
+    Mk.sel = Mk.scroll = mk.tramos.length - 1;
+    Mk.msg = `Copia del tramo ${k}: quedó al final, como tramo ${Mk.sel + 1}. Muévela si va en otro lugar.`;
+    mkRender(); Mk.msg = '';
+    $('#mkAct [data-mk="left"]').focus();
+  }
+  else if (a === 'left' || a === 'right'){
+    const i = Mk.sel, j = i + (a === 'left' ? -1 : 1);
+    if (!mk.tramos[i] || !mk.tramos[j]) return;
+    [mk.tramos[i], mk.tramos[j]] = [mk.tramos[j], mk.tramos[i]];
+    mk.dirty = true; mkSave();
+    Mk.sel = Mk.scroll = j;
+    Mk.msg = `El tramo ${i + 1} ahora es el ${j + 1}, y el que estaba ahí pasó a ser el ${i + 1}.`;
+    mkRender(); Mk.msg = '';
+    const b2 = $(`#mkAct [data-mk="${a}"]`);
+    (b2.disabled ? $(`#mkAct [data-mk="${a === 'left' ? 'right' : 'left'}"]`) : b2).focus();
+  }
   else if (a === 'del'){
     if (!mkArm('del')) return;
     mk.tramos.splice(Mk.sel, 1);

@@ -16,7 +16,8 @@ No forman parte de la app: sirven para comprobar la sincronización entre dispos
   bien y mal, para comprobar los matices y la articulación.
 - `test-varios.js`: pantalla encendida, historial de práctica y la pantalla «Tu progreso» en varios tamaños.
 - `test-grabar.js`: «Crear canción» en Tocar libre: graba tramos con un teclado simulado (acordes, pausas largas, teclas que quedan
-  apretadas), los corrige, los escucha, guarda la canción en «Tus canciones», la reemplaza y comprueba que el borrador no se pierde.
+  apretadas), los corrige, los copia, los mueve de lugar, los escucha, guarda la canción en «Tus canciones», la reemplaza y comprueba
+  que el borrador no se pierde.
 - `test-teclas.js`: «Teclas del computador» en Ajustes: elegir la letra o el número de cada tecla del piano, tocar con ellas en
   Tocar libre y en un ejercicio, mudar o quitar una letra, volver a las de fábrica y que todo quede guardado al recargar.
 - `pianista.js`: el «pianista virtual» que comparten las pruebas.

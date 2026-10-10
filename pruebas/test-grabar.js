@@ -7,7 +7,7 @@ function appHtml(){
   let h = fs.readFileSync(path.join(REPO, 'Piano.html'), 'utf8');
   h = h.replace(/const NUBE_CFG = [^;]*;/, 'const NUBE_CFG = null;');
   const hook = `window.__t = {get P(){ return P; }, get view(){ return view; }, Data, settings, mk, Mk, press, release, goFree, goLearn, goHome, openSong, start, step, setMode,
-    pendingGroup, songData, songLevels, curLevel, mkTramo, get autoN(){ return autoCount.size; }, get saved(){ return saved; }};\nNube.bind();`;
+    pendingGroup, songData, songLevels, curLevel, mkTramo, mkFlat, get autoN(){ return autoCount.size; }, get saved(){ return saved; }};\nNube.bind();`;
   return h.replace('Nube.bind();', hook);
 }
 const server = http.createServer((req, res) => {
@@ -99,7 +99,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok((await chips(A)).length === 3, 'ya son tres tramos', await chips(A));
   await A.click('#mkChips [data-tr="0"]');
   ok((await A.getAttribute('#mkChips [data-tr="0"]', 'aria-pressed')) === 'true' && /Tramo 1: 3 notas/.test(await txt(A, '#mkStatus')), 'al tocar la ficha queda elegido el tramo 1', await txt(A, '#mkStatus'));
-  ok(JSON.stringify((await acts(A)).map(a => a.split(':')[0])) === JSON.stringify(['play1', 'redo', 'del', 'back']), 'ofrece escucharlo, grabarlo de nuevo, borrarlo o volver', await acts(A));
+  ok(JSON.stringify((await acts(A)).map(a => a.split(':')[0])) === JSON.stringify(['play1', 'redo', 'copy', 'left', 'right', 'del', 'back']), 'ofrece escucharlo, grabarlo de nuevo, copiarlo, moverlo, borrarlo o volver', await acts(A));
   await A.click('[data-mk="redo"]');
   ok(/Grabando el tramo 1\./.test(await txt(A, '#mkStatus')), 'grabar de nuevo graba en el mismo lugar', await txt(A, '#mkStatus'));
   await events(A, [[200, 60, true], [300, 60, false], [200, 64, true], [300, 64, false], [200, 67, true], [300, 67, false], [200, 72, true], [300, 72, false]]);
@@ -246,6 +246,70 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await D.click('[data-mk="rec"]'); await D.screenshot({path: path.join(SHOTS, `grabar-${name}-rec.png`)});
     await D.context().close();
   }
+
+  console.log('\n12. Copiar y mover tramos');
+  const E = await open({width: 1180, height: 760}, 'tab-h');
+  await E.evaluate(() => {
+    // Cuatro tramos fáciles de reconocer por su primera nota: 60, 62, 64 y 65.
+    Object.assign(__t.mk, {tramos: [60, 62, 64, 65].map((m, i) => ({n: [[m, 0, 300], [m + 12, 400, 300 + i * 100]], len: 700 + i * 100})), song: '', name: '', dirty: false});
+    __t.goFree();
+  });
+  await E.click('#btnMaker');
+  const orden = async () => (await draft(E)).tramos.map(t => t.n[0][0]).join();
+  const sel = () => E.evaluate(() => [...document.querySelectorAll('#mkChips [data-tr]')].findIndex(b => b.getAttribute('aria-pressed') === 'true'));
+  await E.click('#mkChips [data-tr="0"]');
+  ok(/copiarlo, moverlo o borrarlo/.test(await txt(E, '#mkStatus')), 'al elegir un tramo dice que se puede copiar y mover', await txt(E, '#mkStatus'));
+  ok(await E.isDisabled('[data-mk="left"]') && await E.isEnabled('[data-mk="right"]'), 'el primer tramo no se puede mover antes');
+  await E.click('[data-mk="copy"]');
+  d = await draft(E);
+  ok(await orden() === '60,62,64,65,60' && JSON.stringify(d.tramos[4]) === JSON.stringify(d.tramos[0]) && d.dirty === true, 'Copiar agrega al final un tramo igual', await orden());
+  ok((await sel()) === 4 && /Copia del tramo 1: quedó al final, como tramo 5/.test(await txt(E, '#mkStatus')), 'la copia queda elegida y lo avisa', await txt(E, '#mkStatus'));
+  ok(await E.isDisabled('[data-mk="right"]') && await E.isEnabled('[data-mk="left"]'), 'el último tramo no se puede mover después');
+  // Cambiar la copia no cambia el original: son tramos distintos.
+  await E.click('[data-mk="redo"]'); await events(E, [[100, 77, true], [300, 77, false]]); await E.click('[data-mk="stop"]');
+  ok(await orden() === '60,62,64,65,77', 'grabar de nuevo la copia no toca el original', await orden());
+  await E.click('#mkChips [data-tr="4"]');
+  await E.click('[data-mk="left"]');
+  ok(await orden() === '60,62,64,77,65' && (await sel()) === 3 && /El tramo 5 ahora es el 4, y el que estaba ahí pasó a ser el 5/.test(await txt(E, '#mkStatus')), '«Mover antes» lo adelanta un lugar y sigue elegido', [await orden(), await txt(E, '#mkStatus')]);
+  ok((await E.evaluate(() => document.activeElement && document.activeElement.dataset.mk)) === 'left', 'el botón sigue listo para mover otra vez');
+  await E.click('[data-mk="left"]'); await E.click('[data-mk="left"]');
+  ok(await orden() === '60,77,62,64,65' && (await sel()) === 1 && (await chips(E))[1] === 'Tramo 2 · 1 nota', 'con dos toques más llega al segundo lugar', [await orden(), await chips(E)]);
+  await E.click('[data-mk="right"]');
+  ok(await orden() === '60,62,77,64,65' && (await sel()) === 2, '«Mover después» lo atrasa un lugar', await orden());
+  // Reemplazar un tramo que no gustó: el nuevo ya está a su lado, se borra el viejo.
+  await E.click('#mkChips [data-tr="3"]'); await E.click('[data-mk="del"]'); await E.click('[data-mk="del"]');
+  ok(await orden() === '60,62,77,65', 'se borra el tramo viejo y el nuevo queda en su lugar', await orden());
+  // Al escuchar todo suena en el orden nuevo.
+  await E.click('[data-mk="play"]');
+  const plan = await E.evaluate(() => __t.mkFlat(-1).notes.map(n => n.m).join());
+  ok(plan === '60,72,62,74,77,65,77', 'la canción completa sigue el orden nuevo', plan);
+  await E.click('[data-mk="quiet"]');
+  await E.screenshot({path: path.join(SHOTS, 'grabar-mover.png')});
+  // Sigue ahí al recargar.
+  await E.reload(); await E.waitForFunction(() => window.__t);
+  ok(await orden() === '60,62,77,65', 'el orden nuevo sigue al recargar la página', await orden());
+  // La copia no puede pasar el máximo de notas.
+  await E.evaluate(() => {
+    const n = []; for (let i = 0; i < 2500; i++) n.push([60, i * 100, 80]);
+    Object.assign(__t.mk, {tramos: [{n, len: 250000}], dirty: true}); __t.goFree();
+  });
+  await E.click('#btnMaker'); await E.click('#mkChips [data-tr="0"]'); await E.click('[data-mk="copy"]');
+  ok((await draft(E)).tramos.length === 1 && /La copia no cabe/.test(await txt(E, '#mkStatus')), 'si la copia pasa de 4000 notas, no se hace y lo dice', await txt(E, '#mkStatus'));
+  await E.context().close();
+  // En el celular acostado los botones del tramo elegido siguen cabiendo.
+  const F = await open({width: 800, height: 380}, 'cel-h');
+  await F.evaluate(() => { Object.assign(__t.mk, {tramos: [60, 62, 64].map(m => ({n: [[m, 0, 300]], len: 300})), dirty: true}); __t.goFree(); });
+  await F.click('#btnMaker'); await F.click('#mkChips [data-tr="1"]');
+  const fb = await F.evaluate(() => {
+    const r = s => document.querySelector(s).getBoundingClientRect(), btns = [...document.querySelectorAll('#mkAct [data-mk]')].map(b => b.getBoundingClientRect());
+    const mkr = document.querySelector('#maker');
+    return {n: btns.length, btnsIn: btns.every(b => b.right <= innerWidth + 1 && b.left >= -1), sw: document.documentElement.scrollWidth, vw: innerWidth, kbH: r('#keys').height,
+            rows: new Set(btns.map(b => Math.round(b.top))).size, chipH: Math.round(r('#mkChips').height), actBottom: r('#mkAct').bottom, tbTop: r('#viewFree .toolbar').top};
+  });
+  ok(fb.n === 7 && fb.btnsIn && fb.sw <= fb.vw + 1 && fb.kbH > 100, 'celular acostado: los siete botones del tramo caben a lo ancho y el teclado conserva su alto', fb);
+  ok(fb.rows === 1 && fb.chipH >= 30 && fb.actBottom <= fb.tbTop + 1, 'celular acostado: quedan en una sola fila, sin aplastar las fichas de los tramos', fb);
+  await F.screenshot({path: path.join(SHOTS, 'grabar-mover-cel-h.png')});
+  await F.context().close();
 
   await A.context().close();
   await browser.close(); server.close();
