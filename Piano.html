@@ -65,6 +65,8 @@ svg.i{width:20px;height:20px;flex:none}
 .tab[aria-selected="true"]{background:var(--brass);color:#2A1D0C}
 .icon-btn{border:0;background:transparent;color:var(--cab-ink);width:42px;height:42px;border-radius:12px;display:grid;place-items:center;cursor:pointer}
 .icon-btn:hover{background:var(--lacquer-2)}
+#btnFull{margin-right:-8px}
+#btnFull[aria-pressed="true"]{color:var(--brass)}
 
 main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:relative}
 .view{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
@@ -465,6 +467,7 @@ body[data-view="welcome"] .cab{display:none}
     <button class="tab" id="tabFree" role="tab" aria-selected="true">Tocar libre</button>
     <button class="tab" id="tabLearn" role="tab" aria-selected="false">Aprender</button>
   </nav>
+  <button class="icon-btn" id="btnFull" aria-label="Pantalla completa" title="Pantalla completa" aria-pressed="false" hidden></button>
   <button class="icon-btn" id="btnSettings" aria-label="Ajustes">
     <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.6"/><circle cx="10" cy="17" r="2.6"/></svg>
   </button>
@@ -4794,6 +4797,32 @@ $('#btnMidi').onclick = () => {
     attach(); acc.onstatechange = attach;
   }).catch(() => { st.textContent = 'El navegador no dio permiso para usar teclados MIDI en esta página.'; });
 };
+
+/* ---------- Pantalla completa ----------
+   El botón solo aparece donde el navegador lo permite (en iPhone no). El navegador exige que sea con un toque. */
+const FS_ICON = {
+  on: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  off: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>'
+};
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+function syncFull(){
+  const b = $('#btnFull'), on = !!fsEl(), label = on ? 'Salir de pantalla completa' : 'Pantalla completa';
+  b.innerHTML = on ? FS_ICON.off : FS_ICON.on;
+  b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.setAttribute('aria-label', label); b.title = label;
+}
+if (root.requestFullscreen ? document.fullscreenEnabled !== false : (root.webkitRequestFullscreen && document.webkitFullscreenEnabled)){
+  $('#btnFull').hidden = false;
+  $('#btnFull').onclick = () => {
+    try {
+      if (fsEl()){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      const r = root.requestFullscreen ? root.requestFullscreen({navigationUI: 'hide'}) : root.webkitRequestFullscreen();
+      if (r && r.catch) r.catch(() => {});
+    } catch(e){}
+  };
+  document.addEventListener('fullscreenchange', syncFull);
+  document.addEventListener('webkitfullscreenchange', syncFull);
+  syncFull();
+}
 
 /* ---------- Tamaño y visibilidad ---------- */
 let rsT = 0;
