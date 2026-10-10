@@ -278,6 +278,7 @@ a.btn{text-decoration:none}
 .tfig .acc{fill:var(--felt-ink)}
 .tfig .ln{stroke:var(--ink-soft);stroke-width:1}
 .tfig .stem{stroke:var(--ink);stroke-width:1.5}
+.tfig .hp{stroke:var(--ink);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .tfig .wk{fill:var(--ivory);stroke:rgba(40,28,50,.4)}
 .tfig .hl{fill:#F1D79A;stroke:rgba(40,28,50,.4)}
 .tfig .bk{fill:var(--ebony)}
@@ -4185,7 +4186,7 @@ TSONGS.forEach(s => { s.key = 't:' + s.id; s.teo = true; });
 
 const tT = (h, p, fig) => ({k: 'text', h, p, fig});
 const tF = (h, p, spec, o) => Object.assign({k: 'find', h, p}, Array.isArray(spec) ? {items: spec} : spec, o || {});
-const tS = (h, p, pool, n, range, clef) => ({k: 'staff', h, p, pool, n, range, clef});
+const tS = (h, p, pool, n, range, clef, sig) => ({k: 'staff', h, p, pool, n, range, clef, sig: sig || 0});
 const tP = (h, p, song, o) => Object.assign({k: 'play', h, p, song}, o || {});
 const TEO = [
   {id:'d1', title:'Siéntate y conoce el teclado', sum:'Postura, forma de la mano y teclas negras.',
@@ -4348,13 +4349,192 @@ const TEO = [
     tP('Las dos manos juntas', 'La izquierda sostiene notas largas mientras la derecha toca la melodía. Baja la velocidad al 50 % si lo necesitas.', 'dos-manos')
    ]},
   {id:'d16', title:'Tu primera pieza completa', sum:'El examen final.',
-   fin:'Terminaste el curso de teoría. Ahora sigue en Práctica con las canciones: ya tienes todo lo que necesitas para leerlas y tocarlas.',
+   fin:'Terminaste la primera parte de la teoría: ya tienes lo que necesitas para leer y tocar las canciones de Práctica. La segunda parte sigue con tonalidades, ritmos más finos, más acordes y expresión.',
    steps:[
     tT('Lo que ya sabes', ['Sabes sentarte, ubicar las notas, leer en las dos claves, contar el pulso, tocar acordes y juntar las manos.',
       'Hoy lo usas todo: una canción con las dos manos y una melodía sin pausas.']),
     tP('Estrellita con dos manos', 'La derecha toca la melodía y la izquierda la acompaña.', 'estrellita-manos'),
     tP('Una melodía a tiempo', 'La misma canción del día 6, ahora en modo Ritmo y sin detenerte.', 'mary', {mode:'ritmo'})
+   ]},
+  /* Segunda parte: acompaña al Nivel 2 de los ejercicios. */
+  {id:'d17', part:2, title:'Tonos, semitonos y la tonalidad de Fa', sum:'Por qué hace falta el Si♭.',
+   fin:'Ya sabes de dónde salen los bemoles. Mañana verás lo mismo con los sostenidos.',
+   steps:[
+    tT('Tono y semitono', ['La distancia más pequeña del piano es el semitono: de una tecla a la que tiene pegada, sea blanca o negra. Dos semitonos hacen un tono.',
+      'De Do a Re hay un tono, porque en medio queda una tecla negra. De Mi a Fa hay solo un semitono: entre ellas no hay negra. Lo mismo pasa entre Si y Do.'],
+      {keys:{lo:60, hi:72, hl:[64,65,71,72], mark:{64:'Mi',65:'Fa',71:'Si',72:'Do'}, alt:'Entre Mi y Fa, y entre Si y Do, no hay tecla negra: son semitonos'}}),
+    tF('Sube un semitono', 'Toca la tecla que está un semitono arriba de la que se nombra: la que tiene pegada a la derecha, sea blanca o negra.',
+      [{midi:61, label:'Un semitono arriba de Do'}, {midi:65, label:'Un semitono arriba de Mi'}, {midi:68, label:'Un semitono arriba de Sol'}, {midi:72, label:'Un semitono arriba de Si'}, {midi:70, label:'Un semitono arriba de La'}],
+      {names:false, maxErr:1, range:[60,72], miss:'Esa no es. Un semitono es la tecla de al lado: no te saltes ninguna, ni blanca ni negra.'}),
+    tT('La receta de la escala mayor', ['Toda escala mayor sigue la misma receta de distancias: tono, tono, semitono, tono, tono, tono, semitono. Por eso todas suenan parecido, empiecen donde empiecen.',
+      'Si empiezas en Do, la receta cae justo en las teclas blancas. Si empiezas en Fa, la cuarta nota tiene que quedar a un semitono de La: no es Si, es la tecla negra de su izquierda, Si♭.',
+      'Eso es una tonalidad: la nota donde la música se siente en casa y las teclas que le tocan según la receta. Fa mayor usa un bemol, Si♭.'],
+      {keys:{lo:65, hi:77, hl:[70], mark:{65:'Fa',67:'Sol',69:'La',70:'Si♭',72:'Do',74:'Re',76:'Mi',77:'Fa'}, alt:'La escala de Fa mayor: todas las teclas son blancas menos Si bemol'}}),
+    tT('La armadura', ['Para no escribir el bemol delante de cada Si, se pone una sola vez al principio de cada pentagrama, junto a la clave. Eso es la armadura.',
+      'Un bemol en la línea de Si quiere decir: en esta pieza todos los Si son Si♭, en cualquier altura, aunque no lleven nada al lado.'],
+      {staff:{sig:-1, notes:[65,67,69,70,72], names:true, alt:'Fa, Sol, La, Si bemol y Do con un bemol en la armadura'}}),
+    tS('Lee con un bemol en la armadura', 'Mira la nota y toca su tecla. Ojo con el Si: la armadura lo vuelve Si♭.', [65,67,69,70,72], 10, [60,77], 'T', -1),
+    tP('Cinco dedos en Fa', 'La posición de cinco dedos, ahora con el pulgar en Fa. El dedo 4 toca la tecla negra.', 'cinco-fa'),
+    tP('La escala de Fa', 'En esta escala el pulgar pasa después del dedo 4, no del 3.', 'escala-fa')
+   ]},
+  {id:'d18', part:2, title:'Las tonalidades con sostenidos', sum:'Sol mayor y Re mayor.',
+   fin:'Antes de tocar cualquier pieza, mira primero la armadura: te dice qué teclas negras vas a usar.',
+   steps:[
+    tT('Sol mayor: un sostenido', ['Aplica la receta empezando en Sol. Todo cae en teclas blancas hasta la séptima nota: tiene que quedar a un semitono del Sol de arriba, así que no es Fa sino Fa♯.',
+      'La armadura de Sol mayor es un sostenido, dibujado en la línea de Fa. Todos los Fa de la pieza son Fa♯.'],
+      {staff:{sig:1, notes:[67,69,71,72,74,76,78,79], names:true, alt:'La escala de Sol mayor con un sostenido en la armadura'}}),
+    tT('Re mayor: dos sostenidos', ['Si empiezas en Re hacen falta dos teclas negras: Fa♯ y Do♯. La armadura lleva los dos sostenidos, siempre en ese orden.',
+      'Un truco para reconocer la tonalidad: mira el último sostenido de la armadura y sube un semitono. Si el último es Fa♯, estás en Sol; si es Do♯, estás en Re.',
+      'Con bemoles, por ahora basta recordar que un solo bemol es Fa mayor. Y sin nada en la armadura, Do mayor.'],
+      {staff:{sig:2, notes:[62,64,66,67,69,71,73,74], names:true, alt:'La escala de Re mayor con dos sostenidos en la armadura'}}),
+    tS('Lee en Re mayor', 'Mira la nota y toca su tecla. La armadura cambia dos notas: Fa y Do.', [62,64,66,67,69,71,73,74], 10, [60,77], 'T', 2),
+    tP('La armadura de Sol', 'Ningún Fa lleva el signo al lado, pero todos son Fa♯.', 'armadura-sol'),
+    tP('La escala de Re', 'Los mismos dedos de la escala de Do, con dos teclas negras.', 'escala-re')
+   ]},
+  {id:'d19', part:2, title:'Mayor y menor', sum:'La nota que cambia el color de un acorde.',
+   fin:'Mayor y menor son los dos colores básicos de la música. Empieza a escucharlos en las canciones que te gustan.',
+   steps:[
+    tT('La tercera manda', ['Un acorde tiene tres notas. La de abajo le da el nombre, y la del medio, que se llama tercera, le da el color.',
+      'Si la tercera está a cuatro semitonos de la nota de abajo, el acorde es mayor y suena luminoso. Si está a tres, es menor y suena más oscuro.',
+      'De Re mayor a Re menor cambia una sola tecla: Fa♯ baja a Fa.'],
+      {keys:{lo:60, hi:71, hl:[62,66,69], mark:{62:'Re',65:'Fa',66:'Fa♯',69:'La'}, alt:'Re mayor usa Fa sostenido; Re menor usa Fa'}}),
+    tF('La tercera de cada acorde', 'Toca la tercera que se pide. Cuenta semitonos desde la nota de abajo: cuatro para mayor, tres para menor.',
+      [{midi:66, label:'La tercera de Re mayor'}, {midi:65, label:'La tercera de Re menor'}, {midi:64, label:'La tercera de Do mayor'}, {midi:63, label:'La tercera de Do menor'}, {midi:71, label:'La tercera de Sol mayor'}, {midi:70, label:'La tercera de Sol menor'}],
+      {names:false, maxErr:2, range:[60,72], miss:'Esa no es. Cuenta los semitonos desde la nota de abajo, tecla por tecla.'}),
+    tT('El becuadro', ['En la partitura, el signo ♮ se llama becuadro y anula un sostenido o un bemol: devuelve la nota a su tecla blanca.',
+      'Un sostenido, un bemol o un becuadro escrito junto a una nota vale hasta el final de ese compás. En el compás siguiente vuelve a mandar la armadura.']),
+    tP('Re mayor y Re menor', 'Escucha cómo cambia el color cuando el dedo 3 pasa de la tecla negra a la blanca.', 're-mayor-menor'),
+    tT('Los menores de las teclas blancas', ['Usando solo teclas blancas salen tres acordes mayores, que ya conoces (Do, Fa y Sol), y tres menores: Re menor, Mi menor y La menor.',
+      'En los cifrados de las canciones, una m minúscula quiere decir menor: Rem, Mim, Lam. En el cifrado con letras son Dm, Em y Am.'],
+      {keys:{lo:57, hi:71, hl:[57,60,64], mark:{57:'La',60:'Do',64:'Mi'}, alt:'El acorde de La menor: La, Do y Mi'}}),
+    tP('Acordes menores', 'Los tres se tocan con los dedos 1, 3 y 5. Mueve toda la mano de uno a otro.', 'acordes-menores')
+   ]},
+  {id:'d20', part:2, title:'El puntillo y la síncopa', sum:'Notas de pulso y medio, y acentos fuera del pulso.',
+   fin:'Si un ritmo no te sale, dilo en voz alta antes de tocarlo. La voz aprende el ritmo antes que los dedos.',
+   steps:[
+    tT('El puntillo', ['Un puntito a la derecha de una nota le suma la mitad de lo que vale. Ya lo viste en la blanca con puntillo: dos pulsos más uno, tres.',
+      'La negra con puntillo dura un pulso y medio. Casi siempre va seguida de una corchea, que completa el segundo pulso.',
+      'Cuenta «1 y 2 y»: la nota larga entra en el 1 y sigue sonando mientras pasa el 2; la corta entra en la «y» del 2.'],
+      {rhythm:{items:[{d:1.5},{d:0.5},{d:1},{d:1}], count:['1','y','2','y','3','y','4','y'], grid:0.5, alt:'Negra con puntillo, corchea y dos negras, con la cuenta «1 y 2 y 3 y 4 y» debajo'}}),
+    tP('La negra con puntillo', 'Se toca en modo Ritmo, con metrónomo. Cuenta en voz alta.', 'puntillo', {mode:'ritmo', force:{metro:true}}),
+    tT('La síncopa', ['Normalmente las notas largas empiezan con el clic del metrónomo. En la síncopa empiezan entre dos clics, en la «y», y siguen sonando mientras pasa el pulso siguiente.',
+      'El patrón más común es corto, largo, corto: corchea, negra, corchea. Cuenta «1 y 2 y»: tocas en el 1, en la «y» del 1 y en la «y» del 2. En el 2 no tocas nada: la nota larga sigue sonando.'],
+      {rhythm:{items:[{d:0.5},{d:1},{d:0.5},{d:2}], count:['1','y','2','y','3','y','4','y'], grid:0.5, alt:'Corchea, negra, corchea y blanca: la negra empieza entre dos pulsos'}}),
+    tP('La síncopa', 'En modo Ritmo. Si se te adelanta, baja la velocidad al 75 %.', 'sincopa', {mode:'ritmo', force:{metro:true}})
+   ]},
+  {id:'d21', part:2, title:'Las semicorcheas', sum:'Cuatro notas por pulso.',
+   fin:'La velocidad llega sola. Lo que se practica es que las cuatro notas del pulso salgan parejas.',
+   steps:[
+    tT('Un cuarto de pulso', ['La semicorchea dura la mitad de una corchea: en un pulso caben cuatro. Sola, se reconoce por sus dos ganchitos.',
+      'Con ella ya conoces cinco figuras, y cada una dura la mitad de la anterior.'], 'notes16'),
+    tT('Cómo se reparten', ['Cuando van seguidas, las semicorcheas se unen con una barra doble en grupos de cuatro: cada grupo es un pulso, y así el ojo ve los pulsos de un vistazo.',
+      'Para que salgan parejas, di una palabra de cuatro sílabas en cada pulso: «ca-fe-ci-to, ca-fe-ci-to». La primera sílaba cae con el clic.'],
+      {rhythm:{items:[{d:.25,b:1},{d:.25,b:1},{d:.25,b:1},{d:.25,b:1},{d:1},{d:.25,b:2},{d:.25,b:2},{d:.25,b:2},{d:.25,b:2},{d:1}],
+        count:['ca','fe','ci','to','ca','','','','ca','fe','ci','to','ca','','',''], grid:0.25, strong:[0,4,8,12], alt:'Cuatro semicorcheas unidas y una negra, dos veces, con las sílabas «ca-fe-ci-to» debajo'}}),
+    tP('Semicorcheas', 'En modo Ritmo. Empieza al 50 % de velocidad: no hay ningún apuro.', 'semicorcheas', {mode:'ritmo', force:{metro:true}}),
+    tT('El galope', ['Una corchea seguida de dos semicorcheas ocupa un pulso: larga, corta, corta. Suena como un caballo: «pan, pa-ra, pan, pa-ra».',
+      'La corchea llena la primera mitad del pulso y las dos semicorcheas, la segunda.'],
+      {rhythm:{items:[{d:.5,b:1},{d:.25,b:1},{d:.25,b:1},{d:.5,b:2},{d:.25,b:2},{d:.25,b:2},{d:1},{d:1}],
+        count:['pan','','pa','ra','pan','','pa','ra','pan','','','','pan','','',''], grid:0.25, strong:[0,4,8,12], alt:'Corchea y dos semicorcheas unidas, dos veces, y dos negras, con «pan, pa-ra» debajo'}}),
+    tP('El galope', 'En modo Ritmo y despacio. Que las notas rápidas no empujen el pulso.', 'galope', {mode:'ritmo', force:{metro:true}})
+   ]},
+  {id:'d22', part:2, title:'El compás de 6/8', sum:'Pulsos que se dividen en tres.',
+   fin:'Muchas canciones de cuna y mucha música folclórica van en 6/8. Cuando una música te mece, cuéntala: probablemente vaya de a tres.',
+   steps:[
+    tT('Pulsos de dos y pulsos de tres', ['Hasta ahora cada pulso se partía en dos corcheas: «1 y, 2 y». Hay compases donde cada pulso se parte en tres.',
+      'El más común es el 6/8: seis corcheas por compás, agrupadas en dos pulsos de tres. Cuenta «1, 2, 3, 4, 5, 6» con un pequeño acento en el 1 y en el 4.',
+      'Las barras que unen las corcheas muestran los grupos: de tres en tres.'],
+      {rhythm:{items:[{d:.5,b:1},{d:.5,b:1},{d:.5,b:1},{d:.5,b:2},{d:.5,b:2},{d:.5,b:2}], count:['1','2','3','4','5','6'], grid:0.5, strong:[0,3], alt:'Seis corcheas unidas de tres en tres, con la cuenta del 1 al 6 y acento en el 1 y en el 4'}}),
+    tT('Qué figura vale un pulso', ['En 6/8 el pulso ya no es la negra: es la negra con puntillo, que vale tres corcheas. Una negra seguida de una corchea también llena un pulso: larga, corta.',
+      'El metrónomo de la app marca solo los dos pulsos del compás.',
+      'No lo confundas con el 3/4 del vals: ahí son tres pulsos que se parten en dos; aquí, dos pulsos que se parten en tres.'],
+      {rhythm:{items:[{d:1.5},{d:1},{d:.5}], count:['1','2','3','4','5','6'], grid:0.5, strong:[0,3], alt:'Una negra con puntillo, y luego una negra y una corchea: dos maneras de llenar un pulso de 6/8'}}),
+    tP('El compás de 6/8', 'En modo Ritmo. Siente dos balanceos por compás.', 'seis-octavos', {mode:'ritmo', force:{metro:true}})
+   ]},
+  {id:'d23', part:2, title:'Las inversiones', sum:'El mismo acorde con otra nota abajo.',
+   fin:'Las inversiones son el secreto para acompañar sin saltar por todo el teclado. Las usarás en la próxima lección.',
+   steps:[
+    tT('Las mismas notas, en otro orden', ['Do, Mi y Sol forman el acorde de Do mayor en cualquier orden y en cualquier altura. Con Do abajo, el acorde está en posición fundamental.',
+      'Si pasas el Do de abajo a la octava de arriba queda Mi, Sol, Do: es la primera inversión. Se toca con los dedos 1, 2 y 5.'],
+      {keys:{lo:60, hi:76, hl:[64,67,72], mark:{64:'1',67:'2',72:'5'}, alt:'Primera inversión de Do mayor: Mi, Sol y Do con los dedos 1, 2 y 5'}}),
+    tT('La segunda inversión', ['Si ahora subes también el Mi queda Sol, Do, Mi: la segunda inversión, con los dedos 1, 3 y 5.',
+      'Las tres posiciones suenan parecido porque tienen las mismas notas. Lo que cambia es cuál queda abajo y cuál arriba.'],
+      {keys:{lo:60, hi:76, hl:[67,72,76], mark:{67:'1',72:'3',76:'5'}, alt:'Segunda inversión de Do mayor: Sol, Do y Mi con los dedos 1, 3 y 5'}}),
+    tF('Arma las inversiones', 'Toca las notas una por una, de abajo hacia arriba, empezando a la derecha del Do central.',
+      [{midi:64, label:'Primera inversión de Do: la nota de abajo'}, {midi:67, label:'Primera inversión: la del medio'}, {midi:72, label:'Primera inversión: la de arriba'},
+       {midi:67, label:'Segunda inversión de Do: la nota de abajo'}, {midi:72, label:'Segunda inversión: la del medio'}, {midi:76, label:'Segunda inversión: la de arriba'}],
+      {names:false, maxErr:2, range:[60,77], miss:'Esa no es. Las notas son siempre Do, Mi y Sol: solo cambia cuál va abajo.'}),
+    tP('Inversiones del acorde de Do', 'Primero nota por nota y después el acorde entero, en las tres posiciones.', 'inversiones')
+   ]},
+  {id:'d24', part:2, title:'Tensión y descanso: Sol7 y el enlace', sum:'El acorde que pide volver a casa.',
+   fin:'Do, La menor, Fa y Sol: con esos cuatro acordes se acompañan miles de canciones.',
+   steps:[
+    tT('El acorde de séptima', ['Si al acorde de Sol (Sol, Si, Re) le agregas un Fa, se vuelve Sol7. Esa nota de más choca un poco con las otras y crea tensión: el oído espera que algo la resuelva.',
+      'Lo que la resuelve es el acorde de Do. Sol7 y después Do es el final más común de la música: pregunta y respuesta.',
+      'Para que quepa en la mano se deja fuera el Re y se toca Si, Fa y Sol, sin salir de la posición de Do.'],
+      {keys:{lo:59, hi:67, hl:[59,65,67], mark:{59:'1',65:'4',67:'5'}, alt:'Sol7 junto al Do central: Si, Fa y Sol con los dedos 1, 4 y 5'}}),
+    tP('Sol7 y Do', 'Escucha la tensión de Sol7 y cómo descansa al llegar a Do.', 'sol-siete'),
+    tT('Enlazar acordes', ['Pasar de un acorde a otro saltando con toda la mano suena cortado y cuesta más. Con inversiones, la mano casi no se mueve.',
+      'La regla es sencilla: las notas que los dos acordes tienen en común se quedan quietas, y las demás van a la tecla más cercana.',
+      'De Do a La menor solo se mueve un dedo: el meñique sube de Sol a La.'],
+      {keys:{lo:60, hi:69, hl:[60,64,69], mark:{60:'1',64:'3',69:'5'}, alt:'De Do mayor a La menor: Do y Mi se quedan, y el meñique sube de Sol a La'}}),
+    tP('Enlazar acordes', 'Antes de cada cambio, busca qué notas se quedan en su lugar.', 'enlace')
+   ]},
+  {id:'d25', part:2, title:'La mano izquierda: escala y bajo Alberti', sum:'Un acompañamiento que se mueve.',
+   fin:'El bajo Alberti aparece en muchísima música clásica. Cuando te salga solo, la mano derecha quedará libre para cantar.',
+   steps:[
+    tT('La izquierda también hace escalas', ['La mano izquierda es un espejo de la derecha, así que cruza al revés. Al subir empieza con el meñique y, cuando llega al pulgar, el dedo 3 cruza por encima.',
+      'Al bajar, después del dedo 3 el pulgar pasa por debajo.'],
+      {keys:{lo:48, hi:60, hl:[57], mark:{48:'5',50:'4',52:'3',53:'2',55:'1',57:'3',59:'2',60:'1'}, alt:'Escala de Do con la mano izquierda: después del pulgar en Sol, el dedo 3 cruza a La'}}),
+    tP('Escala de Do con la izquierda', 'Despacio y parejo. Que el cruce del dedo 3 no se note.', 'escala-izq'),
+    tT('El bajo Alberti', ['En lugar de tocar el acorde de golpe, sus notas se reparten una por una en este orden: abajo, arriba, medio, arriba. Para Do: Do, Sol, Mi, Sol, con los dedos 5, 1, 3 y 1.',
+      'La mano no se desplaza. La muñeca gira un poco hacia cada lado, como al mover la perilla de una puerta.'],
+      {keys:{lo:48, hi:55, hl:[48,52,55], mark:{48:'5',52:'3',55:'1'}, alt:'Bajo Alberti en Do con la mano izquierda: Do con el dedo 5, Mi con el 3 y Sol con el 1'}}),
+    tP('El bajo Alberti', 'Solo la mano izquierda. Busca que las cuatro notas de cada grupo suenen parejas.', 'alberti'),
+    tT('Quién canta y quién acompaña', ['Cuando una mano lleva la melodía y la otra acompaña, la melodía tiene que oírse más. El acompañamiento va más suave, como un fondo.',
+      'Practica cada mano por separado antes de juntarlas: en Práctica, la ayuda «Por partes» te deja tocar una mano mientras la app toca la otra.']),
+    tP('Melodía con bajo Alberti', 'Las dos manos juntas. No hay prisa: la música te espera.', 'alberti-melodia')
+   ]},
+  {id:'d26', part:2, title:'Fuerte y suave', sum:'Los matices: p y f.',
+   fin:'Los matices separan tocar las notas de hacer música. Desde hoy, pregúntate en cada pieza dónde va fuerte y dónde suave.',
+   steps:[
+    tT('Los matices', ['La música cambia de volumen, igual que la voz al hablar. Esos cambios se llaman matices y se escriben con letras debajo del pentagrama, que vienen del italiano.',
+      'La p es «piano», suave. La f es «forte», fuerte. También verás mp y mf, medio suave y medio fuerte, y pp y ff, muy suave y muy fuerte.',
+      'Un matiz vale desde donde está escrito hasta que aparece otro.'], 'dyn'),
+    tT('Cómo se hace', ['El piano suena más fuerte cuanto más rápido baja la tecla. Para tocar fuerte no golpees: deja caer el peso del brazo. Para tocar suave, acerca los dedos a las teclas y bájalas con poco peso.',
+      'Suave no es lento y fuerte no es rápido: el pulso no cambia.',
+      'Para que la app note la diferencia hace falta un teclado conectado que mida la fuerza de cada tecla. En la pantalla táctil todas las notas suenan igual, y ahí la app solo revisa las notas.']),
+    tP('Fuerte y suave', 'Cada frase se toca dos veces: primero suave y después fuerte. Exagera la diferencia.', 'fuerte-suave'),
+    tP('El eco', 'Cada compás fuerte se repite suave, como un eco.', 'eco')
+   ]},
+  {id:'d27', part:2, title:'Staccato y legato', sum:'Notas cortas y notas unidas.',
+   fin:'Cuando no hay ningún signo, lo normal es tocar cada nota hasta que empieza la siguiente, sin cortarla ni pisarla.',
+   steps:[
+    tT('La articulación', ['Además de qué nota es y cuánto dura, la partitura dice cómo se toca: separada de las demás o unida a ellas. Eso es la articulación.',
+      'Un punto encima o debajo de la nota es el staccato, o picado: la nota suena corta, pero su lugar en el compás no cambia. Lo que sobra es silencio.',
+      'Una línea curva que abarca varias notas es la ligadura: todo lo que cubre se toca legato, unido, sin huecos.'], 'art'),
+    tP('Staccato', 'Toca y suelta enseguida, con un pequeño rebote de la muñeca. No apures el pulso.', 'staccato'),
+    tT('Cómo se liga', ['Para ligar dos notas, no sueltes la primera hasta que la segunda ya esté sonando. Por un instante las dos teclas están abajo.',
+      'Piensa en caminar: un pie no se levanta hasta que el otro pisa. Donde termina la ligadura levantas la mano, como quien respira al final de una frase.']),
+    tP('Legato', 'La app revisa que no quede silencio entre una nota y la siguiente.', 'legato'),
+    tP('Ligado y picado', 'La misma melodía de las dos maneras. Escucha cómo cambia el carácter.', 'ligado-picado')
+   ]},
+  {id:'d28', part:2, title:'Crescendo, diminuendo y tu pieza final', sum:'Cambiar la fuerza poco a poco.',
+   fin:'Terminaste la segunda parte. Ya lees armaduras, cuentas ritmos finos, enlazas acordes y tocas con expresión. Lo que sigue es repertorio: en Práctica te esperan las canciones.',
+   steps:[
+    tT('Los reguladores', ['No todos los cambios de volumen son de golpe. Un ángulo que se abre es un crescendo: cada nota suena un poco más fuerte que la anterior. Uno que se cierra es un diminuendo: cada nota, un poco más suave.',
+      'A veces se escriben con palabras: «cresc.» y «dim.».',
+      'El truco es repartir el cambio entre todas las notas, como quien sube una rampa y no un escalón. Para poder crecer, empieza suave.'], 'hair'),
+    tP('Crescendo y diminuendo', 'Las frases que suben crecen y las que bajan se apagan.', 'crescendo'),
+    tT('Lo que ya sabes', ['En esta segunda parte aprendiste tres tonalidades nuevas, el puntillo, la síncopa, las semicorcheas y el 6/8, las inversiones, los acordes menores, Sol7, el bajo Alberti, los matices y la articulación.',
+      'La pieza de hoy usa casi todo: está en Fa mayor, con Si♭ en la armadura; la izquierda acompaña con bajo Alberti; la primera mitad va suave y la segunda, fuerte.']),
+    tP('Pequeño estudio en Fa', 'Tu pieza de graduación de la segunda parte. Trabájala sin prisa.', 'estudio-fa')
    ]}
+];
+/* La teoría va en dos partes; la segunda acompaña al Nivel 2 de los ejercicios. */
+const TEO_PARTS = [
+  {n:1, title:'Primera parte · Desde cero', desc:'Postura, notas, lectura, pulso, acordes y las dos manos.'},
+  {n:2, title:'Segunda parte · Tocar con soltura', desc:'Tonalidades, ritmos más finos, más acordes y expresión. Va de la mano con el Nivel 2 de los ejercicios.'}
 ];
 TEO.forEach((l, i) => { l.index = i; l.key = 'teoria:' + l.id; });
 
@@ -4396,19 +4576,22 @@ function figKeys(o){
 }
 function figStaff(o){
   const sp = 10, sc = sp / 250, st = o.clef || 'T', bot = BOT[st], n = o.notes.length;
-  const x0 = 78, dx = 46, W = Math.max(190, x0 + (n - 1) * dx + 40), top = 46, yb = top + 4 * sp, H = yb + (o.names ? 60 : 44);
+  const ks = keySig({sig: o.sig || 0}), flat = ks.k < 0, accK = flat ? 'fl' : 'sh', accW = (flat ? 226 : 249) * sc + 1.5;
+  const x0 = 78 + (ks.n ? ks.n * accW + 6 : 0), dx = n > 6 ? 39 : 46, W = Math.max(190, x0 + (n - 1) * dx + 40), top = 46, yb = top + 4 * sp, H = yb + (o.names ? 60 : 44);
   const yOf = s => yb - (s - bot) * sp / 2, hw = 422 * sc;
   const gl = (k, x, y, cls) => `<path d="${GLYPH[k]}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${sc} ${-sc})" class="${cls || 'ink'}"/>`;
   let h = '';
   for (let i = 0; i < 5; i++) h += `<line x1="6" x2="${W - 6}" y1="${yb - i * sp}" y2="${yb - i * sp}" class="ln"/>`;
   h += gl(st === 'T' ? 'g' : 'f', 14, yOf(bot + (st === 'T' ? 2 : 6)));
+  // La armadura: con ella, las notas que cambia no llevan el signo al lado.
+  ks.pos.forEach((ps, i) => { h += gl(accK, 50 + i * accW, yOf(st === 'T' ? ps : ps - 14)); });
   o.notes.forEach((m, i) => {
-    const x = x0 + i * dx, s = stepOf(m), y = yOf(s);
+    const x = x0 + i * dx, s = stepOf(m) + (flat && isBlack(m) ? 1 : 0), y = yOf(s);
     for (let l = bot - 2; l >= s; l -= 2) h += `<line x1="${x - hw / 2 - 5}" x2="${x + hw / 2 + 5}" y1="${yOf(l)}" y2="${yOf(l)}" class="ln"/>`;
     for (let l = bot + 10; l <= s; l += 2) h += `<line x1="${x - hw / 2 - 5}" x2="${x + hw / 2 + 5}" y1="${yOf(l)}" y2="${yOf(l)}" class="ln"/>`;
-    if (isBlack(m)) h += gl('sh', x - hw / 2 - 249 * sc - 3, y);
+    if (isBlack(m) ? !ks.alt.has(pc(m)) : ks.nat.has(pc(m))){ const a = isBlack(m) ? accK : 'na'; h += gl(a, x - hw / 2 - (a === 'sh' ? 249 : a === 'fl' ? 226 : 168) * sc - 3, y); }
     h += gl('nw', x - hw / 2, y, o.big ? 'acc' : 'ink');
-    if (o.names) h += `<text x="${x}" y="${H - 8}" text-anchor="middle" font-size="13" class="pt">${nameOf(m)}</text>`;
+    if (o.names) h += `<text x="${x}" y="${H - 8}" text-anchor="middle" font-size="${n > 6 ? 14.5 : 13}" class="pt">${(flat ? PCF : PCN)[sys()][pc(m)]}</text>`;
   });
   return `<svg class="tfig${o.big ? ' big' : ''}" style="max-width:${o.big ? 230 : Math.min(460, W * 1.5)}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.alt || 'Nota en el pentagrama')}">${h}</svg>`;
 }
@@ -4426,17 +4609,17 @@ function figHands(){
   };
   return `<svg class="tfig" style="max-width:420px" viewBox="0 0 350 212" role="img" aria-label="Las dos manos con los dedos numerados del 1, el pulgar, al 5, el meñique">${hand(8, true, 'Mano izquierda')}${hand(192, false, 'Mano derecha')}</svg>`;
 }
-function figNotes(with8){
+function figNotes(more){
   const sp = 12, sc = sp / 250, hw = 295 * sc;
-  const cols = [['nw', 'Redonda', '4 pulsos'], ['nh', 'Blanca', '2 pulsos'], ['nb', 'Negra', '1 pulso']].concat(with8 ? [['nb', 'Corchea', 'medio pulso']] : []);
-  const cw = 88, W = cols.length * cw;
+  const cols = [['nw', 'Redonda', '4 pulsos'], ['nh', 'Blanca', '2 pulsos'], ['nb', 'Negra', '1 pulso']].concat(more ? [['nb', 'Corchea', 'medio pulso']] : [], more > 1 ? [['nb', 'Semicorchea', '¼ de pulso']] : []);
+  const cw = cols.length > 4 ? 78 : 88, W = cols.length * cw;
   let h = '';
   cols.forEach(([k, name, dur], i) => {
     const cx = i * cw + cw / 2, y = 62, w = (k === 'nw' ? 422 : 295) * sc;
     h += `<path d="${GLYPH[k]}" transform="translate(${cx - w / 2} ${y}) scale(${sc} ${-sc})" class="ink"/>`;
     if (k !== 'nw') h += `<line x1="${cx + hw / 2 - 0.7}" x2="${cx + hw / 2 - 0.7}" y1="${y - 2}" y2="${y - 42}" class="stem"/>`;
-    if (name === 'Corchea') h += `<path d="${GLYPH.fu}" transform="translate(${cx + hw / 2 - 1.4} ${y - 42}) scale(${sc} ${-sc})" class="ink"/>`;
-    h += `<text x="${cx}" y="94" text-anchor="middle" font-size="13" class="pt">${name}</text><text x="${cx}" y="111" text-anchor="middle" font-size="12" class="soft">${dur}</text>`;
+    if (name === 'Corchea' || name === 'Semicorchea') h += `<path d="${GLYPH[name === 'Corchea' ? 'fu' : 'fu2']}" transform="translate(${cx + hw / 2 - 1.4} ${y - 42}) scale(${sc} ${-sc})" class="ink"/>`;
+    h += `<text x="${cx}" y="94" text-anchor="middle" font-size="${cols.length > 4 ? 12.5 : 13}" class="pt">${name}</text><text x="${cx}" y="111" text-anchor="middle" font-size="12" class="soft">${dur}</text>`;
   });
   return `<svg class="tfig" style="max-width:${W * 1.3}px" viewBox="0 0 ${W} 120" role="img" aria-label="Figuras: ${cols.map(c => c[1].toLowerCase() + ', ' + c[2]).join('; ')}">${h}</svg>`;
 }
@@ -4452,12 +4635,63 @@ function figRests(){
   });
   return `<svg class="tfig" style="max-width:390px" viewBox="0 0 ${W} 114" role="img" aria-label="Silencios de redonda, de blanca y de negra">${h}</svg>`;
 }
+/* Un ritmo: las figuras separadas según lo que duran y, debajo, cómo se cuenta.
+   items: {d: pulsos, b: grupo de barra}; count: un texto por cada casilla de `grid` pulsos; strong: casillas que llevan el acento. */
+function figRhythm(o){
+  const sp = 11, sc = sp / 250, hw = 295 * sc, u = o.grid < 0.5 ? 80 : 64, L = 20, y = 62, top = y - 40, it = o.items;
+  const total = it.reduce((a, x) => a + x.d, 0), W = L * 2 + total * u, xs = [];
+  let h = '', t = 0;
+  it.forEach(x => { xs.push(L + t * u); t += x.d; });
+  const sx = i => xs[i] + hw - 0.7, beamed = i => !!it[i].b && ((it[i - 1] && it[i - 1].b === it[i].b) || (it[i + 1] && it[i + 1].b === it[i].b));
+  it.forEach((x, i) => {
+    const d = x.d, k = d >= 4 ? 'nw' : d >= 2 ? 'nh' : 'nb', w = (k === 'nw' ? 422 : 295) * sc;
+    h += `<path d="${GLYPH[k]}" transform="translate(${xs[i].toFixed(1)} ${y}) scale(${sc} ${-sc})" class="ink"/>`;
+    if (k !== 'nw') h += `<line x1="${sx(i).toFixed(1)}" x2="${sx(i).toFixed(1)}" y1="${y - 2}" y2="${top}" class="stem"/>`;
+    if (d === 3 || d === 1.5 || d === 0.75) h += `<circle cx="${(xs[i] + w + 5).toFixed(1)}" cy="${y}" r="2.3" class="ink"/>`;
+    if (d < 1 && !beamed(i)) h += `<path d="${GLYPH[d <= 0.25 ? 'fu2' : 'fu']}" transform="translate(${(sx(i) - 0.7).toFixed(1)} ${top}) scale(${sc} ${-sc})" class="ink"/>`;
+  });
+  for (let i = 0; i < it.length; i++){
+    if (!beamed(i) || (it[i - 1] && it[i - 1].b === it[i].b)) continue;
+    let j = i; while (it[j + 1] && it[j + 1].b === it[i].b) j++;
+    h += `<rect x="${(sx(i) - 0.75).toFixed(1)}" y="${top}" width="${(sx(j) - sx(i) + 1.5).toFixed(1)}" height="5" class="ink"/>`;
+    for (let k = i; k <= j; k++){
+      if (it[k].d > 0.25) continue;
+      if (k < j && it[k + 1].d <= 0.25) h += `<rect x="${(sx(k) - 0.75).toFixed(1)}" y="${top + 8}" width="${(sx(k + 1) - sx(k) + 1.5).toFixed(1)}" height="5" class="ink"/>`;
+      else if (!(k > i && it[k - 1].d <= 0.25)) h += `<rect x="${(k > i ? sx(k) - 9 : sx(k) - 0.75).toFixed(1)}" y="${top + 8}" width="9.75" height="5" class="ink"/>`;
+    }
+  }
+  const strong = o.strong ? new Set(o.strong) : null, small = o.grid < 0.5;
+  (o.count || []).forEach((c, i) => {
+    if (!c) return;
+    const on = strong ? strong.has(i) : /^\d/.test(c);
+    h += `<text x="${(L + i * o.grid * u + hw / 2).toFixed(1)}" y="98" text-anchor="middle" font-size="${small ? 11 : 13.5}" class="${on ? 'pt' : 'soft'}">${c}</text>`;
+  });
+  return `<svg class="tfig" style="max-width:${Math.min(460, Math.round(W * 1.45))}px" viewBox="0 0 ${W} 108" role="img" aria-label="${esc(o.alt || 'Un ritmo y cómo se cuenta')}">${h}</svg>`;
+}
+/* Signos de expresión: matices, reguladores y articulación. */
+function figSigns(kind){
+  const sp = 12, sc = sp / 250, hw = 295 * sc, cw = 150, y = 46;
+  const note = (x, dot) => `<path d="${GLYPH.nb}" transform="translate(${x} ${y}) scale(${sc} ${-sc})" class="ink"/><line x1="${x + hw - 0.7}" x2="${x + hw - 0.7}" y1="${y - 2}" y2="${y - 38}" class="stem"/>${dot ? `<circle cx="${x + hw / 2}" cy="${y + 13}" r="2.4" class="ink"/>` : ''}`;
+  const dyn = (k, cx) => `<path d="${GLYPH[k]}" transform="translate(${cx - (k === 'dp' ? 13 : 9)} ${y + 6}) scale(${sc * 2} ${-sc * 2})" class="ink"/>`;
+  const cols = kind === 'dyn' ? [[cx => dyn('dp', cx), 'p · piano', 'suave'], [cx => dyn('df', cx), 'f · forte', 'fuerte']]
+    : kind === 'hair' ? [[cx => `<path class="hp" d="M${cx + 40} ${y - 22}L${cx - 40} ${y - 10}L${cx + 40} ${y + 2}"/>`, 'Crescendo', 'cada vez más fuerte'], [cx => `<path class="hp" d="M${cx - 40} ${y - 22}L${cx + 40} ${y - 10}L${cx - 40} ${y + 2}"/>`, 'Diminuendo', 'cada vez más suave']]
+    : [[cx => note(cx - 30, true) + note(cx + 14, true), 'Staccato', 'cortas y separadas'], [cx => note(cx - 44, false) + note(cx - 8, false) + note(cx + 28, false) + `<path class="hp" d="M${cx - 38} ${y + 12}Q${cx} ${y + 28} ${cx + 34} ${y + 12}"/>`, 'Legato', 'unidas, sin huecos']];
+  let h = '';
+  cols.forEach(([draw, name, what], i) => {
+    const cx = i * cw + cw / 2;
+    h += draw(cx) + `<text x="${cx}" y="96" text-anchor="middle" font-size="13.5" class="pt">${name}</text><text x="${cx}" y="113" text-anchor="middle" font-size="12.5" class="soft">${what}</text>`;
+  });
+  return `<svg class="tfig" style="max-width:400px" viewBox="0 0 ${cols.length * cw} 122" role="img" aria-label="${cols.map(c => c[1] + ': ' + c[2]).join('; ')}">${h}</svg>`;
+}
 function figOf(f){
   if (!f) return '';
   if (f === 'hands') return figHands();
-  if (f === 'notes') return figNotes(false);
-  if (f === 'notes8') return figNotes(true);
+  if (f === 'notes') return figNotes(0);
+  if (f === 'notes8') return figNotes(1);
+  if (f === 'notes16') return figNotes(2);
   if (f === 'rests') return figRests();
+  if (f === 'dyn' || f === 'hair' || f === 'art') return figSigns(f);
+  if (f.rhythm) return figRhythm(f.rhythm);
   if (f.keys) return figKeys(f.keys);
   if (f.staff) return figStaff(f.staff);
   return '';
@@ -4488,7 +4722,11 @@ function renderTeoList(){
     <div class="path-prog"><div class="bar"><i style="width:${(done / TEO.length * 100).toFixed(1)}%"></i></div><span>${done} de ${TEO.length} lecciones</span></div>
     <p class="tday">${msg}</p><section class="lvl">`;
   for (const l of TEO){
-    const d = teoDone(l), isNext = next === l;
+    const d = teoDone(l), isNext = next === l, part = l.part || 1;
+    if (!l.index || part !== (TEO[l.index - 1].part || 1)){
+      const P_ = TEO_PARTS.find(x => x.n === part), mine = TEO.filter(x => (x.part || 1) === part);
+      h += `<div class="ruta-lv"><h2>${P_.title}</h2><span>${mine.filter(teoDone).length} de ${mine.length}</span><p>${P_.desc}</p></div>`;
+    }
     const right = d ? '<span class="tok">Aprobada</span>' : isNext ? `<span class="next-tag">${today ? 'Siguiente' : 'Hoy'}</span>` : '<span class="new">Bloqueada</span>';
     h += `<button class="song${isNext ? ' is-next' : ''}" data-teo="${l.index}"${teoOpen(l) ? '' : ' disabled'}>
       <span class="num${d ? ' done' : ''}" aria-hidden="true">${l.index + 1}</span>
@@ -4616,7 +4854,7 @@ function showQ(){
   const q = TL.q, it = q.items[q.i], st = q.st;
   q.hint.forEach(el => el.classList.remove('guide')); q.hint = [];
   q.miss = 0; q.phase = 'input';
-  $('#tqQ').innerHTML = st.k === 'staff' ? figStaff({clef: st.clef || 'T', notes: [it.midi], big: true}) : esc(it.label || PCN[sys()][it.pc]);
+  $('#tqQ').innerHTML = st.k === 'staff' ? figStaff({clef: st.clef || 'T', notes: [it.midi], big: true, sig: st.sig}) : esc(it.label || PCN[sys()][it.pc]);
   $('#tqFb').textContent = st.k === 'staff' ? '¿Qué tecla es? Tócala.' : 'Toca esa tecla.';
   $('#tqN').textContent = `${q.i + 1} de ${q.items.length}`;
 }
@@ -4624,6 +4862,7 @@ function teoPress(m){
   const q = TL && TL.q; if (!q || q.phase !== 'input') return;
   const it = q.items[q.i], st = q.st;
   const ok = it.midi != null ? m === it.midi : pc(m) === it.pc;
+  const nameOf = x => (st.sig < 0 ? PCF : PCN)[sys()][pc(x)];
   if (ok){
     q.phase = 'wait'; flashKey(m, 'ok');
     $('#tqFb').textContent = st.k === 'staff' ? `¡Bien! Es ${nameOf(m)}.` : '¡Bien!';
@@ -4631,7 +4870,9 @@ function teoPress(m){
     TL.timers.push(setTimeout(() => { if (TL && TL.q === q){ if (q.i >= q.items.length) endQuiz(); else showQ(); } }, st.k === 'staff' ? 700 : 420));
   } else {
     q.errors++; q.miss++; flashKey(m, 'bad');
-    $('#tqFb').textContent = st.names === false ? 'Esa no es. Mira bien los grupos de teclas negras.'
+    $('#tqFb').textContent = st.miss ? st.miss
+      : st.names === false ? 'Esa no es. Mira bien los grupos de teclas negras.'
+      : st.k === 'staff' && st.sig && isBlack(it.midi) && m === it.midi + (st.sig < 0 ? 1 : -1) ? `Esa es ${nameOf(m)}. Mira la armadura: en esta tonalidad esa nota lleva ${st.sig < 0 ? 'bemol' : 'sostenido'}.`
       : st.k === 'staff' ? `Esa es ${nameOf(m)}. Fíjate en qué línea o espacio está la nota.` : `Esa es ${nameOf(m)}. Inténtalo otra vez.`;
     if (q.miss >= 2 && !q.hint.length){
       for (const [k, el] of keyEls) if (it.midi != null ? k === it.midi : pc(k) === it.pc){ el.classList.add('guide'); q.hint.push(el); }
