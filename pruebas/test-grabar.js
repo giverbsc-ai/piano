@@ -99,7 +99,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok((await chips(A)).length === 3, 'ya son tres tramos', await chips(A));
   await A.click('#mkChips [data-tr="0"]');
   ok((await A.getAttribute('#mkChips [data-tr="0"]', 'aria-pressed')) === 'true' && /Tramo 1: 3 notas/.test(await txt(A, '#mkStatus')), 'al tocar la ficha queda elegido el tramo 1', await txt(A, '#mkStatus'));
-  ok(JSON.stringify((await acts(A)).map(a => a.split(':')[0])) === JSON.stringify(['play1', 'redo', 'copy', 'left', 'right', 'del', 'back']), 'ofrece escucharlo, grabarlo de nuevo, copiarlo, moverlo, borrarlo o volver', await acts(A));
+  ok(JSON.stringify((await acts(A)).map(a => a.split(':')[0])) === JSON.stringify(['play1', 'redo', 'copy', 'left', 'right', 'join', 'del', 'back']), 'ofrece escucharlo, grabarlo de nuevo, copiarlo, moverlo, agruparlo, borrarlo o volver', await acts(A));
   await A.click('[data-mk="redo"]');
   ok(/Grabando el tramo 1\./.test(await txt(A, '#mkStatus')), 'grabar de nuevo graba en el mismo lugar', await txt(A, '#mkStatus'));
   await events(A, [[200, 60, true], [300, 60, false], [200, 64, true], [300, 64, false], [200, 67, true], [300, 67, false], [200, 72, true], [300, 72, false]]);
@@ -258,7 +258,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const orden = async () => (await draft(E)).tramos.map(t => t.n[0][0]).join();
   const sel = () => E.evaluate(() => [...document.querySelectorAll('#mkChips [data-tr]')].findIndex(b => b.getAttribute('aria-pressed') === 'true'));
   await E.click('#mkChips [data-tr="0"]');
-  ok(/copiarlo, moverlo o borrarlo/.test(await txt(E, '#mkStatus')), 'al elegir un tramo dice que se puede copiar y mover', await txt(E, '#mkStatus'));
+  ok(/copiarlo, moverlo, agruparlo o borrarlo/.test(await txt(E, '#mkStatus')), 'al elegir un tramo dice que se puede copiar, mover y agrupar', await txt(E, '#mkStatus'));
   ok(await E.isDisabled('[data-mk="left"]') && await E.isEnabled('[data-mk="right"]'), 'el primer tramo no se puede mover antes');
   await E.click('[data-mk="copy"]');
   d = await draft(E);
@@ -296,20 +296,89 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await E.click('#btnMaker'); await E.click('#mkChips [data-tr="0"]'); await E.click('[data-mk="copy"]');
   ok((await draft(E)).tramos.length === 1 && /La copia no cabe/.test(await txt(E, '#mkStatus')), 'si la copia pasa de 4000 notas, no se hace y lo dice', await txt(E, '#mkStatus'));
   await E.context().close();
-  // En el celular acostado los botones del tramo elegido siguen cabiendo.
+  // En el celular acostado los botones del tramo elegido van en una sola fila que se desliza hacia los lados.
   const F = await open({width: 800, height: 380}, 'cel-h');
   await F.evaluate(() => { Object.assign(__t.mk, {tramos: [60, 62, 64].map(m => ({n: [[m, 0, 300]], len: 300})), dirty: true}); __t.goFree(); });
   await F.click('#btnMaker'); await F.click('#mkChips [data-tr="1"]');
   const fb = await F.evaluate(() => {
-    const r = s => document.querySelector(s).getBoundingClientRect(), btns = [...document.querySelectorAll('#mkAct [data-mk]')].map(b => b.getBoundingClientRect());
-    const mkr = document.querySelector('#maker');
-    return {n: btns.length, btnsIn: btns.every(b => b.right <= innerWidth + 1 && b.left >= -1), sw: document.documentElement.scrollWidth, vw: innerWidth, kbH: r('#keys').height,
-            rows: new Set(btns.map(b => Math.round(b.top))).size, chipH: Math.round(r('#mkChips').height), actBottom: r('#mkAct').bottom, tbTop: r('#viewFree .toolbar').top};
+    const r = s => document.querySelector(s).getBoundingClientRect(), act = document.querySelector('#mkAct'), btns = [...act.querySelectorAll('[data-mk]')].map(b => b.getBoundingClientRect());
+    return {n: btns.length, sw: document.documentElement.scrollWidth, vw: innerWidth, kbH: r('#keys').height, rows: new Set(btns.map(b => Math.round(b.top))).size,
+            chipH: Math.round(r('#mkChips').height), actBottom: r('#mkAct').bottom, tbTop: r('#viewFree .toolbar').top, slides: act.scrollWidth > act.clientWidth, firstIn: btns[0].left >= 0};
   });
-  ok(fb.n === 7 && fb.btnsIn && fb.sw <= fb.vw + 1 && fb.kbH > 100, 'celular acostado: los siete botones del tramo caben a lo ancho y el teclado conserva su alto', fb);
-  ok(fb.rows === 1 && fb.chipH >= 30 && fb.actBottom <= fb.tbTop + 1, 'celular acostado: quedan en una sola fila, sin aplastar las fichas de los tramos', fb);
+  ok(fb.n === 8 && fb.sw <= fb.vw + 1 && fb.kbH > 100, 'celular acostado: con los ocho botones del tramo nada se sale de la pantalla y el teclado conserva su alto', fb);
+  ok(fb.rows === 1 && fb.chipH >= 30 && fb.actBottom <= fb.tbTop + 1 && fb.firstIn, 'celular acostado: quedan en una sola fila, sin aplastar las fichas de los tramos', fb);
+  await F.evaluate(() => { document.querySelector('#mkAct').scrollLeft = 9999; });
+  const lastIn = await F.evaluate(() => { const b = document.querySelector('#mkAct [data-mk="back"]').getBoundingClientRect(); return b.right <= innerWidth + 1 && b.left >= 0; });
+  ok(lastIn, 'celular acostado: deslizando la fila se llega al último botón');
+  await F.evaluate(() => { document.querySelector('#mkAct').scrollLeft = 0; });
   await F.screenshot({path: path.join(SHOTS, 'grabar-mover-cel-h.png')});
   await F.context().close();
+
+  console.log('\n13. Agrupar tramos');
+  const G = await open({width: 1180, height: 760}, 'tab-h');
+  await G.evaluate(() => {
+    Object.assign(__t.mk, {tramos: [60, 62, 64, 65].map((m, i) => ({n: [[m, 0, 300], [m + 12, 400, 300 + i * 100]], len: 700 + i * 100})), song: '', name: '', dirty: false});
+    __t.goFree();
+  });
+  await G.click('#btnMaker');
+  const dG = () => draft(G);
+  const flat = () => G.evaluate(() => { const f = __t.mkFlat(-1); return JSON.stringify([f.notes.map(n => [n.m, n.at, n.d]), f.len]); });
+  const selG = () => G.evaluate(() => [...document.querySelectorAll('#mkChips [data-tr]')].findIndex(b => b.getAttribute('aria-pressed') === 'true'));
+  const suena = await flat(), sueltos = JSON.stringify((await dG()).tramos);
+  await G.click('#mkChips [data-tr="3"]');
+  ok(await G.isDisabled('[data-mk="join"]') && (await G.locator('[data-mk="split"]').count()) === 0, 'el último tramo no tiene con quién agruparse, y un tramo suelto no ofrece desagrupar');
+  await G.click('#mkChips [data-tr="1"]'); await G.click('[data-mk="join"]');
+  d = await dG();
+  ok(d.tramos.length === 3 && JSON.stringify(d.tramos[1].p) === '[800,900]' && d.tramos[1].n.map(n => n[0]).join() === '62,74,64,76' && d.dirty === true, '«Agrupar con el siguiente» une los tramos 2 y 3 en uno', d.tramos[1]);
+  ok(JSON.stringify(await chips(G)) === JSON.stringify(['Tramo 1 · 2 notas', 'Tramo 2 · grupo de 2 · 4 notas', 'Tramo 3 · 2 notas']), 'la ficha dice que es un grupo y las siguientes bajan de número', await chips(G));
+  ok((await selG()) === 1 && /Agrupados: el tramo 2 ahora es un grupo de 2 tramos/.test(await txt(G, '#mkStatus')), 'el grupo queda elegido y lo avisa', await txt(G, '#mkStatus'));
+  ok((await flat()) === suena, 'agrupar no cambia cómo suena la canción');
+  ok(JSON.stringify((await acts(G)).map(a => a.split(':')[0])) === JSON.stringify(['play1', 'copy', 'left', 'right', 'join', 'split', 'del', 'back']), 'un grupo se escucha, copia, mueve, agranda, desagrupa o borra, pero no se regraba entero', await acts(G));
+  ok((await G.evaluate(() => document.activeElement && document.activeElement.dataset.mk)) === 'join', 'el botón sigue listo para sumar otro tramo');
+  await G.click('[data-mk="join"]');
+  d = await dG();
+  ok(d.tramos.length === 2 && JSON.stringify(d.tramos[1].p) === '[800,900,1000]' && (await chips(G))[1] === 'Tramo 2 · grupo de 3 · 6 notas' && await G.isDisabled('[data-mk="join"]'), 'otro toque le suma el tramo siguiente', await chips(G));
+  ok((await flat()) === suena, 'y sigue sonando igual');
+  await G.click('#mkChips [data-tr="1"]'); await G.click('#mkChips [data-tr="1"]');
+  ok(/Tramo 2: grupo de 3 tramos, 6 notas/.test(await txt(G, '#mkStatus')) && /desagrúpalo/.test(await txt(G, '#mkStatus')), 'al elegirlo explica que es un grupo', await txt(G, '#mkStatus'));
+  ok((await G.evaluate(() => __t.mkFlat(1).notes.length)) === 6, '«Escuchar tramo» toca el grupo entero');
+  // El grupo se mueve y se copia como un solo tramo.
+  await G.click('[data-mk="left"]');
+  d = await dG();
+  ok(d.tramos.map(t => t.n[0][0]).join() === '62,60' && JSON.stringify(d.tramos[0].p) === '[800,900,1000]', 'el grupo se mueve entero', d.tramos.map(t => t.n.map(n => n[0])));
+  await G.click('[data-mk="copy"]');
+  d = await dG();
+  ok(d.tramos.length === 3 && JSON.stringify(d.tramos[2]) === JSON.stringify(d.tramos[0]) && (await chips(G))[2] === 'Tramo 3 · grupo de 3 · 6 notas', 'el grupo se copia entero, y la copia también es un grupo', await chips(G));
+  await G.screenshot({path: path.join(SHOTS, 'grabar-agrupar.png')});
+  // Sigue ahí al recargar.
+  await G.reload(); await G.waitForFunction(() => window.__t);
+  d = await dG();
+  ok(d.tramos.length === 3 && JSON.stringify(d.tramos[0].p) === '[800,900,1000]' && JSON.stringify(d.tramos[2].p) === '[800,900,1000]', 'los grupos siguen al recargar la página', d.tramos.map(t => t.p));
+  await G.evaluate(() => __t.goFree()); await G.click('#btnMaker');
+  // Desagrupar devuelve los tramos tal como eran.
+  const orig = JSON.parse(sueltos);
+  await G.click('#mkChips [data-tr="0"]'); await G.click('[data-mk="split"]');
+  d = await dG();
+  ok(d.tramos.length === 5 && JSON.stringify(d.tramos.slice(0, 3)) === JSON.stringify(orig.slice(1)) && JSON.stringify(d.tramos[3]) === JSON.stringify(orig[0]), '«Desagrupar» devuelve los tres tramos tal como eran', d.tramos.slice(0, 3));
+  ok(/volvió a ser 3 tramos sueltos: del 1 al 3/.test(await txt(G, '#mkStatus')) && (await selG()) === -1, 'y lo avisa', await txt(G, '#mkStatus'));
+  // Un tramo suelto con un grupo, y un grupo con otro grupo.
+  await G.click('#mkChips [data-tr="3"]'); await G.click('[data-mk="join"]');
+  d = await dG();
+  ok(d.tramos.length === 4 && JSON.stringify(d.tramos[3].p) === '[700,800,900,1000]' && (await chips(G))[3] === 'Tramo 4 · grupo de 4 · 8 notas', 'un tramo suelto se agrupa con un grupo y queda un solo grupo de cuatro', await chips(G));
+  await G.click('[data-mk="split"]');
+  d = await dG();
+  ok(d.tramos.length === 7 && JSON.stringify(d.tramos.slice(3)) === JSON.stringify(orig), 'al desagruparlo salen los cuatro tramos originales', d.tramos.slice(3).map(t => t.n.map(n => n[0])));
+  // Regrabar una parte: se desagrupa, se regraba ese tramo y se vuelve a agrupar.
+  await G.click('#mkChips [data-tr="0"]'); await G.click('[data-mk="join"]'); await G.click('[data-mk="split"]');
+  await G.click('#mkChips [data-tr="1"]'); await G.click('[data-mk="redo"]'); await events(G, [[100, 80, true], [300, 80, false]]); await G.click('[data-mk="stop"]');
+  d = await dG();
+  ok(d.tramos.length === 7 && d.tramos[1].n.map(n => n[0]).join() === '80' && !d.tramos[1].p && d.tramos[0].n.map(n => n[0]).join() === '62,74', 'tras desagrupar se puede regrabar una sola parte', d.tramos.slice(0, 2));
+  // Un grupo guardado con cuentas que no cierran queda como tramo normal, sin romper nada.
+  await G.evaluate(() => { localStorage.setItem('piano:borrador', JSON.stringify({tramos: [{n: [[60, 0, 300], [62, 600, 300]], len: 900, p: [300, 300]}, {n: [[64, 0, 300], [65, 700, 300]], len: 1000, p: [300, 300]}, {n: [[67, 0, 200]], len: 200, p: 'x'}], dirty: true})); });
+  await G.reload(); await G.waitForFunction(() => window.__t);
+  d = await dG();
+  ok(d.tramos.length === 3 && JSON.stringify(d.tramos[0].p) === '[300,300]' && !d.tramos[1].p && !d.tramos[2].p, 'un grupo guardado con datos raros se abre como tramo normal', d.tramos.map(t => t.p || null));
+  await G.context().close();
 
   await A.context().close();
   await browser.close(); server.close();

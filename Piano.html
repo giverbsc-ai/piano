@@ -123,7 +123,11 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
   #viewFree.making .display{display:none}
   #viewFree.making .maker{flex:1 1 auto;max-height:none;border-bottom:0;padding-top:6px;padding-bottom:2px;gap:6px}
   #viewFree.making .mk-t{font-size:1.05rem}
-  /* Con un tramo elegido hay siete botones: aquí los de mover quedan solo con la flecha para que quepan en una fila. */
+  /* Con un tramo elegido hay ocho botones: aquí van en una sola fila que se desliza hacia los lados, como las fichas,
+     y los de mover quedan solo con la flecha. */
+  #viewFree.making .mk-act{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  #viewFree.making .mk-act::-webkit-scrollbar{display:none}
+  #viewFree.making .mk-act > *{flex:none}
   #viewFree.making .mk-act .mk-w{display:none}
   #viewFree.making .mk-act .btn{padding:0 10px}
 }
@@ -2643,7 +2647,12 @@ function mkClean(d){
     const n = (Array.isArray(t && t.n) ? t.n : []).filter(Array.isArray)
       .map(a => [Math.round(+a[0]), Math.max(0, Math.round(+a[1])), Math.max(1, Math.round(+a[2]))])
       .filter(a => a[0] >= 21 && a[0] <= 108 && isFinite(a[1]) && isFinite(a[2]));
-    if (n.length) out.tramos.push({n, len: n.reduce((m, a) => Math.max(m, a[1] + a[2]), 0)});
+    if (!n.length) continue;
+    const tr = {n, len: n.reduce((m, a) => Math.max(m, a[1] + a[2]), 0)};
+    // Un grupo recuerda cuánto dura cada tramo que lleva dentro; si las cuentas no cierran, queda como un tramo normal.
+    const p = Array.isArray(t.p) ? t.p.map(x => Math.round(+x)) : [];
+    if (p.length > 1 && p.every(x => x > 0) && p.reduce((a, x) => a + x, 0) + MK_JOIN * (p.length - 1) === tr.len) tr.p = p;
+    out.tramos.push(tr);
   }
   out.song = String(d.song || ''); out.name = String(d.name || '').slice(0, 80);
   out.speed = MK_SPEEDS.some(x => x[0] === +d.speed) ? +d.speed : 1;
@@ -2657,6 +2666,23 @@ const mkCount = () => mk.tramos.reduce((a, t) => a + t.n.length, 0);
 const mkLen = () => mk.tramos.reduce((a, t) => a + t.len, 0) + MK_JOIN * Math.max(0, mk.tramos.length - 1);
 const mkSong = () => mk.song ? Data.items.find(s => s.id === mk.song) || null : null;
 const notasTxt = n => n === 1 ? '1 nota' : n + ' notas';
+/* Grupos: varios tramos seguidos que se manejan como uno solo. Sus notas van una parte detrás de otra, con el mismo
+   respiro que hay entre tramos, así que agrupar o desagrupar no cambia cómo suena la canción. `p` guarda la duración
+   de cada parte para poder separarlas otra vez. */
+const mkParts = t => t && t.p ? t.p.length : 1;
+function mkJoin(a, b){
+  const off = a.len + MK_JOIN;
+  return {n: a.n.concat(b.n.map(x => [x[0], x[1] + off, x[2]])), len: off + b.len, p: (a.p || [a.len]).concat(b.p || [b.len])};
+}
+function mkSplit(t){
+  const out = []; let off = 0;
+  t.p.forEach((len, k) => {
+    const end = k === t.p.length - 1 ? Infinity : off + len + MK_JOIN;
+    out.push({n: t.n.filter(x => x[1] >= off && x[1] < end).map(x => [x[0], x[1] - off, x[2]]), len});
+    off += len + MK_JOIN;
+  });
+  return out.filter(x => x.n.length);
+}
 /* De las teclas apretadas y soltadas a las notas de un tramo. */
 function mkTramo(ev, tEnd){
   const open = new Map(), notes = [];
@@ -2705,8 +2731,9 @@ function mkStatus(){
   else if (Mk.msg) t = Mk.msg;
   else if (!n) t = 'Graba un pedazo de la canción, detén y sigue con el siguiente. Al final la guardas en «Tus canciones» para practicarla.';
   else if (Mk.sel >= 0 && mk.tramos[Mk.sel]){
-    const tr = mk.tramos[Mk.sel];
-    t = `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Puedes escucharlo, grabarlo de nuevo, copiarlo, moverlo o borrarlo.`;
+    const tr = mk.tramos[Mk.sel], g = mkParts(tr);
+    t = g > 1 ? `Tramo ${Mk.sel + 1}: grupo de ${g} tramos, ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Se escucha, se copia y se mueve entero. Para cambiar una parte, desagrúpalo.`
+      : `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Puedes escucharlo, grabarlo de nuevo, copiarlo, moverlo, agruparlo o borrarlo.`;
   } else {
     const s = mkSong();
     t = `${n === 1 ? '1 tramo' : n + ' tramos'}, ${notasTxt(mkCount())}, ${fmtTime(mkLen())}. `
@@ -2719,7 +2746,7 @@ function mkChips(){
   const row = $('#mkChips'), sl = row.scrollLeft, busy = !!(Mk.rec || Mk.play);
   const now = Mk.play ? Mk.play.cur : Mk.rec ? Mk.rec.idx : -1;
   row.hidden = !mk.tramos.length;
-  row.innerHTML = mk.tramos.map((t, i) => `<button type="button" class="chip${i === now ? ' now' : ''}" data-tr="${i}" aria-pressed="${i === Mk.sel}"${busy ? ' disabled' : ''}>Tramo ${i + 1} · ${notasTxt(t.n.length)}</button>`).join('');
+  row.innerHTML = mk.tramos.map((t, i) => `<button type="button" class="chip${i === now ? ' now' : ''}" data-tr="${i}" aria-pressed="${i === Mk.sel}"${busy ? ' disabled' : ''}>Tramo ${i + 1} · ${mkParts(t) > 1 ? `grupo de ${mkParts(t)} · ` : ''}${notasTxt(t.n.length)}</button>`).join('');
   row.scrollLeft = sl;
   const go = Mk.scroll != null ? Mk.scroll : now;
   Mk.scroll = null;
@@ -2734,11 +2761,12 @@ function mkActions(){
   if (Mk.rec) h = `<button class="btn recording" data-mk="stop">${dot}Detener tramo</button><button class="btn" data-mk="cancel">Descartar</button>`;
   else if (Mk.play) h = `<button class="btn" data-mk="quiet">${ICON.stop}Parar</button>`;
   else if (Mk.sel >= 0){
-    const k = Mk.sel + 1, arm = Mk.armed === 'del';
-    h = `<button class="btn" data-mk="play1">${ICON.play}Escuchar tramo ${k}</button><button class="btn" data-mk="redo">${dot}Grabar de nuevo</button>`
+    const k = Mk.sel + 1, arm = Mk.armed === 'del', g = mkParts(mk.tramos[Mk.sel]) > 1;
+    h = `<button class="btn" data-mk="play1">${ICON.play}Escuchar tramo ${k}</button>${g ? '' : `<button class="btn" data-mk="redo">${dot}Grabar de nuevo</button>`}`
       + `<button class="btn" data-mk="copy">${ICON.copy}Copiar</button>`
       + `<button class="btn" data-mk="left" title="Mover antes" aria-label="Mover antes"${k === 1 ? ' disabled' : ''}>${ICON.left}<span class="mk-w">Mover antes</span></button>`
       + `<button class="btn" data-mk="right" title="Mover después" aria-label="Mover después"${k === n ? ' disabled' : ''}><span class="mk-w">Mover después</span>${ICON.right}</button>`
+      + `<button class="btn" data-mk="join"${k === n ? ' disabled' : ''}>Agrupar con el siguiente</button>${g ? '<button class="btn" data-mk="split">Desagrupar</button>' : ''}`
       + `<button class="btn${arm ? ' armed' : ''}" data-mk="del">${arm ? `¿Borrar el tramo ${k}?` : ICON.trash + 'Borrar'}</button><button class="btn" data-mk="back">Volver</button>`;
   } else {
     const pend = !mkSong() || mk.dirty, arm = Mk.armed === 'new';
@@ -2855,7 +2883,7 @@ $('#mkAct').addEventListener('click', e => {
     const t = mk.tramos[Mk.sel]; if (!t) return;
     if (mkCount() + t.n.length > MAX_NOTAS){ Mk.msg = `La copia no cabe: la canción pasaría de ${MAX_NOTAS} notas, que es el máximo.`; mkRender(); Mk.msg = ''; return; }
     const k = Mk.sel + 1;
-    mk.tramos.push({n: t.n.map(x => x.slice()), len: t.len});
+    mk.tramos.push(Object.assign({n: t.n.map(x => x.slice()), len: t.len}, t.p ? {p: t.p.slice()} : null));
     mk.dirty = true; mkSave();
     Mk.sel = Mk.scroll = mk.tramos.length - 1;
     Mk.msg = `Copia del tramo ${k}: quedó al final, como tramo ${Mk.sel + 1}. Muévela si va en otro lugar.`;
@@ -2872,6 +2900,28 @@ $('#mkAct').addEventListener('click', e => {
     mkRender(); Mk.msg = '';
     const b2 = $(`#mkAct [data-mk="${a}"]`);
     (b2.disabled ? $(`#mkAct [data-mk="${a === 'left' ? 'right' : 'left'}"]`) : b2).focus();
+  }
+  else if (a === 'join'){
+    const i = Mk.sel, t = mk.tramos[i], nx = mk.tramos[i + 1];
+    if (!t || !nx) return;
+    mk.tramos.splice(i, 2, mkJoin(t, nx));
+    mk.dirty = true; mkSave();
+    Mk.scroll = i;
+    const g = mkParts(mk.tramos[i]), more = i < mk.tramos.length - 1;
+    Mk.msg = `Agrupados: el tramo ${i + 1} ahora es un grupo de ${g} tramos` + (more ? ` y los que seguían bajaron de número. Toca «Agrupar con el siguiente» otra vez para sumarle otro.` : '.');
+    mkRender(); Mk.msg = '';
+    const b2 = $('#mkAct [data-mk="join"]');
+    (b2.disabled ? $('#mkAct [data-mk="split"]') : b2).focus();
+  }
+  else if (a === 'split'){
+    const i = Mk.sel, t = mk.tramos[i];
+    if (!t || !t.p) return;
+    const parts = mkSplit(t);
+    mk.tramos.splice(i, 1, ...parts);
+    mk.dirty = true; mkSave();
+    Mk.sel = -1; Mk.scroll = i;
+    Mk.msg = parts.length > 1 ? `El grupo volvió a ser ${parts.length} tramos sueltos: del ${i + 1} al ${i + parts.length}.` : 'El grupo volvió a ser un tramo suelto.';
+    mkRender(); Mk.msg = '';
   }
   else if (a === 'del'){
     if (!mkArm('del')) return;
