@@ -108,7 +108,13 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .songlist h1{font-family:"Alegreya",Georgia,serif;font-weight:700;font-size:clamp(1.7rem,5vw,2.3rem);line-height:1.12;margin:0 0 12px}
 .ltabs{margin-bottom:14px}
 .lead{margin:0 0 8px;color:var(--ink-soft);max-width:58ch}
-.lvl h2{font-size:1rem;font-weight:700;margin:22px 0 4px;color:var(--felt-ink)}
+.lvl h2,.lvl h3{font-size:1rem;font-weight:700;margin:22px 0 4px;color:var(--felt-ink)}
+.ruta-lv{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;margin:30px 0 -6px;padding-top:16px;border-top:1px solid var(--line)}
+.ruta-lv h2{font-family:"Alegreya",Georgia,serif;font-size:1.35rem;line-height:1.15;margin:0;flex:1 1 auto}
+.ruta-lv span{font-size:.9rem;font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.ruta-lv p{flex:1 1 100%;margin:2px 0 0;color:var(--ink-soft);max-width:58ch}
+.ruta-fin{margin:14px 0 0;padding-left:20px;max-width:60ch}
+.ruta-fin li{margin-bottom:8px}
 .song{width:100%;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;padding:12px 8px;border:0;border-bottom:1px solid var(--line);
   background:transparent;text-align:left;cursor:pointer}
 .song:hover{background:var(--surface)}
@@ -813,7 +819,13 @@ const isBlack = m => BLACK.has(pc(m));
 const freq = m => 440 * Math.pow(2, (m - 69) / 12);
 const octave = m => Math.floor(m / 12) - 1;
 const sys = () => settings.labels === 'en' ? 'en' : 'es';
-const nameOf = m => PCN[sys()][pc(m)];
+/* Las piezas en tonalidades con bemoles nombran las teclas negras como Si♭, Mi♭… en lugar de La♯, Re♯. */
+const PCF = {
+  es:['Do','Re♭','Re','Mi♭','Mi','Fa','Sol♭','Sol','La♭','La','Si♭','Si'],
+  en:['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B']
+};
+let FLATS = false;
+const nameOf = m => (FLATS ? PCF : PCN)[sys()][pc(m)];
 const altName = m => PCN[sys() === 'en' ? 'es' : 'en'][pc(m)];
 const fullName = m => nameOf(m) + octave(m);
 function toMidi(s){
@@ -902,16 +914,101 @@ const LESSONS = [
   {id:'estrellita-acordes', bpm:80, title:'Estrellita con acordes', summary:'Tu primera canción completa con acordes en la izquierda.',
    goal:'La canción entera: la derecha toca la melodía y la izquierda los acordes de Do, Fa y Sol. Practica primero la izquierda sola con la ayuda «Por partes» y después junta las manos al 50 %. Cuando te salga, en Canciones cada melodía tiene un nivel «Con acordes».',
    notes:'C4:1:1 C4:1:1 G4:1:4 G4:1:4 A4:1:5 A4:1:5 G4:2:4 F4:1:4 F4:1:4 E4:1:3 E4:1:3 D4:1:2 D4:1:2 C4:2:1 G4:1:5 G4:1:5 F4:1:4 F4:1:4 E4:1:3 E4:1:3 D4:2:2 G4:1:5 G4:1:5 F4:1:4 F4:1:4 E4:1:3 E4:1:3 D4:2:2 C4:1:1 C4:1:1 G4:1:4 G4:1:4 A4:1:5 A4:1:5 G4:2:4 F4:1:4 F4:1:4 E4:1:3 E4:1:3 D4:1:2 D4:1:2 C4:2:1',
-   left:'C3+E3+G3:4:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:4:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1'}
+   left:'C3+E3+G3:4:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:4:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 C3+F3+A3:2:5+2+1 C3+E3+G3:2:5+3+1 B2+D3+G3:2:5+3+1 C3+E3+G3:2:5+3+1'},
+  /* ----- Nivel 2 ----- */
+  {id:'cinco-fa', bpm:80, sig:-1, title:'Cinco dedos en Fa', summary:'Tu primer bemol: Si♭.',
+   goal:'Pon el pulgar en Fa: dedo 1 en Fa, 2 en Sol, 3 en La, 4 en Si♭ y 5 en Do. Si♭ es la tecla negra que está justo a la izquierda de Si: un bemol (♭) baja la nota a la tecla de al lado. En la partitura el bemol aparece una sola vez, al principio, junto a la clave: es la armadura de Fa mayor.',
+   notes:'F4:1:1 G4:1:2 A4:1:3 Bb4:1:4 C5:2:5 C5:2:5 Bb4:1:4 A4:1:3 G4:1:2 F4:1:1 F4:2:1 A4:2:3 C5:1:5 Bb4:1:4 A4:1:3 Bb4:1:4 A4:1:3 G4:1:2 F4:2:1 G4:1:2 Bb4:1:4 A4:1:3 G4:1:2 F4:4:1'},
+  {id:'escala-fa', bpm:72, sig:-1, title:'Escala de Fa mayor', summary:'El pulgar pasa después del dedo 4.',
+   goal:'En esta escala el pulgar no pasa después del dedo 3 sino después del 4: Fa, Sol, La y Si♭ con los dedos 1, 2, 3 y 4; el pulgar pasa por debajo para tocar Do, y siguen Re, Mi y Fa con 2, 3 y 4. Al bajar, el dedo 4 cruza por encima del pulgar para tocar Si♭.',
+   notes:'F4:1:1 G4:1:2 A4:1:3 Bb4:1:4 C5:1:1 D5:1:2 E5:1:3 F5:1:4 E5:1:3 D5:1:2 C5:1:1 Bb4:1:4 A4:1:3 G4:1:2 F4:2:1'},
+  {id:'armadura-sol', bpm:84, sig:1, title:'La armadura de Sol', summary:'El sostenido se escribe una sola vez, al principio.',
+   goal:'Mira la partitura: junto a la clave hay un sostenido en la línea de Fa. Es la armadura, y significa que todos los Fa de la pieza son Fa♯ aunque no lleven el signo al lado. Pon el pulgar en Re: dedos 1 a 5 en Re, Mi, Fa♯, Sol y La.',
+   notes:'G4:1:4 F#4:1:3 G4:1:4 A4:1:5 G4:2:4 D4:2:1 E4:1:2 F#4:1:3 G4:1:4 E4:1:2 D4:4:1 F#4:1:3 G4:1:4 A4:1:5 G4:1:4 F#4:1:3 E4:1:2 D4:2:1 E4:1:2 G4:1:4 F#4:1:3 A4:1:5 G4:4:4'},
+  {id:'escala-re', bpm:72, sig:2, title:'Escala de Re mayor', summary:'Dos sostenidos: Fa♯ y Do♯.',
+   goal:'La armadura ahora tiene dos sostenidos: Fa♯ y Do♯. Los dedos son los mismos de la escala de Do: 1, 2 y 3 en Re, Mi y Fa♯; el pulgar pasa por debajo para tocar Sol, y siguen La, Si, Do♯ y Re con 2, 3, 4 y 5.',
+   notes:'D4:1:1 E4:1:2 F#4:1:3 G4:1:1 A4:1:2 B4:1:3 C#5:1:4 D5:1:5 C#5:1:4 B4:1:3 A4:1:2 G4:1:1 F#4:1:3 E4:1:2 D4:2:1'},
+  {id:'re-mayor-menor', bpm:76, title:'Re mayor y Re menor', summary:'Una sola tecla cambia el color.',
+   goal:'Compara dos posiciones con el pulgar en Re. Con Fa♯ suena Re mayor, luminoso; con Fa natural suena Re menor, más oscuro. Lo único que cambia es el dedo 3: toca la tecla negra o la blanca de al lado.',
+   notes:'D4:1:1 E4:1:2 F#4:1:3 G4:1:4 A4:2:5 F#4:2:3 D4:1:1 E4:1:2 F4:1:3 G4:1:4 A4:2:5 F4:2:3 D4+F#4+A4:2:1+3+5 D4+F4+A4:2:1+3+5 A4:1:5 G4:1:4 F4:1:3 E4:1:2 D4+F4+A4:4:1+3+5'},
+  {id:'escala-izq', bpm:66, hand:'L', title:'Escala de Do con la izquierda', summary:'El dedo 3 cruza por encima del pulgar.',
+   goal:'La mano izquierda sube al revés que la derecha: empieza con el meñique en Do y llega al pulgar en Sol; entonces el dedo 3 cruza por encima para tocar La, y siguen Si y Do con 2 y 1. Al bajar, después de La el pulgar pasa por debajo para tocar Sol.',
+   notes:'C3:1:5 D3:1:4 E3:1:3 F3:1:2 G3:1:1 A3:1:3 B3:1:2 C4:1:1 B3:1:2 A3:1:3 G3:1:1 F3:1:2 E3:1:3 D3:1:4 C3:2:5'},
+  {id:'puntillo', bpm:80, title:'La negra con puntillo', summary:'Una nota de pulso y medio, seguida de una corta.',
+   goal:'El puntillo alarga la nota la mitad de lo que dura: una negra con puntillo vale un pulso y medio, y la corchea que le sigue completa el segundo pulso. Cuenta «1, y, 2, y»: la nota larga entra en el 1 y la corta en la «y» del 2.',
+   notes:'E4:1.5:3 F4:0.5:4 G4:2:5 G4:1.5:5 F4:0.5:4 E4:2:3 D4:1.5:2 E4:0.5:3 F4:1:4 D4:1:2 C4:4:1 E4:1.5:3 D4:0.5:2 C4:1:1 E4:1:3 G4:1.5:5 F4:0.5:4 E4:1:3 D4:1:2 C4:1.5:1 D4:0.5:2 E4:1:3 D4:1:2 C4:4:1'},
+  {id:'sincopa', bpm:76, title:'La síncopa', summary:'La nota larga cae entre dos pulsos.',
+   goal:'En la síncopa el acento se corre: una nota larga empieza en la «y», entre dos clics del metrónomo, y sigue sonando mientras pasa el siguiente. Cuenta «1, y, 2, y» y toca corto, largo, corto. Es el ritmo que hace bailar a mucha música popular.',
+   notes:'C4:0.5:1 E4:1:3 C4:0.5:1 G4:2:5 F4:0.5:4 D4:1:2 F4:0.5:4 E4:2:3 C4:0.5:1 E4:1:3 G4:0.5:5 E4:0.5:3 G4:1:5 E4:0.5:3 D4:0.5:2 F4:1:4 D4:0.5:2 C4:2:1 E4:0.5:3 G4:1:5 E4:0.5:3 C4:2:1 D4:0.5:2 F4:1:4 D4:0.5:2 E4:2:3 C4:0.5:1 E4:1:3 G4:0.5:5 F4:0.5:4 D4:1:2 F4:0.5:4 E4:0.5:3 D4:1:2 E4:0.5:3 C4:2:1'},
+  {id:'semicorcheas', bpm:60, title:'Semicorcheas', summary:'Cuatro notas en un solo pulso.',
+   goal:'La semicorchea dura un cuarto de pulso: caben cuatro en cada clic del metrónomo. Di «ca-fe-ci-to» en cada pulso para repartirlas parejas. Empieza al 50 % y con los dedos muy cerca de las teclas.',
+   notes:'C4:0.25:1 D4:0.25:2 E4:0.25:3 F4:0.25:4 G4:1:5 G4:0.25:5 F4:0.25:4 E4:0.25:3 D4:0.25:2 C4:1:1 C4:0.25:1 D4:0.25:2 E4:0.25:3 F4:0.25:4 G4:0.25:5 F4:0.25:4 E4:0.25:3 D4:0.25:2 C4:2:1 E4:0.25:3 F4:0.25:4 G4:0.25:5 F4:0.25:4 E4:1:3 D4:0.25:2 E4:0.25:3 F4:0.25:4 E4:0.25:3 D4:1:2 C4:0.25:1 E4:0.25:3 D4:0.25:2 F4:0.25:4 E4:0.25:3 G4:0.25:5 F4:0.25:4 D4:0.25:2 C4:2:1'},
+  {id:'galope', bpm:72, title:'Corchea y dos semicorcheas', summary:'El ritmo de galope.',
+   goal:'Una nota larga y dos rápidas en cada pulso: «pan, pa-ra, pan, pa-ra». La corchea ocupa la primera mitad del pulso y las dos semicorcheas, la segunda. Mantén el pulso parejo aunque las notas rápidas te quieran empujar.',
+   notes:'C4:0.5:1 C4:0.25:1 C4:0.25:1 E4:0.5:3 E4:0.25:3 E4:0.25:3 G4:0.5:5 G4:0.25:5 G4:0.25:5 E4:1:3 F4:0.5:4 F4:0.25:4 F4:0.25:4 D4:0.5:2 D4:0.25:2 D4:0.25:2 E4:2:3 C4:0.5:1 D4:0.25:2 E4:0.25:3 F4:0.5:4 E4:0.25:3 D4:0.25:2 E4:0.5:3 F4:0.25:4 G4:0.25:5 E4:1:3 D4:0.5:2 E4:0.25:3 F4:0.25:4 D4:1:2 C4:2:1'},
+  {id:'seis-octavos', bpm:100, pulse:1.5, meter:2, title:'El compás de 6/8', summary:'Dos pulsos, cada uno con tres corcheas.',
+   goal:'En el compás de 6/8 cada pulso se divide en tres corcheas en lugar de dos: cuenta «1, 2, 3, 4, 5, 6» con un pequeño acento en el 1 y en el 4. El metrónomo marca solo esos dos pulsos. Se siente como mecerse.',
+   notes:'C4:0.5:1 E4:0.5:3 G4:0.5:5 G4:1.5:5 F4:0.5:4 E4:0.5:3 D4:0.5:2 E4:1.5:3 C4:1:1 E4:0.5:3 G4:1:5 E4:0.5:3 D4:3:2 E4:0.5:3 F4:0.5:4 G4:0.5:5 F4:1:4 D4:0.5:2 E4:0.5:3 D4:0.5:2 C4:0.5:1 D4:1.5:2 E4:1:3 G4:0.5:5 F4:1:4 D4:0.5:2 C4:3:1'},
+  {id:'inversiones', bpm:66, title:'Inversiones del acorde de Do', summary:'Las mismas tres notas, en otro orden.',
+   goal:'Un acorde se puede tocar con cualquiera de sus notas abajo. Do, Mi, Sol es la posición fundamental. Si subes el Do una octava queda Mi, Sol, Do: la primera inversión, con los dedos 1, 2 y 5. Si subes también el Mi queda Sol, Do, Mi: la segunda inversión, con 1, 3 y 5. Suenan parecido porque son las mismas notas.',
+   notes:'C4:1:1 E4:1:3 G4:1:5 R:1 C4+E4+G4:4:1+3+5 E4:1:1 G4:1:2 C5:1:5 R:1 E4+G4+C5:4:1+2+5 G4:1:1 C5:1:3 E5:1:5 R:1 G4+C5+E5:4:1+3+5 E4+G4+C5:2:1+2+5 C4+E4+G4:2:1+3+5 C4+E4+G4:4:1+3+5'},
+  {id:'acordes-menores', bpm:66, title:'Acordes menores', summary:'Re menor, Mi menor y La menor.',
+   goal:'En las teclas blancas hay tres acordes menores: Re menor (Re, Fa, La), Mi menor (Mi, Sol, Si) y La menor (La, Do, Mi). Los tres se tocan con los dedos 1, 3 y 5, moviendo toda la mano de un acorde al otro. Compáralos con Do mayor, que suena al principio y al final.',
+   notes:'C4+E4+G4:4:1+3+5 D4+F4+A4:4:1+3+5 E4+G4+B4:4:1+3+5 D4+F4+A4:4:1+3+5 D4:1:1 F4:1:3 A4:2:5 E4:1:1 G4:1:3 B4:2:5 A3+C4+E4:4:1+3+5 C4+E4+G4:4:1+3+5'},
+  {id:'sol-siete', bpm:66, title:'El acorde de Sol7', summary:'El acorde que pide volver a Do.',
+   goal:'Sol7 es el acorde de Sol con una nota más: Fa. Sin sacar la mano de la posición de Do se toca con Si, Fa y Sol: el pulgar baja a Si y los dedos 4 y 5 tocan Fa y Sol. Suena tenso, como una pregunta, y el acorde de Do la responde. Escucha esa tensión y ese descanso.',
+   notes:'C4+E4+G4:4:1+3+5 B3+F4+G4:4:1+4+5 C4+E4+G4:4:1+3+5 B3+F4+G4:2:1+4+5 C4+E4+G4:2:1+3+5 C4+F4+A4:4:1+3+5 B3+F4+G4:4:1+4+5 C4+E4+G4:2:1+3+5 B3+F4+G4:2:1+4+5 C4+E4+G4:4:1+3+5'},
+  {id:'enlace', bpm:66, title:'Enlazar acordes', summary:'Do, La menor, Fa y Sol casi sin mover la mano.',
+   goal:'Con inversiones se pasa de un acorde a otro moviendo muy poco. De Do (Do, Mi, Sol) a La menor solo sube el meñique, de Sol a La. De La menor a Fa solo cambia Mi por Fa. Para Sol baja toda la mano un paso: Si, Re, Sol. Antes de cada cambio, busca qué notas se quedan en su lugar.',
+   notes:'C4+E4+G4:4:1+3+5 C4+E4+A4:4:1+2+5 C4+F4+A4:4:1+3+5 B3+D4+G4:4:1+2+5 C4+E4+G4:2:1+3+5 C4+E4+A4:2:1+2+5 C4+F4+A4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:4:1+3+5'},
+  {id:'alberti', bpm:72, hand:'L', title:'El bajo Alberti', summary:'El acorde repartido: abajo, arriba, medio, arriba.',
+   goal:'Un acompañamiento clásico: las notas del acorde una por una, en el orden abajo, arriba, medio, arriba. Para Do: Do, Sol, Mi, Sol con los dedos 5, 1, 3 y 1. La mano no se desplaza; la muñeca gira un poco hacia cada lado, como al abrir una puerta.',
+   notes:'C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 C3:0.5:5 A3:0.5:1 F3:0.5:2 A3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3+E3+G3:4:5+3+1'},
+  {id:'alberti-melodia', bpm:72, title:'Melodía con bajo Alberti', summary:'La derecha canta notas largas sobre el acompañamiento.',
+   goal:'Junta las dos manos: la izquierda toca el bajo Alberti del ejercicio anterior y la derecha, una melodía de notas largas. Practica primero cada mano sola con la ayuda «Por partes». La izquierda debe sonar más suave que la melodía.',
+   notes:'E4:2:3 G4:2:5 F4:2:4 D4:2:2 E4:2:3 C4:2:1 D4:4:2 E4:2:3 G4:2:5 F4:2:4 D4:2:2 E4:1:3 C4:1:1 D4:2:2 C4:4:1',
+   left:'C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3:0.5:5 G3:0.5:1 E3:0.5:3 G3:0.5:1 B2:0.5:5 G3:0.5:1 D3:0.5:3 G3:0.5:1 C3+E3+G3:4:5+3+1'},
+  {id:'fuerte-suave', bpm:80, dyn:'0:p 8:f 16:p 24:f', title:'Fuerte y suave', summary:'La misma frase con dos intensidades.',
+   goal:'La música no suena siempre igual de fuerte. La letra p (piano) pide tocar suave, y la f (forte), fuerte. Suave no es lento: deja caer el dedo con poco peso. Fuerte no es golpear: usa el peso del brazo. Toca cada frase primero suave y después fuerte, y exagera la diferencia.',
+   notes:'C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:2:5 E4:2:3 C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:2:5 E4:2:3 G4:1:5 F4:1:4 E4:1:3 D4:1:2 E4:2:3 C4:2:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 E4:2:3 C4:2:1'},
+  {id:'eco', bpm:84, dyn:'0:f 4:p 8:f 12:p 16:f 20:p 24:f 28:p', title:'El eco', summary:'Cada idea se repite como un eco lejano.',
+   goal:'Un juego de contraste: cada compás se toca fuerte y enseguida se repite suave, como un eco entre montañas. Prepara el cambio antes de tocar: para el eco, acerca los dedos a las teclas y casi no levantes la mano.',
+   notes:'C4:1:1 E4:1:3 G4:2:5 C4:1:1 E4:1:3 G4:2:5 G4:1:5 F4:1:4 E4:2:3 G4:1:5 F4:1:4 E4:2:3 E4:1:3 F4:1:4 G4:1:5 E4:1:3 E4:1:3 F4:1:4 G4:1:5 E4:1:3 D4:1:2 E4:1:3 C4:2:1 D4:1:2 E4:1:3 C4:2:1'},
+  {id:'staccato', bpm:84, art:'0:s 28:n', title:'Staccato: notas cortas', summary:'Toca y suelta, como si la tecla quemara.',
+   goal:'El punto encima o debajo de una nota es el staccato: la nota suena corta y separada de la siguiente. Toca la tecla y suéltala enseguida, con un pequeño rebote de la muñeca, pero sin apurar el pulso: el silencio entre las notas también cuenta. Las barras se ven cortas para recordártelo. La última nota es larga.',
+   notes:'C4:1:1 E4:1:3 G4:1:5 E4:1:3 C4:1:1 E4:1:3 G4:1:5 R:1 F4:1:4 D4:1:2 F4:1:4 D4:1:2 E4:1:3 C4:1:1 E4:1:3 R:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 C4:1:1 D4:1:2 E4:1:3 R:1 D4:1:2 F4:1:4 E4:1:3 D4:1:2 C4:4:1'},
+  {id:'legato', bpm:76, art:'0:l', title:'Legato: notas ligadas', summary:'No sueltes una nota hasta que suene la siguiente.',
+   goal:'Legato es lo contrario del staccato: las notas se unen sin huecos, como al cantar con una sola respiración. No sueltes una tecla hasta que la siguiente ya esté sonando; por un instante las dos están abajo. En este ejercicio la app revisa que mantengas cada nota hasta el final de su barra.',
+   notes:'C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:2:5 E4:2:3 F4:1:4 E4:1:3 D4:1:2 C4:1:1 D4:4:2 E4:1:3 F4:1:4 G4:1:5 E4:1:3 F4:2:4 D4:2:2 E4:1:3 D4:1:2 C4:1:1 D4:1:2 C4:4:1'},
+  {id:'ligado-picado', bpm:80, art:'0:l 8:s 16:l 24:s', title:'Ligado y picado', summary:'Dos maneras de decir la misma frase.',
+   goal:'La misma melodía, primero ligada y después en staccato. Fíjate cómo cambia el carácter: ligada suena tranquila y cantada; picada, juguetona. Mira las barras: las largas se mantienen hasta el final, las cortas se sueltan enseguida.',
+   notes:'C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:1:5 E4:1:3 C4:2:1 C4:1:1 D4:1:2 E4:1:3 F4:1:4 G4:1:5 E4:1:3 C4:1:1 R:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 E4:1:3 D4:1:2 C4:2:1 G4:1:5 F4:1:4 E4:1:3 D4:1:2 E4:1:3 D4:1:2 C4:1:1 R:1'},
+  {id:'pedal', bpm:72, ped:'0-4 4-8 8-12 12-16 16-20 20-24 24-28 28-32', title:'El pedal derecho', summary:'Deja sonar el acorde y cambia el pedal en cada compás.',
+   goal:'El pedal derecho deja sonando las notas aunque sueltes las teclas. Písalo con el pie derecho, con el talón apoyado en el suelo. En cada compás nuevo se cambia: toca la primera nota, levanta el pie y vuelve a pisar enseguida, para que el acorde anterior no se mezcle con el nuevo. La franja de la derecha muestra cuándo va pisado. Si tu teclado no tiene pedal conectado, toca las notas igual: la app califica solo eso.',
+   notes:'C4:1:1 E4:1:2 G4:1:3 C5:1:5 A3:1:1 C4:1:2 E4:1:3 A4:1:5 A3:1:1 C4:1:2 F4:1:4 A4:1:5 B3:1:1 D4:1:2 G4:1:4 B4:1:5 C4:1:1 E4:1:2 G4:1:3 C5:1:5 A3:1:1 C4:1:2 F4:1:4 A4:1:5 B3:1:1 D4:1:2 G4:1:4 B4:1:5 C4+E4+G4:4:1+3+5'},
+  {id:'estudio-fa', bpm:76, sig:-1, dyn:'0:p 16:f', title:'Pequeño estudio en Fa', summary:'Todo junto: dos manos, armadura, bajo Alberti y matices.',
+   goal:'Una pieza corta para reunir lo aprendido en este nivel. Está en Fa mayor, con Si♭ en la armadura; la izquierda acompaña con bajo Alberti; la primera mitad va suave y la segunda, fuerte. Trabájala por partes y sin prisa: es tu pieza de graduación del Nivel 2.',
+   notes:'A4:2:3 C5:2:5 Bb4:2:4 G4:2:2 A4:1:3 G4:1:2 F4:1:1 A4:1:3 G4:4:2 A4:2:3 C5:2:5 Bb4:1:4 A4:1:3 G4:1:2 Bb4:1:4 A4:2:3 G4:2:2 F4:4:1',
+   left:'F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 E3:0.5:5 C4:0.5:1 G3:0.5:3 C4:0.5:1 E3:0.5:5 C4:0.5:1 G3:0.5:3 C4:0.5:1 F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 E3:0.5:5 C4:0.5:1 G3:0.5:3 C4:0.5:1 E3:0.5:5 C4:0.5:1 G3:0.5:3 C4:0.5:1 F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 F3:0.5:5 D4:0.5:1 Bb3:0.5:2 D4:0.5:1 F3:0.5:5 D4:0.5:1 Bb3:0.5:2 D4:0.5:1 F3:0.5:5 C4:0.5:1 A3:0.5:3 C4:0.5:1 E3:0.5:5 C4:0.5:1 G3:0.5:3 C4:0.5:1 F3+A3+C4:4:5+3+1'}
 ];
 const UNITS = [
   {title:'Tus primeras notas', ids:['do-central','do-re-mi','cinco-do','saltos','ritmo','silencios','mary']},
   {title:'Mover la mano', ids:['cinco-sol','escala','fa-sost','escala-sol']},
   {title:'La mano izquierda', ids:['izquierda','turnos']},
   {title:'Acordes y dos manos', ids:['acorde-do','tres-acordes','arpegio','la-menor','dos-manos','estrellita-manos']},
-  {title:'Acompañar con la mano izquierda', ids:['acorde-izq','tres-acordes-izq','bajo-acorde','melodia-acordes','estrellita-acordes']}
+  {title:'Acompañar con la mano izquierda', ids:['acorde-izq','tres-acordes-izq','bajo-acorde','melodia-acordes','estrellita-acordes']},
+  {lvl:2, title:'Nuevas tonalidades', ids:['cinco-fa','escala-fa','armadura-sol','escala-re','re-mayor-menor','escala-izq']},
+  {lvl:2, title:'Ritmos nuevos', ids:['puntillo','sincopa','semicorcheas','galope','seis-octavos']},
+  {lvl:2, title:'Más acordes', ids:['inversiones','acordes-menores','sol-siete','enlace','alberti','alberti-melodia']},
+  {lvl:2, title:'Tocar con expresión', ids:['fuerte-suave','eco','staccato','legato','ligado-picado','pedal','estudio-fa']}
+];
+/* La ruta tiene niveles; cada nivel agrupa varias unidades. */
+const RUTA = [
+  {n:1, title:'Nivel 1 · Primeros pasos', desc:'Las notas, las dos manos y tus primeros acordes.'},
+  {n:2, title:'Nivel 2 · Tocar con soltura', desc:'Tonalidades con sostenidos y bemoles, ritmos más finos, más acordes y expresión: fuerte y suave, ligado y picado, pedal.'}
 ];
 LESSONS.forEach((l, i) => { l.lesson = true; l.index = i; l.key = l.id; });
+UNITS.forEach(u => u.ids.forEach(id => { LESSONS.find(l => l.id === id).lvl = u.lvl || 1; }));
 
 /* ---------- Canciones (melodías de dominio público) ---------- */
 const SONGS = [
@@ -1004,6 +1101,17 @@ function decodeNotes(str){
     return {midi: m, start: s / 24, dur: d / 24, finger: 0, hand: h === 1 ? 'L' : 'R'};
   }).filter(n => n.midi >= 21 && n.midi <= 108 && isFinite(n.start) && n.dur > 0);
 }
+/* Expresión de una pieza. dyn y art son listas «pulso:valor» que valen desde ese pulso hasta la marca siguiente:
+   dyn f = fuerte, p = suave; art s = staccato (corta), l = legato (ligada); cualquier otro valor las quita.
+   ped es una lista de tramos «desde-hasta» en los que va pisado el pedal derecho. */
+function marksOf(str){
+  return String(str || '').trim().split(/\s+/).filter(Boolean).map(x => { const [t, v] = x.split(':'); return {t: parseFloat(t), v: v || ''}; })
+    .filter(x => isFinite(x.t)).sort((a, b) => a.t - b.t);
+}
+function markAt(list, t){ let v = ''; for (const k of list){ if (k.t > t + 1e-6) break; v = k.v; } return v; }
+function pedSpans(str){
+  return String(str || '').trim().split(/\s+/).filter(Boolean).map(x => { const [a, b] = x.split('-').map(parseFloat); return {a, b}; }).filter(x => x.b > x.a);
+}
 function songData(s){
   if (s._cache) return s._cache;
   let out = [], len = 0;
@@ -1014,6 +1122,14 @@ function songData(s){
   } catch(e){ out = []; len = 0; }
   for (const n of out) len = Math.max(len, n.start + n.dur);
   out.sort((a, b) => a.start - b.start || a.midi - b.midi);
+  if (s.dyn || s.art){
+    const dy = marksOf(s.dyn), ar = marksOf(s.art);
+    for (const n of out){
+      const d = markAt(dy, n.start), a = markAt(ar, n.start);
+      if (d === 'f' || d === 'p') n.dyn = d;
+      if (a === 's' || a === 'l') n.art = a;
+    }
+  }
   s._cache = {notes: out, length: len};
   return s._cache;
 }
@@ -1855,6 +1971,7 @@ function setPedal(src, on){
   pedal = pedalSrc.size > 0;
   $('#btnPedal').setAttribute('aria-pressed', pedal ? 'true' : 'false');
   if (!pedal) for (const [m, v] of [...voices]) if (!v.held) stopVoice(m, 0.12);
+  if (src === 'midi' && view === 'player' && P) pedalMark(on);
 }
 
 /* ---------- Teclado en pantalla ---------- */
@@ -1930,7 +2047,7 @@ function press(m, src, vel = 0.8){
     keyEls.get(m)?.classList.add('down');
     if (!(src === 'midi' && settings.midiMute) && !(view === 'player' && P && P.mode === 'juntos' && autoCount.has(m))) startVoice(m, vel);
   }
-  onPress(m);
+  onPress(m, src, vel);
 }
 function release(m){
   const c = (down.get(m) || 0) - 1;
@@ -1994,11 +2111,11 @@ window.addEventListener('keyup', e => {
 });
 window.addEventListener('blur', () => { releaseAll(); setPedal('space', false); });
 
-function onPress(m){
+function onPress(m, src, vel){
   if (view === 'free'){
     lastNote = m; updateDisplay();
     if (rec.on) rec.events.push({t: performance.now() - rec.start, m, on: true});
-  } else if (view === 'player') judge(m);
+  } else if (view === 'player') judge(m, src, vel);
   else if (view === 'reto') judgeReto(m);
   else if (view === 'teo') teoPress(m);
 }
@@ -2184,19 +2301,29 @@ function renderLessons(){
   const doneOf = l => (best[l.key]?.stars || 0) >= 2;
   const done = LESSONS.filter(doneOf).length;
   const nextIdx = LESSONS.findIndex(l => !doneOf(l));
-  let h = `<p class="lead">Ejercicios cortos y en orden para aprender desde cero. Cada nota muestra qué dedo usar. Pasa al siguiente cuando consigas dos estrellas. Al abrir un ejercicio puedes activar las ayudas del profesor: metrónomo, partitura, práctica por partes y más.</p>
+  let h = `<p class="lead">Ejercicios cortos y en orden para aprender desde cero, en dos niveles. Cada nota muestra qué dedo usar. Pasa al siguiente cuando consigas dos estrellas. Al abrir un ejercicio puedes activar las ayudas del profesor: metrónomo, partitura, práctica por partes y más.</p>
     <div class="path-prog"><div class="bar"><i style="width:${(done / LESSONS.length * 100).toFixed(1)}%"></i></div><span>${done} de ${LESSONS.length} completados</span></div>`;
-  for (const u of UNITS){
-    h += `<section class="lvl"><h2>${u.title}</h2>`;
-    for (const id of u.ids){
-      const l = LESSONS.find(x => x.id === id), b = best[l.key];
-      const right = b ? starsHTML(b) : l.index === nextIdx ? '<span class="next-tag">Siguiente</span>' : '';
-      h += `<button class="song${l.index === nextIdx ? ' is-next' : ''}" data-id="${l.key}">
-        <span class="num${doneOf(l) ? ' done' : ''}" aria-hidden="true">${l.index + 1}</span>
-        <span><span class="t">${l.title}</span><span class="o">${l.summary}</span></span>${right}</button>`;
+  for (const lv of RUTA){
+    const us = UNITS.filter(u => (u.lvl || 1) === lv.n), ls = LESSONS.filter(l => l.lvl === lv.n), d = ls.filter(doneOf).length;
+    h += `<div class="ruta-lv"><h2>${lv.title}</h2><span>${d === ls.length ? 'Completo' : `${d} de ${ls.length}`}</span><p>${lv.desc}</p></div>`;
+    for (const u of us){
+      h += `<section class="lvl"><h3>${u.title}</h3>`;
+      for (const id of u.ids){
+        const l = LESSONS.find(x => x.id === id), b = best[l.key];
+        const right = b ? starsHTML(b) : l.index === nextIdx ? '<span class="next-tag">Siguiente</span>' : '';
+        h += `<button class="song${l.index === nextIdx ? ' is-next' : ''}" data-id="${l.key}">
+          <span class="num${doneOf(l) ? ' done' : ''}" aria-hidden="true">${l.index + 1}</span>
+          <span><span class="t">${l.title}</span><span class="o">${l.summary}</span></span>${right}</button>`;
+      }
+      h += '</section>';
     }
-    h += '</section>';
   }
+  h += `<div class="ruta-lv"><h2>${done === LESSONS.length ? 'Terminaste la ruta. ¿Qué sigue?' : '¿Y después de los ejercicios?'}</h2></div>
+    <ul class="ruta-fin">
+      <li><b>Canciones con acordes.</b> Cada canción tiene tres niveles: melodía, con bajo y con acordes. El tercero usa lo que aprendes en esta ruta.</li>
+      <li><b>Tus propias canciones.</b> Importa la música que te gusta y súbele la dificultad poco a poco, hasta tocarla completa con las dos manos.</li>
+      <li><b>Lectura y oído.</b> Los retos en nivel 3, y estos mismos ejercicios en modo Ritmo y sin la ayuda «Digitación».</li>
+    </ul>`;
   const mine = Data.items.filter(s => s.kind === 'ejercicio');
   if (mine.length) h += '<section class="lvl"><h2>Tus ejercicios guardados</h2>' + mine.map(rowItem).join('') + '</section>';
   return h;
@@ -2734,6 +2861,24 @@ function readColors(){
 const bps = () => P.song.bpm * P.speed / 60;
 const tolBeats = () => Math.min(0.45, 0.28 * bps());
 const handOf = n => n.hand === 'L' ? 'L' : 'R';
+/* Expresión: cómo suena una nota cuando la toca la app, y los límites para calificarla. */
+const EXPR = {f: 'fuerte', p: 'suave', s: 'corto', l: 'ligado'};
+const DYN_GAP = 12;   // diferencia mínima entre fuerte y suave, en la escala de 0 a 127 que envía el teclado
+const velOf = n => n.dyn === 'f' ? 0.98 : n.dyn === 'p' ? 0.42 : 0.75;
+const stacLimit = n => Math.max(0.2, Math.min(0.5, 0.5 * n.dur / bps()));   // segundos que puede durar una nota corta
+function soundLen(n){
+  if (n.art === 's') return Math.min(0.22, 0.35 * n.dur / bps());
+  let end = n.start + n.dur;
+  for (const sp of P.ped) if (n.start >= sp.a - 1e-6 && n.start < sp.b - 1e-6) end = Math.max(end, sp.b);
+  return (end - n.start) / bps() * 0.92;
+}
+/* Tonalidad de la pieza: sig > 0 son sostenidos en la armadura y sig < 0, bemoles. */
+function keySig(s){
+  const k = Math.max(-5, Math.min(5, Math.round(+s.sig || 0))), n = Math.abs(k);
+  const alt = (k > 0 ? [6, 1, 8, 3, 10] : [10, 3, 8, 1, 6]).slice(0, n);
+  const nat = (k > 0 ? [5, 0, 7, 2, 9] : [11, 4, 9, 2, 7]).slice(0, n);
+  return {k, n, alt: new Set(alt), nat: new Set(nat), pos: (k > 0 ? [38, 35, 39, 36, 33] : [34, 37, 33, 36, 32]).slice(0, n)};
+}
 
 /* Compás de la pieza: pulso (en unidades de negra), pulsos por compás y anacrusa. */
 function meterOf(s){
@@ -2782,6 +2927,11 @@ function buildRun(){
   const mine = P.notes.filter(n => !n.auto);
   P.total = mine.length;
   P.first = mine.length ? mine[0].start : P.notes.length ? P.notes[0].start : P.a;
+  const inRun = t => t >= a - 1e-6 && t < b - 1e-6;
+  P.hasDyn = mine.some(n => n.dyn);
+  P.dynMarks = P.level ? [] : marksOf(s.dyn).filter(k => (k.v === 'f' || k.v === 'p') && inRun(k.t));
+  P.ped = P.level ? [] : pedSpans(s.ped).filter(sp => inRun(sp.a)).map(sp => ({a: sp.a, b: Math.min(sp.b, b), down: 0, lift: false}));
+  P.sig = keySig(s);
   buildSheet();
 }
 function rebuild(){ if (!P) return; buildRun(); buildSongKeyboard(); reset(); }
@@ -2816,7 +2966,8 @@ function layoutScore(){
   const stage = $('#stage');
   let h = 0, k = DEV.k;
   if (P && aidOn('score')){
-    const base = P.sheet.staves.length === 2 ? 150 : 90;
+    // Con un solo pentagrama, los matices y el pedal se escriben debajo: hace falta un renglón más.
+    const base = P.sheet.staves.length === 2 ? 150 : 90 + (P.dynMarks.length || P.ped.length ? 14 : 0);
     // La partitura grande solo se usa si deja lugar suficiente para las barras.
     if (stage.clientHeight < base * k + 150) k = 1;
     h = Math.round(base * k);
@@ -2855,9 +3006,11 @@ function openSong(key, ctx, ses){
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
   const d = songData(s);
   if (!d.notes.length) return;
+  FLATS = (+s.sig || 0) < 0;
   P = {song: s, ctx: ctx ? Object.assign({}, ctx, {force: Object.assign({parts: false}, ctx.st.force || {})}) : null,
        level: hasLevels(s) ? curLevel(s) : 0, notes: [], mode: ctx ? (ctx.st.mode || 'esperar') : settings.mode, speed: settings.speed, t: 0, playing: false, waiting: false,
-       hits: 0, errors: 0, shorts: 0, finished: false, timers: [], lastTs: 0, held: new Map(), fb: new Map(), offs: [], lap: 1, lapMsg: '', scoreH: 0,
+       hits: 0, errors: 0, shorts: 0, longs: 0, finished: false, timers: [], lastTs: 0, held: new Map(), fb: new Map(), offs: [], lap: 1, lapMsg: '', scoreH: 0,
+       ped: [], dynMarks: [], pedSeen: false,
        ses: ses == null || ctx ? null : ses};
   aidInfo = '';
   view = 'player'; setTabs();
@@ -2942,16 +3095,17 @@ $('#handsSeg').addEventListener('click', e => {
 $('#btnLevel').onclick = () => { reset(); };
 function leavePlayer(){
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
-  P = null; guideKey = ''; guideEls.forEach(el => el.classList.remove('guide', 'wait', 'lh')); guideEls = [];
+  P = null; FLATS = false; guideKey = ''; guideEls.forEach(el => el.classList.remove('guide', 'wait', 'lh')); guideEls = [];
   cancelAnimationFrame(raf); raf = 0;
   $('#hint').hidden = true;
   $('#stage').style.setProperty('--sh', '0px'); scoreCv.hidden = true;
 }
 function clearRun(){
   P.timers.forEach(clearTimeout); P.timers = []; clearAuto();
-  P.notes.forEach(n => { n.state = 0; n.short = false; n.sung = false; });
+  P.notes.forEach(n => { n.state = 0; n.short = false; n.long = false; n.sung = false; n.src = ''; n.vel = 0; });
   P.held.clear(); P.fb = new Map(); P.offs = [];
-  Object.assign(P, {t: P.t0, waiting: false, hits: 0, errors: 0, shorts: 0, finished: false});
+  P.ped.forEach(sp => { sp.down = 0; sp.lift = false; });
+  Object.assign(P, {t: P.t0, waiting: false, hits: 0, errors: 0, shorts: 0, longs: 0, finished: false, pedSeen: pedalSrc.has('midi')});
 }
 function reset(){
   if (!P) return;
@@ -2963,7 +3117,9 @@ function reset(){
   $('#soKicker').hidden = !kick; $('#soKicker').textContent = kick;
   $('#soTitle').textContent = s.title;
   $('#soGoal').hidden = !s.goal; $('#soGoal').textContent = s.goal || '';
-  $('#soDesc').textContent = MODE_DESC[P.mode] + (P.ctx ? ` Para aprobar: ${reqText(P.ctx.st)}.` : '');
+  $('#soDesc').textContent = MODE_DESC[P.mode] + (P.ctx ? ` Para aprobar: ${reqText(P.ctx.st)}.` : '')
+    + (P.hasDyn ? ' La fuerza de cada nota se mide con un teclado sensible conectado por USB.' : '')
+    + (P.ped.length ? ' El pedal se revisa si tu teclado tiene uno conectado.' : '');
   renderLevelPick(); renderAids();
   guideKey = '*'; updateGuide(); updateProgress(); setPlayIcon();
 }
@@ -3028,25 +3184,40 @@ function fbOf(start){
   return f;
 }
 const needHold = n => n.dur * 0.7 / bps() >= 0.3;
-function hitNote(n, m){
+function hitNote(n, m, src, vel){
   n.state = 1; P.hits++; flashKey(m, 'ok');
-  if (aidOn('dur') && needHold(n)) P.held.set(m, n);
+  n.src = src || ''; n.vel = vel || 0; n.at = performance.now();
+  // Se vigila cuándo se suelta la tecla: las notas cortas siempre, las ligadas siempre, y las demás con la ayuda «Duración».
+  if (n.art === 's' || ((aidOn('dur') || n.art === 'l') && needHold(n))) P.held.set(m, n);
 }
+function tooLong(n){ return n.art === 's' && !n.long && (performance.now() - n.at) / 1000 > stacLimit(n); }
 function releaseJudge(m){
   if (!P) return;
   const n = P.held.get(m); if (!n) return;
   P.held.delete(m);
   if (P.finished || !P.playing) return;
-  if (P.t < n.start + n.dur * 0.7 - 1e-6){ n.short = true; P.shorts++; }
+  if (n.art === 's'){ if (tooLong(n)){ n.long = true; P.longs++; } }
+  else if (n.art === 'l'){
+    // Ligada: vale si se mantuvo casi toda su duración, o si la nota siguiente de esa mano ya estaba sonando al soltarla.
+    const h = handOf(n), nx = P.notes.find(x => !x.auto && handOf(x) === h && x.start > n.start + 1e-6);
+    if (P.t < n.start + n.dur * 0.8 - 1e-6 && !(nx && nx.state === 1)){ n.short = true; P.shorts++; }
+  }
+  else if (P.t < n.start + n.dur * 0.7 - 1e-6){ n.short = true; P.shorts++; }
 }
-function judge(m){
+/* El pedal del teclado: se anota que existe y, al soltarlo, si fue un cambio hecho cerca del inicio de un tramo. */
+function pedalMark(on){
+  P.pedSeen = true;
+  if (on || !P.playing || P.finished) return;
+  for (const sp of P.ped) if (Math.abs(P.t - sp.a) <= 0.6) sp.lift = true;
+}
+function judge(m, src, vel){
   if (!P || !P.playing || P.finished || P.mode === 'escuchar') return;
   if (P.mode === 'esperar'){
     const grp = pendingGroup(); if (!grp.length) return;
     const s = grp[0].start;
     const n = grp.find(x => x.midi === m);
     if (n){
-      if (s - P.t <= 1.5){ hitNote(n, m); if (grp.length === 1) P.waiting = false; }
+      if (s - P.t <= 1.5){ hitNote(n, m, src, vel); if (grp.length === 1) P.waiting = false; }
     } else if (!P.notes.some(x => x.state === 1 && !x.auto && x.midi === m && Math.abs(x.start - s) < 1e-6)){
       P.errors++; flashKey(m, 'bad');
       const f = fbOf(s); f.errs++; f.wrong.push(m);
@@ -3057,7 +3228,7 @@ function judge(m){
       if (n.start - P.t > tol) break;
       if (n.state === 0 && !n.auto && n.midi === m && Math.abs(n.start - P.t) <= tol){ hit = n; break; }
     }
-    if (hit){ hitNote(hit, m); P.offs.push((P.t - hit.start) / bps()); }
+    if (hit){ hitNote(hit, m, src, vel); P.offs.push((P.t - hit.start) / bps()); }
     else {
       P.errors++; flashKey(m, 'bad');
       // La tecla correcta fuera de tiempo es un fallo de ritmo; otra tecla, un fallo de nota.
@@ -3086,12 +3257,16 @@ function step(dt){
     const k0 = Math.floor((tPrev - M.g0) / M.pulse + 1e-9), k1 = Math.floor((P.t - M.g0) / M.pulse + 1e-9);
     if (k1 > k0) tick(((k1 % M.meter) + M.meter) % M.meter === 0);
   }
+  if (P.ped.length && pedalSrc.has('midi')){
+    P.pedSeen = true;
+    for (const sp of P.ped){ const x = Math.min(P.t, sp.b) - Math.max(tPrev, sp.a); if (x > 0) sp.down += x; }
+  }
   const listen = P.mode === 'escuchar', duo = P.mode === 'juntos';
   for (const n of P.notes){
     if (n.start > P.t) break;
-    if (n.state === 0 && (listen || n.auto)){ n.state = 3; playFor(n.midi, n.dur / bps() * 0.92, P.timers); }
+    if (n.state === 0 && (listen || n.auto)){ n.state = 3; playFor(n.midi, soundLen(n), P.timers, velOf(n)); }
     // Modo Juntos: la app hace sonar cada nota en su momento, la toque o no el alumno.
-    else if (duo && !n.auto && !n.sung){ n.sung = true; playFor(n.midi, n.dur / bps() * 0.92, P.timers, 0.6); }
+    else if (duo && !n.auto && !n.sung){ n.sung = true; playFor(n.midi, soundLen(n), P.timers, 0.8 * velOf(n)); }
   }
   if (P.mode === 'ritmo' || duo){
     const tol = tolBeats();
@@ -3110,6 +3285,10 @@ function hintText(grp){
   if (gs.length === 1) return fing && gs[0].finger ? `Toca ${nameOf(gs[0].midi)} con el dedo ${gs[0].finger}${who}` : `Toca ${nameOf(gs[0].midi)}${who}`;
   return 'Toca ' + part(gs);
 }
+function exprHint(text, grp){
+  const n = grp[0], bits = [n.dyn && EXPR[n.dyn], n.art && EXPR[n.art]].filter(Boolean);
+  return bits.length ? text.replace(/\.$/, '') + ' · ' + bits.join(', ') : text;
+}
 function updateGuide(){
   let grp = [], wait = false;
   if (P && P.playing && P.mode !== 'escuchar'){
@@ -3117,7 +3296,7 @@ function updateGuide(){
     if (g0.length && g0[0].start - P.t <= 2){ grp = g0; wait = P.waiting; }
   }
   const hide = grp.length > 0 && isBlind() && !((P.fb.get(Math.round(grp[0].start * 24)) || {}).errs >= 2);
-  const key = grp.map(n => n.midi + n.hand).join(',') + (hide ? '#' : '');
+  const key = grp.map(n => n.midi + n.hand + (n.dyn || '') + (n.art || '')).join(',') + (hide ? '#' : '');
   if (key !== guideKey){
     guideEls.forEach(el => el.classList.remove('guide', 'wait', 'lh'));
     guideEls = [];
@@ -3127,7 +3306,7 @@ function updateGuide(){
     }
     guideKey = key;
     const hint = $('#hint');
-    if (grp.length){ hint.textContent = hide ? 'Lee la nota marcada en la partitura' : hintText(grp); hint.hidden = false; } else hint.hidden = true;
+    if (grp.length){ hint.textContent = exprHint(hide ? 'Lee la nota marcada en la partitura' : hintText(grp), grp); hint.hidden = false; } else hint.hidden = true;
   }
   guideEls.forEach(el => el.classList.toggle('wait', wait));
 }
@@ -3135,12 +3314,49 @@ function updateProgress(){
   if (!P) return;
   $('#pProg').style.width = (Math.max(0, Math.min(1, (P.t - P.a) / Math.max(0.01, P.end - P.a))) * 100) + '%';
 }
+/* Fuerte y suave, y pedal: solo se califican si el teclado los envía. La fuerza se compara entre las notas
+   marcadas f y las marcadas p, así no depende de qué tan sensible sea cada teclado. */
+function exprResult(){
+  const out = {dyn: null, ped: null};
+  if (P.hasDyn){
+    const mine = P.notes.filter(n => !n.auto && n.dyn && n.state === 1), mi = mine.filter(n => n.src === 'midi');
+    const raw = n => Math.round((n.vel - 0.35) / 0.65 * 127), avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const f = mi.filter(n => n.dyn === 'f').map(raw), p = mi.filter(n => n.dyn === 'p').map(raw), all = mi.map(raw);
+    if (f.length < 2 || p.length < 2 || mi.length < mine.length * 0.6 || Math.max(...all) - Math.min(...all) < 4) out.dyn = {measured: false};
+    else { const d = avg(f) - avg(p); out.dyn = {measured: true, ok: d >= DYN_GAP, diff: d}; }
+  }
+  if (P.ped.length){
+    if (!P.pedSeen) out.ped = {measured: false};
+    else {
+      const good = P.ped.filter((sp, i) => sp.down >= 0.6 * (sp.b - sp.a) && (i === 0 || sp.lift)).length;
+      out.ped = {measured: true, good, total: P.ped.length, ok: good >= Math.ceil(P.ped.length * 0.6)};
+    }
+  }
+  return out;
+}
 function runResult(){
+  for (const n of P.held.values()) if (tooLong(n)){ n.long = true; P.longs++; }
   const den = Math.max(1, P.mode === 'esperar' ? P.hits + P.errors : P.total);
-  const acc = Math.max(0, (P.hits - (aidOn('dur') ? 0.5 * P.shorts : 0)) / den);
+  const acc = Math.max(0, (P.hits - 0.5 * P.shorts - 0.5 * P.longs) / den);
   let stars = acc >= 0.95 ? 3 : acc >= 0.8 ? 2 : acc >= 0.5 ? 1 : 0, capped = false;
   if (aidOn('tempo') && P.mode === 'esperar' && stars === 3){ stars = 2; capped = true; }
-  return {acc, pct: Math.round(acc * 100), stars, capped};
+  // Con las notas bien pero sin el matiz o el pedal que pide el ejercicio, se queda en una estrella.
+  const ex = exprResult();
+  const weak = stars >= 2 && ((!!ex.dyn && ex.dyn.measured && !ex.dyn.ok) || (!!ex.ped && ex.ped.measured && !ex.ped.ok));
+  if (weak) stars = 1;
+  return {acc, pct: Math.round(acc * 100), stars, capped, ex, weak};
+}
+/* Frases del resultado sobre duración, notas cortas, fuerza y pedal. */
+function exprText(r){
+  const b = [], mine = P.notes.filter(n => !n.auto);
+  if (aidOn('dur') || mine.some(n => n.art === 'l')) b.push(P.shorts === 0 ? 'Todas con su duración.' : P.shorts === 1 ? '1 nota soltada antes de tiempo.' : `${P.shorts} notas soltadas antes de tiempo.`);
+  if (mine.some(n => n.art === 's')) b.push(P.longs === 0 ? 'Las notas cortas salieron cortas.' : P.longs === 1 ? '1 nota corta quedó sonando de más.' : `${P.longs} notas cortas quedaron sonando de más.`);
+  const d = r.ex.dyn, p = r.ex.ped;
+  if (d) b.push(!d.measured ? 'La fuerza no se pudo medir: hace falta un teclado sensible conectado por USB. Aquí se calificaron solo las notas.'
+    : d.ok ? 'Se nota la diferencia entre fuerte y suave.' : 'Casi no hay diferencia entre fuerte y suave: exagera el contraste.');
+  if (p) b.push(!p.measured ? 'No se detectó un pedal: se calificaron solo las notas.'
+    : `Pedal: ${p.good} de ${p.total} ${p.total === 1 ? 'tramo' : 'tramos'} bien ${p.ok ? '' : '(písalo todo el compás y cámbialo al empezar el siguiente)'}`.trim() + '.');
+  return b.length ? ' ' + b.join(' ') : '';
 }
 
 /* «Dónde fallé»: compases y notas con problemas, y un consejo según el tipo de fallo. */
@@ -3161,12 +3377,12 @@ function feedback(){
   for (const [k, grp] of [...groups].sort((a, b) => a[0] - b[0])){
     nG++;
     const f = P.fb.get(k) || {errs: 0, wrong: [], wait: 0, early: 0, late: 0};
-    const missed = grp.filter(n => n.state === 2).length, short = grp.filter(n => n.short).length;
+    const missed = grp.filter(n => n.state === 2).length, short = grp.filter(n => n.short).length, long = grp.filter(n => n.long).length;
     const slow = P.mode === 'esperar' && nG > 1 && f.wait > slowLim;
     if (slow) slows++;
     const hands = new Set(grp.map(handOf));
     early += f.early; late += f.late;
-    const w = f.errs + missed + 0.5 * short + (slow ? 0.5 : 0) + (missed ? 0 : 0.5 * Math.min(1, f.early + f.late));
+    const w = f.errs + missed + 0.5 * short + 0.5 * long + (slow ? 0.5 : 0) + (missed ? 0 : 0.5 * Math.min(1, f.early + f.late));
     if (w > 0){
       if (f.errs || missed || slow){
         probs++;
@@ -3190,6 +3406,7 @@ function feedback(){
       else if (f.late) bits.push(grp.length > 1 ? 'lo tocaste tarde' : 'la tocaste tarde');
       else if (missed) bits.push('se te pasó');
       if (short) bits.push(grp.length > 1 ? 'lo soltaste antes de tiempo' : 'la soltaste antes de tiempo');
+      if (long) bits.push(grp.length > 1 ? 'lo dejaste sonar y va corto' : 'la dejaste sonar y va corta');
       if (slow && !f.errs) bits.push('tardaste en encontrarla');
       const mk = measureAt(grp[0].start);
       if (!meas.has(mk)) meas.set(mk, {k: mk, w: 0, lines: []});
@@ -3256,10 +3473,11 @@ function finish(){
     if (pass && TL){ TL.ok.add(P.ctx.step); saveTeoPos(); }
     const errs = P.errors === 0 ? 'Ninguna tecla equivocada.' : P.errors === 1 ? '1 tecla equivocada.' : `${P.errors} teclas equivocadas.`;
     let detail = P.mode === 'esperar' ? `${total} notas tocadas. ${errs}` : `${P.hits} de ${total} notas a tiempo. ${errs}`;
-    if (aidOn('dur')) detail += P.shorts === 0 ? ' Todas con su duración.' : P.shorts === 1 ? ' 1 nota soltada antes de tiempo.' : ` ${P.shorts} notas soltadas antes de tiempo.`;
+    detail += exprText(r);
     const fb = aidOn('fb') && !pass && modeOk ? feedback() : null;
     const tip = pass ? 'Ya puedes seguir con la lección.'
       : !modeOk ? `Este paso se aprueba en modo ${MODE_NAME[st.mode]}.`
+      : r.weak ? 'Las notas están bien. Para aprobar falta la expresión que pide el ejercicio.'
       : `Para aprobar necesitas ${need === 3 ? 'tres' : 'dos'} estrellas. Repítelo con calma${P.mode === 'ritmo' && P.speed > 0.5 ? ' o baja la velocidad' : ''}.`;
     const buttons = pass ? '<button class="btn primary" data-act="teo-next">Continuar la lección</button><button class="btn" data-act="again">Repetir</button>'
       : (modeOk ? '<button class="btn primary" data-act="again">Repetir</button>' : `<button class="btn primary" data-act="${st.mode}">Tocar en modo ${MODE_NAME[st.mode]}</button>`)
@@ -3273,10 +3491,10 @@ function finish(){
       <p>En estos compases solo toca la otra mano. Elige otros compases o las dos manos.</p>
       <div class="actions"><button class="btn primary" data-act="aids">Elegir otra parte</button>${partBtns}</div>`;
   } else {
-    const titles = ['Sigue practicando', 'Vas bien', '¡Muy bien!', '¡Perfecto!'];
+    const titles = ['Sigue practicando', r.weak ? 'Falta la expresión' : 'Vas bien', '¡Muy bien!', '¡Perfecto!'];
     const errs = P.errors === 0 ? 'Ninguna tecla equivocada.' : P.errors === 1 ? '1 tecla equivocada.' : `${P.errors} teclas equivocadas.`;
     let detail = P.mode === 'esperar' ? `${total} notas tocadas. ${errs}` : `${P.hits} de ${total} notas a tiempo. ${errs}`;
-    if (aidOn('dur')) detail += P.shorts === 0 ? ' Todas con su duración.' : P.shorts === 1 ? ' 1 nota soltada antes de tiempo.' : ` ${P.shorts} notas soltadas antes de tiempo.`;
+    detail += exprText(r);
     const fb = aidOn('fb') ? feedback() : null;
     let tip = '', buttons = '', fix = '';
     if (fb && fb.worst >= 0 && parts.length > 1){
@@ -3289,11 +3507,15 @@ function finish(){
       buttons = `<button class="btn primary" data-act="again">Repetir</button>${fix}${partBtns}<button class="btn" data-act="list">${s.lesson || s.generated ? 'Ver ejercicios' : 'Otra canción'}</button>`;
     } else if (s.lesson){
       if (stars >= 2){
-        tip = nextL ? 'Ya puedes pasar al siguiente ejercicio.' : 'Terminaste todos los ejercicios. Sigue con las canciones.';
+        tip = !nextL ? 'Terminaste toda la ruta de ejercicios. Sigue con las canciones.'
+          : nextL.lvl !== s.lvl ? `Completaste el último ejercicio del Nivel ${s.lvl}. Sigue el Nivel ${nextL.lvl}.` : 'Ya puedes pasar al siguiente ejercicio.';
         if (r.capped) tip += ' La tercera estrella se gana en modo Ritmo.';
         buttons = nextL ? '<button class="btn primary" data-act="next">Siguiente ejercicio</button><button class="btn" data-act="again">Repetir</button>'
                         : '<button class="btn primary" data-act="songs">Ir a las canciones</button><button class="btn" data-act="again">Repetir</button>';
         if (r.capped) buttons += ritmoBtn;
+      } else if (r.weak){
+        tip = 'Las notas están bien: lo que falta es la expresión que pide el ejercicio. Vuelve a leer la explicación y repítelo.';
+        buttons = '<button class="btn primary" data-act="again">Repetir</button>';
       } else {
         tip = 'Consigue dos estrellas para pasar al siguiente ejercicio.' + (P.mode !== 'esperar' ? ' Prueba en modo Esperar o a menor velocidad.' : ' Mira la tecla iluminada antes de tocar.');
         buttons = '<button class="btn primary" data-act="again">Repetir</button>' + (P.mode !== 'esperar' ? '<button class="btn" data-act="esperar">Modo Esperar</button>' : '');
@@ -3360,6 +3582,7 @@ $('#doneOv').addEventListener('click', e => {
 /* ---------- Partitura ----------
    Glifos musicales de la tipografía Bravura (Steinberg Media Technologies), licencia SIL Open Font License 1.1. */
 const GLYPH = {"g":"M376 415C374 427 376 428 382 434C398 449 419 470 438 491C522 583 572 702 572 815C572 902 548 988 507 1048C492 1070 466 1098 455 1098C441 1098 410 1072 390 1050C316 968 292 843 292 739C292 681 299 616 306 575C308 563 309 561 297 551C233 498 164 437 112 373C43 287 0 194 0 87C0 -87 119 -252 364 -252C387 -252 413 -250 433 -246C444 -244 446 -243 448 -255C460 -322 475 -409 475 -456C475 -604 375 -622 316 -622C262 -622 236 -606 236 -593C236 -586 245 -583 268 -576C299 -567 335 -540 335 -482C335 -427 300 -380 239 -380C172 -380 132 -433 132 -495C132 -560 171 -658 322 -658C389 -658 519 -628 519 -458C519 -401 501 -306 490 -244C488 -232 489 -233 503 -227C604 -187 671 -102 671 11C671 139 577 252 430 252C404 252 404 252 401 270ZM470 943C503 943 530 916 530 861C530 792 497 728 419 650C403 634 379 611 356 591C349 585 345 586 343 599C339 625 337 659 337 691C337 847 409 943 470 943ZM361 262C364 243 364 244 346 238C258 208 201 129 201 44C201 -46 248 -110 316 -133C324 -136 336 -139 343 -139C351 -139 355 -134 355 -128C355 -121 347 -118 340 -115C298 -97 268 -54 268 -8C268 49 307 92 368 109C384 113 386 112 388 101L438 -197C440 -208 439 -208 424 -211C408 -214 388 -216 368 -216C193 -216 80 -119 80 20C80 79 90 158 173 252C233 319 279 356 326 394C336 402 338 401 340 390ZM430 103C428 115 429 118 441 117C522 110 589 42 589 -46C589 -109 551 -160 495 -188C483 -194 481 -194 479 -182Z","f":"M252 262C78 262 0 135 0 39C0 -41 42 -110 123 -110C186 -110 229 -66 229 -4C229 60 182 100 133 100C106 100 96 93 83 93C70 93 67 101 67 111C67 151 127 224 229 224C335 224 381 120 381 -37C381 -140 359 -260 297 -356C237 -449 134 -534 10 -605C1 -610 -5 -615 -5 -623C-5 -629 -1 -635 8 -635C13 -635 19 -633 25 -630C158 -565 286 -489 392 -375C479 -281 531 -159 531 -28C531 146 425 262 252 262ZM629 180C598 180 574 156 574 125C574 94 598 70 629 70C660 70 684 94 684 125C684 156 660 180 629 180ZM630 -71C599 -71 576 -94 576 -125C576 -156 599 -179 630 -179C661 -179 684 -156 684 -125C684 -94 661 -71 630 -71Z","t2":"M421 -91C421 -79 416 -77 409 -77C401 -77 398 -81 396 -87C396 -88 395 -89 395 -90C385 -114 377 -133 356 -133C351 -133 346 -132 339 -130C326 -125 319 -124 309 -119C289 -111 242 -95 201 -95C188 -95 175 -97 164 -101C186 -65 271 -35 293 -29C308 -25 350 -17 383 10C407 29 426 58 426 102C426 149 406 183 380 205C329 248 251 254 229 254C202 254 168 253 142 247C107 240 72 219 48 191C31 170 20 145 20 118C20 104 23 90 29 75C44 44 75 20 111 20C172 20 181 83 181 108C181 168 112 171 112 191C114 205 132 229 191 229C280 229 281 162 281 133C281 95 269 60 247 31C211 -17 183 -41 134 -71C79 -106 40 -155 23 -218C23 -220 22 -222 22 -224C22 -235 29 -248 40 -255C43 -257 46 -257 48 -257C70 -257 82 -196 141 -196C181 -196 196 -250 285 -250C328 -250 405 -246 421 -91Z","t3":"M213 248C208 248 203 249 198 249C112 249 26 192 26 139C26 106 45 62 107 58H112C156 58 178 90 178 123V131C175 168 150 170 145 172C140 174 125 172 125 186V190C127 207 158 215 167 215C252 215 260 162 260 138V131C260 57 201 28 138 25C128 24 114 19 114 8C114 -4 131 -4 139 -4C254 -4 263 -82 263 -95C263 -201 209 -213 187 -213C183 -213 179 -212 178 -212C170 -211 151 -211 150 -196V-191C150 -169 172 -154 173 -125C173 -115 172 -104 168 -94C157 -69 128 -53 101 -53C97 -53 94 -53 90 -54C73 -57 54 -67 42 -80C25 -95 20 -119 20 -141C22 -219 93 -249 191 -251H200C299 -251 401 -200 401 -112V-105C400 -91 398 -77 392 -64C388 -54 381 -44 373 -35C367 -27 359 -20 349 -14L328 -2L295 7C290 8 287 8 285 12C284 14 284 15 284 17C284 21 285 25 288 26C299 29 310 30 319 35C334 42 347 49 358 62C374 80 380 103 380 126C380 218 255 245 213 248Z","t4":"M362 -74V140C362 148 361 157 350 157C341 157 336 155 330 148L235 33C231 28 226 22 226 10V-74H91C171 -6 331 221 334 232C334 234 335 235 335 237C335 245 328 251 320 251C311 251 270 249 252 249C234 249 189 251 181 251C172 251 158 248 158 232C158 108 60 -31 30 -73L24 -81C24 -82 23 -83 23 -84C21 -88 20 -92 20 -95C20 -105 28 -112 40 -112H226V-175C226 -202 204 -210 186 -210C170 -210 163 -219 163 -229C163 -239 167 -250 182 -250H395C405 -250 415 -243 415 -229C415 -215 403 -209 393 -209C383 -209 362 -203 362 -171V-112H435C445 -112 450 -105 450 -93C450 -81 446 -74 435 -74Z","t6":"M260 100C272 88 289 83 305 83C313 83 322 85 330 87C361 95 385 127 385 159C385 163 385 166 384 170C379 203 351 227 321 238C297 248 268 251 242 251C166 250 95 213 59 145C37 103 20 50 20 3V-1C21 -47 29 -99 51 -139C72 -177 106 -218 145 -235C170 -246 200 -249 225 -249C270 -249 320 -242 356 -213C391 -185 414 -140 414 -95C414 -39 384 -5 352 19C325 39 294 50 263 50C231 50 198 38 172 15C170 13 168 13 166 13C160 13 157 21 157 37C160 222 219 227 240 227C260 227 273 222 273 212C273 198 254 186 248 174C243 165 241 155 241 145C241 130 246 115 256 104C257 102 259 101 260 100ZM222 2C254 2 281 -48 281 -110C281 -172 254 -222 222 -222C190 -222 164 -172 164 -110C164 -48 190 2 222 2Z","t8":"M334 36C370 59 394 92 394 142C394 244 247 259 220 259C104 259 25 206 25 122C25 53 64 16 112 -11C60 -36 20 -69 20 -132C20 -219 110 -259 209 -259C309 -259 416 -216 416 -81C416 -21 381 12 334 36ZM282 59C202 87 117 104 117 167C117 209 174 230 218 230C250 230 335 214 335 144C335 104 315 78 282 59ZM205 -226C138 -226 77 -192 77 -127C77 -87 112 -50 156 -33C229 -65 303 -86 303 -152C303 -192 272 -226 205 -226Z","nw":"M216 125C83 125 0 70 0 2C0 -65 57 -125 206 -125C370 -125 422 -68 422 2C422 73 309 125 216 125ZM111 63C122 98 159 103 190 103C259 103 314 29 314 -31C314 -38 313 -44 312 -50C307 -75 293 -92 268 -98C258 -101 247 -102 237 -102C228 -102 220 -101 211 -98C194 -93 178 -84 164 -72C156 -65 149 -58 143 -50C123 -27 108 7 108 39C108 47 109 55 111 63Z","nh":"M97 -125C262 -125 295 9 295 42C295 93 254 125 196 125C47 125 0 10 0 -42C0 -95 42 -125 97 -125ZM173 -46C128 -76 97 -87 75 -87C54 -87 42 -76 35 -64C32 -58 29 -51 29 -44C29 -22 51 5 120 45C170 74 201 84 221 84C240 84 251 75 258 63C261 57 264 51 264 44C264 24 243 0 173 -46Z","nb":"M97 -125C186 -125 295 -43 295 42C295 93 255 125 198 125C88 125 0 44 0 -42C0 -94 43 -125 97 -125Z","fu":"M238 -790C238 -790 264 -695 264 -617C264 -492 212 -374 149 -274C98 -195 56 -109 40 -13C37 3 29 9 19 9C8 9 0 6 0 -6V-245C66 -257 161 -393 197 -478C212 -512 221 -569 221 -628C221 -673 214 -720 197 -765C195 -771 194 -776 194 -780C194 -796 204 -805 210 -809C211 -810 213 -810 215 -810C222 -810 234 -804 238 -790Z","fd":"M240 760C254 718 261 668 261 623C261 564 236 480 221 446C184 362 134 281 0 236V1C0 -9 8 -14 16 -14C25 -14 38 -8 40 8C57 103 131 190 182 269C245 368 306 487 306 612C306 690 286 761 278 793C275 804 269 808 262 808C250 808 237 796 237 777C237 772 238 766 240 760Z","fu2":"M272 -796C276 -791 279 -734 279 -686V-664C279 -622 268 -581 250 -544C250 -541 249 -539 249 -535C249 -533 249 -531 250 -528C253 -522 275 -462 275 -401C275 -388 274 -377 272 -365C262 -297 236 -269 164 -191C110 -133 54 -117 37 -11C35 0 23 2 17 2C11 2 0 -1 0 -8V-396H5C67 -398 138 -400 207 -540C230 -588 239 -637 239 -689C239 -718 236 -748 231 -778C230 -782 230 -784 230 -787C230 -801 237 -809 244 -811C247 -812 249 -813 252 -813C259 -813 266 -809 272 -796ZM209 -459C193 -434 176 -414 155 -390C108 -336 62 -312 41 -230C40 -229 40 -228 40 -227C40 -223 46 -217 54 -217H62C123 -217 177 -273 210 -322C228 -348 237 -379 237 -411C237 -418 237 -424 236 -431C234 -439 234 -449 229 -457C228 -460 221 -463 216 -463C213 -463 211 -462 209 -459Z","fd2":"M240 786C246 754 249 720 249 687C249 634 240 581 217 533C148 393 67 390 5 388H0V1C0 -4 7 -9 17 -9C24 -9 35 -7 37 4C61 158 258 201 282 358C284 369 285 381 285 394C285 455 263 515 260 521C259 523 259 525 259 528C259 532 260 534 260 537C282 583 291 637 291 691C291 725 287 759 281 790C276 813 269 812 257 812C245 811 237 803 240 786ZM226 456C231 456 238 453 239 449C244 442 244 432 246 424C247 417 247 410 247 404C247 371 238 341 220 315C187 266 123 210 62 210H54C46 210 40 215 40 220C40 221 40 222 41 223C62 305 118 328 165 383C186 406 203 426 219 452C221 455 223 456 226 456Z","sh":"M237 118C244 121 249 129 249 135V206C249 211 246 214 242 214C240 214 239 214 237 213C237 213 217 205 212 204C205 204 198 209 198 217V339C198 345 192 350 184 350C174 350 168 345 168 339V209C167 199 164 186 155 180C143 173 109 159 92 155C83 155 80 167 80 175V295C80 301 73 306 66 306C56 306 50 301 50 295V160C50 146 44 136 38 133C32 130 12 122 12 122C5 120 0 112 0 106V35C0 29 3 26 8 26C9 26 11 27 12 27C12 27 27 33 34 37C35 37 36 38 37 38C44 38 50 28 50 20V-79C50 -90 45 -99 39 -102C33 -104 12 -113 12 -113C5 -115 0 -123 0 -129V-200C0 -206 3 -209 8 -209C9 -209 11 -208 12 -208C12 -208 26 -202 35 -199C36 -198 37 -198 38 -198C45 -198 50 -209 50 -214V-337C50 -343 56 -348 63 -348C73 -348 80 -343 80 -337V-198C80 -185 85 -178 90 -176L151 -151C152 -151 154 -150 155 -150C163 -150 168 -162 168 -168V-293C168 -299 174 -304 181 -304C192 -304 198 -299 198 -293V-151C198 -143 202 -131 209 -128C216 -125 237 -117 237 -117C244 -114 249 -106 249 -100V-29C249 -24 246 -21 242 -21C240 -21 239 -21 237 -22L211 -32C205 -32 198 -26 198 -14V79C198 86 203 105 211 108ZM168 -45C162 -65 115 -85 92 -85C86 -85 81 -83 80 -80C78 -76 77 -54 77 -30C77 1 78 36 80 44C82 61 128 82 153 82C160 82 166 80 168 76C170 71 172 46 172 19C172 -8 170 -36 168 -45Z","rw":"M282 -109V-17C282 -2 270 9 256 9H26C11 9 0 -2 0 -17V-109C0 -123 11 -135 26 -135H256C270 -135 282 -123 282 -109Z","rh":"M282 24V116C282 131 270 142 256 142H26C11 142 0 131 0 116V24C0 10 11 -2 26 -2H256C270 -2 282 10 282 24Z","rq":"M78 -38C94 -58 108 -77 121 -98C123 -102 127 -110 127 -112C127 -113 127 -115 126 -116C124 -120 120 -121 115 -121C111 -121 103 -119 99 -118C94 -118 88 -115 83 -115C40 -115 1 -158 1 -211C1 -261 44 -310 117 -366C125 -372 135 -375 143 -375C150 -375 157 -373 158 -369C159 -366 160 -364 160 -362C160 -353 152 -345 144 -338C131 -338 120 -311 118 -302C115 -294 114 -285 114 -276C114 -245 129 -210 161 -204C166 -203 171 -203 177 -203C206 -203 239 -214 255 -220C256 -220 257 -221 258 -221C261 -222 263 -222 265 -222C268 -222 270 -221 270 -218C270 -206 244 -173 233 -161C195 -115 164 -78 164 -22C164 -18 165 -13 165 -9C169 49 205 97 231 138C234 143 235 148 235 153C235 163 231 172 231 172C231 172 83 348 66 365C61 370 54 373 48 373C38 373 28 366 28 352C28 347 29 342 32 336C36 325 93 274 93 202C93 165 78 122 33 75C23 65 19 54 19 46C19 32 29 22 29 22Z","r8":"M134 107C134 144 104 174 67 174C30 174 0 144 0 107C0 86 12 68 27 56C36 50 45 45 55 43C63 41 72 39 81 39C95 39 109 42 120 46C134 50 143 54 156 61C158 62 160 62 161 62C165 62 166 58 166 53C166 50 166 46 165 42C162 27 90 -172 72 -238C72 -250 95 -251 101 -251C112 -251 126 -249 136 -241C139 -239 237 112 237 112C241 130 246 146 247 151C247 161 237 166 235 167C233 167 230 167 224 163C217 157 167 97 134 97Z","r16":"M208 111C208 149 178 179 140 179C103 179 72 149 72 111C72 91 84 72 100 60C108 54 118 49 128 46C135 44 143 43 152 43C166 43 182 46 194 50C208 54 217 58 230 65C233 66 235 67 237 67C240 67 242 65 242 60C242 57 241 52 239 45C237 37 193 -101 184 -120C176 -139 149 -151 135 -151C136 -147 136 -144 136 -141C136 -103 105 -73 68 -73C30 -73 0 -103 0 -141C0 -161 12 -180 28 -192C36 -198 45 -203 55 -206C63 -208 71 -209 80 -209C94 -209 110 -206 122 -202C136 -198 142 -195 155 -188C157 -188 159 -190 159 -193C159 -194 158 -195 158 -196L63 -479C63 -480 62 -481 62 -482C62 -490 71 -500 93 -500C122 -500 127 -488 131 -477L247 -96C273 -11 292 56 292 56C292 56 317 144 319 157C319 159 320 160 320 161C320 167 312 171 310 172C305 172 302 170 299 168C292 162 242 102 208 101Z"};
+Object.assign(GLYPH, {"fl":"M12 -170C15 -174 18 -175 21 -175C24 -175 27 -173 27 -173C57 -156 81 -129 106 -112C195 -50 226 11 226 57C226 114 182 150 136 153C119 153 95 145 81 136C75 131 64 122 59 122C57 122 56 122 54 123C47 126 43 133 43 140C44 162 50 402 50 422C50 433 41 439 31 439C17 439 1 429 0 411C0 411 4 -160 12 -170ZM47 -81C47 -81 44 -21 44 19C44 35 45 47 46 51C53 71 93 100 116 100C145 100 157 67 157 42C157 -12 111 -66 68 -93C64 -95 61 -96 58 -96C49 -96 47 -86 47 -81Z","na":"M141 181C139 181 138 180 137 180C137 180 73 157 47 157C41 157 37 158 37 162L37 329C37 336 31 341 25 341L12 341C5 341 0 336 0 329L0 -186C0 -192 3 -195 9 -195L11 -194C12 -194 14 -194 15 -193C29 -187 85 -163 114 -163C124 -163 131 -166 131 -174L131 -323C131 -330 136 -335 143 -335L156 -335C162 -335 168 -330 168 -323L168 179C168 184 164 187 160 187C159 187 157 187 156 186ZM37 39C37 53 98 79 122 79C128 79 131 78 131 74L131 -29C131 -47 74 -70 49 -70C42 -70 37 -68 37 -64Z","dp":"M274 274C243 274 221 264 203 248C189 236 186 228 182 228C177 228 180 235 171 252C164 264 149 273 123 273C64 273 32 231 1 174C-4 165 -6 160 -6 155C-6 148 -1 144 5 144C12 144 16 150 21 159C50 209 70 235 88 235C96 235 99 230 99 223C99 215 96 205 93 198L-30 -107C-33 -115 -35 -117 -45 -117L-76 -117C-85 -117 -89 -121 -89 -130C-89 -138 -85 -142 -77 -142L116 -142C125 -142 129 -138 129 -129C129 -121 125 -117 117 -117L77 -117C71 -117 68 -117 68 -114C68 -113 69 -110 70 -107L115 5C117 10 119 17 124 17C129 17 132 7 148 -1C162 -8 175 -10 192 -10C288 -10 366 90 366 185C366 243 330 274 274 274ZM247 237C264 237 270 222 270 200C270 151 217 24 169 24C152 24 144 35 144 56C144 77 152 97 163 125L183 174C197 208 223 237 247 237Z","df":"M16 264C5 264 0 259 0 248C0 238 5 233 15 233L73 233C79 233 81 233 81 229C81 227 80 224 79 219L16 0C-12 -98 -30 -130 -70 -130C-83 -130 -88 -126 -88 -121C-88 -113 -79 -118 -64 -108C-52 -100 -44 -87 -44 -71C-44 -45 -62 -30 -89 -30C-119 -30 -141 -54 -141 -85C-141 -129 -108 -152 -66 -152C10 -152 57 -101 112 12C141 73 163 135 187 220L188 221C188 224 196 233 201 233L266 233C277 233 282 238 282 249C282 259 277 264 267 264L207 264C200 264 197 264 197 269C197 272 198 275 199 281C219 368 241 421 291 421C299 421 307 419 307 413C307 407 302 408 291 403C278 397 270 383 270 365C270 337 290 323 315 323C341 323 364 340 364 377C364 414 341 444 278 444C181 444 127 375 94 279C89 264 88 264 74 264Z"});
 const GL = {};
 function glyph(k, x, y, sc){
   let p = GL[k];
@@ -3377,6 +3600,7 @@ function figsOf(len, rest){
   }
   return out;
 }
+const staffStep = m => stepOf(m) + (FLATS && isBlack(m) ? 1 : 0);
 function buildSheet(){
   const M = P.M, src = P.src, midi = P.song.kind === 'midi';
   const hasL = src.some(n => n.hand === 'L'), hasR = src.some(n => n.hand !== 'L');
@@ -3416,8 +3640,19 @@ function buildSheet(){
     }
   }
   const chords = [...map.values()].sort((a, b) => a.t - b.t);
+  // Alteraciones: las de la armadura no se repiten; las demás se escriben en cada nota, y si en el mismo compás
+  // vuelve la nota natural (o contradice la armadura), lleva becuadro.
+  const sig = P.sig, accState = {};
   for (const c of chords){
     c.items.sort((a, b) => a.midi - b.midi);
+    const mk = Math.floor((c.t - M.g0) / M.mlen + 1e-6);
+    if (!accState[c.st] || accState[c.st].mk !== mk) accState[c.st] = {mk, m: new Map()};
+    const seen = accState[c.st].m;
+    for (const it of c.items){
+      const p12 = pc(it.midi), step = staffStep(it.midi), was = seen.get(step);
+      if (isBlack(it.midi)){ it.acc = sig.alt.has(p12) && was !== 'nat' ? '' : (FLATS ? 'fl' : 'sh'); seen.set(step, 'alt'); }
+      else { it.acc = sig.nat.has(p12) || was === 'alt' ? 'na' : ''; if (it.acc) seen.set(step, 'nat'); }
+    }
     const fs = c.items.filter(it => it.first && it.n.finger).map(it => it.n.finger);
     c.fingers = aidOn('dedos') && fs.length === c.items.filter(it => it.first).length && fs.length ? fs.join(' ') : '';
   }
@@ -3459,8 +3694,9 @@ function drawScore(grp){
   const F10 = `700 ${Math.round(10 * K)}px "Alegreya Sans", sans-serif`;
   const yOf = (st, s) => yb[st] - (s - BOT[st]) * sp / 2;
   const seg = (x1, y1, x2, y2) => { sg.beginPath(); sg.moveTo(x1, y1); sg.lineTo(x2, y2); sg.stroke(); };
-  const clefW = 671 * sc, showTS = !sh.midi;
-  const x0 = 8 + clefW + 6 + (showTS ? 470 * sc + 14 : 4);
+  const clefW = 671 * sc, showTS = !sh.midi, sig = P.sig;
+  const accK = sig.k < 0 ? 'fl' : 'sh', sigStep = (sig.k < 0 ? 226 : 249) * sc + 1.5, sigW = sig.n ? sig.n * sigStep + 5 : 0;
+  const x0 = 8 + clefW + 6 + sigW + (showTS ? 470 * sc + 14 : 4);
   const ppu = sh.ppu * (W > 720 ? 1.35 : 1) * K;
   const xh = x0 + Math.min(96 * K, (W - x0) * 0.2);
   const xOf = t => xh + (t - P.t) * ppu;
@@ -3501,12 +3737,12 @@ function drawScore(grp){
       glyph(k, xOf(r.t) - 4, yOf(st, BOT[st] + (k === 'rw' ? 6 : 4)), sc);
     }
   }
-  const colOf = n => n.state === 1 ? (n.short ? COL.warn : COL.ok) : n.state === 2 ? COL.miss : n.state === 3 ? COL.soft : grp.has(n) ? COL.hi : n.auto ? COL.soft : COL.ink;
+  const colOf = n => n.state === 1 ? (n.short || n.long ? COL.warn : COL.ok) : n.state === 2 ? COL.miss : n.state === 3 ? COL.soft : grp.has(n) ? COL.hi : n.auto ? COL.soft : COL.ink;
   for (const c of sh.chords){
     if (c.t < tMin) continue;
     if (c.t > tMax) break;
     const x = xOf(c.t), st = c.st, fig = c.fig;
-    const steps = c.items.map(it => stepOf(it.midi));
+    const steps = c.items.map(it => staffStep(it.midi));
     const lo = steps[0], hi = steps[steps.length - 1];
     const up = (lo + hi) / 2 < BOT[st] + 4;
     const hw = (fig >= 4 ? 422 : 295) * sc, hk = fig >= 4 ? 'nw' : fig >= 2 ? 'nh' : 'nb';
@@ -3524,7 +3760,7 @@ function drawScore(grp){
       const y = yOf(st, steps[i]), col = colOf(it.n);
       sg.fillStyle = col;
       glyph(hk, x - hw / 2, y, sc);
-      if (isBlack(it.midi)) glyph('sh', x - hw / 2 - 249 * sc - 2, y, sc);
+      if (it.acc) glyph(it.acc, x - hw / 2 - (it.acc === 'sh' ? 249 : it.acc === 'fl' ? 226 : 168) * sc - 2, y, sc);
       if (it.fig === 3 || it.fig === 1.5 || it.fig === 0.75){
         sg.beginPath(); sg.arc(x + hw / 2 + 4 * K, y - ((steps[i] - BOT[st]) % 2 === 0 ? sp / 2 : 0), 1.6 * K, 0, Math.PI * 2); sg.fill();
       }
@@ -3534,10 +3770,25 @@ function drawScore(grp){
         sg.beginPath(); sg.moveTo(x1, ty); sg.quadraticCurveTo((x1 + x2) / 2, ty + d * sp * 0.9, x2, ty); sg.stroke();
       }
     });
+    if (c.items[0].n.art === 's' && c.items[0].first){
+      // Staccato: un punto del lado contrario a la plica.
+      const ys = up ? yOf(st, lo) + sp * ((lo - BOT[st]) % 2 === 0 ? 1.5 : 1) : yOf(st, hi) - sp * ((hi - BOT[st]) % 2 === 0 ? 1.5 : 1);
+      sg.fillStyle = c0; sg.beginPath(); sg.arc(x, ys, 1.7 * K, 0, Math.PI * 2); sg.fill();
+    }
     if (c.fingers){
       sg.fillStyle = c0 === COL.ink ? COL.soft : c0; sg.textAlign = 'center';
       sg.fillText(c.fingers, x, two && st === 'B' ? H - 4 : Math.round(11 * K));
     }
+  }
+  // Matices (p, f) y pedal, debajo del pentagrama de arriba o del único que haya.
+  const yMark = two ? (yb.T + yb.B - 4 * sp) / 2 + 4 * K : H - 6 * K;
+  sg.fillStyle = COL.hi;
+  for (const k of P.dynMarks){ if (k.t < tMin || k.t > tMax) continue; glyph(k.v === 'f' ? 'df' : 'dp', xOf(k.t) - 5 * K, yMark, sc * (two ? 1.25 : 1)); }
+  if (P.ped.length){
+    sg.font = `italic 700 ${Math.round(11 * K)}px "Alegreya", Georgia, serif`; sg.textAlign = 'left'; sg.textBaseline = 'alphabetic';
+    const yp = two ? Math.min(H - 14 * K, botY + 15 * K) : H - 5 * K;
+    for (const sp2 of P.ped){ if (sp2.a < tMin || sp2.a > tMax) continue; sg.fillText('Ped.', xOf(sp2.a) - 6 * K, yp); }
+    sg.font = F10;
   }
   sg.restore();
 
@@ -3545,9 +3796,11 @@ function drawScore(grp){
   const num = M.pulse === 1.5 ? M.meter * 3 : M.meter, den = M.pulse === 1.5 ? 8 : 4;
   for (const st of sh.staves){
     glyph(st === 'T' ? 'g' : 'f', 8, yOf(st, BOT[st] + (st === 'T' ? 2 : 6)), sc);
+    // Armadura: en clave de fa cada signo va dos octavas más abajo, que es una línea o espacio menos en el dibujo.
+    sig.pos.forEach((ps, i) => glyph(accK, 8 + clefW + 5 + i * sigStep, yOf(st, st === 'T' ? ps : ps - 14), sc));
     if (showTS && GLYPH['t' + num]){
-      glyph('t' + num, 8 + clefW + 6, yOf(st, BOT[st] + 6), sc);
-      glyph('t' + den, 8 + clefW + 6, yOf(st, BOT[st] + 2), sc);
+      glyph('t' + num, 8 + clefW + 6 + sigW, yOf(st, BOT[st] + 6), sc);
+      glyph('t' + den, 8 + clefW + 6 + sigW, yOf(st, BOT[st] + 2), sc);
     }
   }
 }
@@ -3597,10 +3850,13 @@ function draw(grp){
     if (yt > H) continue;
     const k = geom.get(n.midi); if (!k) continue;
     const pad = k.black ? 1 : Math.max(2, k.w * 0.08);
-    const x = k.x + pad, w = k.w - pad * 2, top = yt + 1, h = Math.max(4, yb - yt - 2);
+    const x = k.x + pad, w = k.w - pad * 2;
+    let top = yt + 1, h = Math.max(4, yb - yt - 2);
+    // Staccato: la barra se dibuja corta, pegada al momento en que se toca.
+    if (n.art === 's'){ h = Math.min(h, Math.max(20 * kk, 0.32 * ppb)); top = yb - 1 - h; }
     const left = n.hand === 'L';
     let fill, txt = left ? '#15213D' : COL.barText;
-    if (n.state === 1){ fill = n.short ? COL.warn : COL.ok; txt = '#fff'; }
+    if (n.state === 1){ fill = n.short || n.long ? COL.warn : COL.ok; txt = '#fff'; }
     else if (n.state === 2){ fill = COL.miss; txt = '#fff'; }
     else if (grp.has(n)) fill = left ? COL.leftNext : COL.next;
     else { fill = left ? (k.black ? COL.leftBlack : COL.left) : (k.black ? COL.barBlack : COL.bar); if (k.black) txt = '#fff'; }
@@ -3619,6 +3875,34 @@ function draw(grp){
       if (label){ g.font = `700 ${fs}px "Alegreya Sans", sans-serif`; g.fillStyle = txt; g.fillText(label, x + w / 2, Math.min(top + h - 6, H - 6)); }
     }
   }
+  // Matices: una línea con su letra donde cambia la fuerza. Pedal: una franja a la derecha mientras va pisado.
+  if (P.dynMarks.length && !blind){
+    g.textAlign = 'right'; g.textBaseline = 'alphabetic';
+    for (const k of P.dynMarks){
+      const y = Math.round(H - (k.t - P.t) * ppb);
+      if (y < -4 || y > H + 30) continue;
+      const strong = k.v === 'f', label = strong ? 'f  fuerte' : 'p  suave';
+      g.font = `italic 700 ${Math.round(14 * kk)}px "Alegreya", Georgia, serif`;
+      const tw = g.measureText(label).width + 14 * kk, bh = 22 * kk;
+      g.fillStyle = COL.hi; g.globalAlpha = strong ? 0.9 : 0.45; g.fillRect(0, y - 1, W, 2);
+      g.globalAlpha = 1; g.fillStyle = COL.hi; rr(W - tw - 4, y - bh - 3, tw, bh, 6); g.fill();
+      g.fillStyle = '#fff'; g.fillText(label, W - 4 - 7 * kk, y - 3 - 6 * kk);
+    }
+  }
+  if (P.ped.length && !blind){
+    const on = pedalSrc.has('midi');
+    for (const sp of P.ped){
+      const y1 = H - (sp.a - P.t) * ppb, y0 = H - (sp.b - P.t) * ppb + 0.12 * ppb;
+      if (y1 < 0 || y0 > H) continue;
+      const now = P.t >= sp.a && P.t < sp.b;
+      g.globalAlpha = now && on ? 0.95 : 0.45; g.fillStyle = COL.left;
+      rr(W - 9, y0, 6, Math.max(4, y1 - y0), 3); g.fill();
+      g.globalAlpha = 1; g.fillStyle = COL.soft; g.textAlign = 'right';
+      g.font = `italic 700 ${Math.round(12 * kk)}px "Alegreya", Georgia, serif`;
+      if (y1 <= H + 2) g.fillText('Ped.', W - 13, y1 - 4);
+    }
+  }
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   if (P.playing && P.t < P.first - 1e-6){
     const beat = ((Math.floor((P.t - M.g0) / M.pulse + 1e-6) % M.meter) + M.meter) % M.meter + 1;
     g.fillStyle = COL.soft; g.globalAlpha = 0.55;
@@ -4144,7 +4428,8 @@ if (!Array.isArray(sesStore.dias)) sesStore.dias = [];
 if (!sesStore.ult || typeof sesStore.ult !== 'object') sesStore.ult = {};
 const saveSes = () => { store.set('piano:sesion', sesStore); Nube.push(); };
 const SES_K = {warm: 'Calentamiento', rev: 'Repaso', new: 'Lo nuevo', song: 'Canción'};
-const WARM = ['cinco-do', 'cinco-sol', 'escala', 'escala-sol', 'izquierda', 'arpegio', 'acorde-izq', 'tres-acordes-izq'];
+const WARM = ['cinco-do', 'cinco-sol', 'escala', 'escala-sol', 'izquierda', 'arpegio', 'acorde-izq', 'tres-acordes-izq',
+              'escala-fa', 'escala-re', 'escala-izq', 'inversiones', 'enlace', 'alberti'];
 const starsAt = key => (Data.progress[key]?.stars || 0);
 const songStars = s => hasLevels(s) ? starsAt(progKey(s, curLevel(s))) : starsAt(s.key);
 const dayNum = d => Math.round(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5);
