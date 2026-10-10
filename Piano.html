@@ -4671,7 +4671,7 @@ function goWelcome(){
   leaveAll(); TL = null;
   area = 'home'; view = 'welcome'; setTabs();
   Nube.dock(true);
-  const im = $('#welImg'); if (!im.getAttribute('src')) im.src = 'img/portada.jpg';
+  const im = $('#welImg'); if (!im.getAttribute('src')) im.src = 'img/portada.jpg?v=2';
 }
 function enterApp(){
   if (view === 'welcome') Nube.dock(false);
