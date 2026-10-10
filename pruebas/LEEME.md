@@ -8,7 +8,7 @@ No forman parte de la app: sirven para comprobar la sincronización entre dispos
 - `test-real.js`: carga el SDK real de Firebase que está en `lib/`, sin red, para comprobar que la app lo llama como el SDK espera.
 
 - `test-ejercicios.js`: revisa que los 48 ejercicios estén bien escritos (compases, dedos, armaduras) y los toca un
-  «pianista virtual» con el reloj simulado para comprobar la calificación: notas, staccato, legato, fuerte y suave, y pedal.
+  «pianista virtual» con el reloj simulado para comprobar la calificación: notas, staccato, legato, fuerte y suave, y crescendo.
 - `test-midi-real.js`: lo mismo en tiempo real y con un teclado MIDI simulado conectado desde Ajustes (tarda unos dos minutos).
 
 Cómo correrlas (Node 18 o más):
