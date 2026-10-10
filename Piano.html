@@ -375,11 +375,19 @@ a.btn{text-decoration:none}
 .keys{position:relative;flex:1 1 auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer}
 .key{position:absolute;top:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
 .key.white{height:100%;z-index:1;padding-bottom:12px;border-left:1px solid rgba(40,28,50,.3);border-radius:0 0 7px 7px;
-  background:linear-gradient(180deg,#EFE9DE 0%,var(--ivory) 10%,var(--ivory) 90%,#E9E2D4 100%);box-shadow:inset 0 -7px 0 rgba(70,48,20,.07)}
+  --k1:#EFE9DE;--k2:var(--ivory);--k3:#E9E2D4;--kd1:#E0D7C7;--kd2:#EAE2D3;
+  background:linear-gradient(180deg,var(--k1) 0%,var(--k2) 10%,var(--k2) 90%,var(--k3) 100%);box-shadow:inset 0 -7px 0 rgba(70,48,20,.07)}
 .key.white.first{border-left:0}
 .key.black{height:61%;z-index:2;padding-bottom:7px;border-radius:0 0 5px 5px;
-  background:linear-gradient(180deg,#100E13 0%,var(--ebony) 72%,#3C3444 93%,#17141B 100%);box-shadow:0 3px 4px rgba(0,0,0,.45)}
-.key.white.down{background:linear-gradient(180deg,#E0D7C7,#EAE2D3);box-shadow:inset 0 -2px 0 rgba(70,48,20,.1)}
+  --b1:#100E13;--b2:var(--ebony);--b3:#3C3444;--b4:#17141B;
+  background:linear-gradient(180deg,var(--b1) 0%,var(--b2) 72%,var(--b3) 93%,var(--b4) 100%);box-shadow:0 3px 4px rgba(0,0,0,.45)}
+/* Teclado en color: azul suave la zona de la mano izquierda (hl) y rojo suave la de la derecha (hr). Solo cambian los
+   colores de fondo de la tecla; iluminada, acertada o equivocada se ve igual que siempre. */
+.key.white.hl{--k1:#D3DFF3;--k2:#E2EBF9;--k3:#CEDAF0;--kd1:#BFCFEB;--kd2:#CEDBF2}
+.key.white.hr{--k1:#F1D5D5;--k2:#FAE4E3;--k3:#EDCFCF;--kd1:#E9BFC0;--kd2:#F1CFCF}
+.key.black.hl{--b1:#0C1220;--b2:#182238;--b3:#35446A;--b4:#121A2B}
+.key.black.hr{--b1:#1D0D11;--b2:#33181E;--b3:#643641;--b4:#241116}
+.key.white.down{background:linear-gradient(180deg,var(--kd1),var(--kd2));box-shadow:inset 0 -2px 0 rgba(70,48,20,.1)}
 .key.black.down{background:linear-gradient(180deg,#0B090D,#2A2430);box-shadow:0 1px 2px rgba(0,0,0,.5)}
 .key.white.guide{background:linear-gradient(180deg,#F1D79A,#F7E6BD)}
 .key.black.guide{background:linear-gradient(180deg,#86601F,var(--brass))}
@@ -391,8 +399,14 @@ a.btn{text-decoration:none}
 .key.black.auto{background:linear-gradient(180deg,#86601F,#C79436)}
 .key.white.ok{background:linear-gradient(180deg,#96CFC4,#C6E7E0)}
 .key.black.ok{background:linear-gradient(180deg,#1C655B,var(--ok))}
-.key.white.bad{background:linear-gradient(180deg,#E6A0AA,#F2CAD0)}
-.key.black.bad{background:linear-gradient(180deg,#6A1523,var(--bad))}
+/* Tecla equivocada: un rojo más intenso que el tono suave de la mano derecha, sin llegar a ser chillón. */
+.key.white.bad{background:linear-gradient(180deg,#D9606F,#E88E99)}
+.key.black.bad{background:linear-gradient(180deg,#7C1929,#CF4B5D)}
+/* Digitación sobre las teclas: el número del dedo que toca esa tecla, azul para la mano izquierda y vino para la derecha. */
+.fg{flex:none;display:grid;place-items:center;min-width:1.5em;height:1.5em;padding:0 .25em;border-radius:.75em;font-size:clamp(11px,1.35vw,14px);font-weight:700;line-height:1;
+  color:#fff;background:var(--felt);box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.fg.l{background:#2E4C94}
+.key.black .fg{font-size:clamp(10px,1.15vw,12px);box-shadow:0 0 0 1px rgba(255,255,255,.6)}
 .lbl{font-weight:700;font-size:clamp(10px,1.5vw,14px);color:#6A5C72;line-height:1;white-space:nowrap}
 .kb{font-size:10px;line-height:1;color:#A89EAF}
 .key.black .kb{color:#8D8496}
@@ -812,6 +826,10 @@ body[data-view="welcome"] .cab{display:none}
       <div class="flabel">Dispositivo</div>
       <p class="fhelp" id="devNow"></p>
       <button class="btn" id="btnDevice">Cambiar dispositivo</button>
+    </div>
+    <div class="field">
+      <div class="flabel">Teclado en pantalla</div>
+      <label class="chk"><input type="checkbox" id="setManos"> Teclado en color: azul suave la zona de la mano izquierda y rojo suave la de la derecha</label>
     </div>
     <div class="field" id="kbdField" hidden>
       <div class="flabel">Teclas del computador</div>
@@ -2348,7 +2366,7 @@ function rangeEnd(lo, n){ let m = lo, c = 1; while (c < n && m < 108){ m++; if (
 function buildKeyboard(lo, hi){
   range = {lo, hi};
   keysEl.innerHTML = ''; keyEls = new Map();
-  guideKey = ''; guideEls = [];
+  guideKey = ''; guideEls = []; fgShown = new Map();
   kbBase = lo - pc(lo);
   const ww = 100 / countWhites(lo, hi);
   let wi = 0;
@@ -2375,7 +2393,7 @@ function buildKeyboard(lo, hi){
     keysEl.appendChild(el);
     keyEls.set(m, el);
   }
-  refreshLabels();
+  refreshLabels(); refreshHands();
 }
 function refreshLabels(){
   for (const [m, el] of keyEls){
@@ -2500,7 +2518,7 @@ function freeRange(){
 }
 function buildFree(){
   const r = freeRange();
-  if (r.lo !== range.lo || r.hi !== range.hi) buildKeyboard(r.lo, r.hi);
+  if (r.lo !== range.lo || r.hi !== range.hi) buildKeyboard(r.lo, r.hi); else refreshHands();
   $('#rangeLbl').textContent = `${fullName(r.lo)} a ${fullName(r.hi)}`;
   $('#octDown').disabled = r.lo <= 24;
   $('#octUp').disabled = countWhites(r.lo + 12, rangeEnd(r.lo + 12, r.n)) < r.n;
@@ -3544,12 +3562,13 @@ const AIDS = [
   {id:'metro', label:'Metrónomo', desc:'Marca el pulso con un clic y dibuja las líneas de compás. El primer tiempo de cada compás suena más agudo.'},
   {id:'dur', label:'Duración', f:1, desc:'Cuenta cuánto dura cada nota: mantén la tecla presionada hasta que termine su barra. Si la sueltas antes, vale la mitad.'},
   {id:'tempo', label:'A tiempo', desc:'La tercera estrella solo se gana tocando sin pausas, en modo Ritmo o Juntos. En modo Esperar el máximo son dos.'},
-  {id:'dedos', label:'Digitación', f:1, desc:'Muestra en cada nota el número del dedo con el que conviene tocarla: 1 es el pulgar y 5 el meñique. Apágala cuando ya te la sepas.'},
+  {id:'dedos', label:'Digitación', f:1, desc:'Muestra el número del dedo con el que conviene tocar cada nota, en las barras y sobre las teclas del piano: 1 es el pulgar y 5 el meñique. Apágala cuando ya te la sepas.'},
+  {id:'manos', label:'Teclado en color', desc:'Pinta el teclado en dos tonos suaves: azul la zona de la mano izquierda y rojo la de la derecha. También se ve en Tocar libre, los retos y la teoría.'},
   {id:'score', label:'Partitura', f:1, desc:'Muestra las notas en el pentagrama mientras tocas, para que aprendas a leer música.'},
   {id:'parts', label:'Por partes', desc:'Practica solo unos compases, o una sola mano mientras la app toca la otra.'},
   {id:'fb', label:'Dónde fallé', desc:'Al terminar te dice en qué compases y en qué notas fallaste, y qué practicar.'}
 ];
-const aids = Object.assign({metro:true, dur:false, tempo:false, dedos:true, score:true, parts:false, fb:true}, settings.aids || {});
+const aids = Object.assign({metro:true, dur:false, tempo:false, dedos:true, manos:true, score:true, parts:false, fb:true}, settings.aids || {});
 // Dentro de una lección de teoría algunas ayudas quedan fijas (P.ctx.force).
 const aidOn = id => { const f = P && P.ctx && P.ctx.force; return f && id in f ? !!f[id] : !!aids[id]; };
 const isBlind = () => !!P && aidOn('blind') && P.scoreH > 0;
@@ -3557,6 +3576,41 @@ let aidInfo = '';
 let partSel = {key: '', idx: -1, hand: 'both', loop: false};
 
 let P = null, raf = 0, guideKey = '', guideEls = [];
+/* Desde qué tecla empieza la zona de la mano derecha. Sin pieza, el Do central. Con una pieza se respeta lo que toca
+   cada mano: si la derecha baja del Do central o la izquierda lo pasa, la frontera se corre; si se cruzan, queda en el Do central. */
+function handSplit(){
+  if (!P) return 60;
+  let L = -1, R = 999;
+  for (const n of P.notes){ if (n.hand === 'L') L = Math.max(L, n.midi); else R = Math.min(R, n.midi); }
+  if (L >= R || (L < 60 && R >= 60)) return 60;
+  return R < 60 ? R : L + 1;
+}
+function refreshHands(){
+  const on = aidOn('manos'), sp = on ? handSplit() : 0;
+  for (const [m, el] of keyEls){ el.classList.toggle('hl', on && m < sp); el.classList.toggle('hr', on && m >= sp); }
+}
+/* Digitación sobre las teclas: cada tecla que falta por tocar muestra el dedo de su próxima nota. */
+let fgShown = new Map();
+function updateFingers(){
+  const want = new Map();
+  if (P && aidOn('dedos') && !isBlind()){
+    for (const n of P.notes){
+      if (n.state !== 0 || n.auto || !n.finger) continue;
+      const w = want.get(n.midi);
+      if (!w || n.start < w.start) want.set(n.midi, n);
+    }
+  }
+  if (!want.size && !fgShown.size) return;
+  for (const [m, el] of keyEls){
+    const n = want.get(m), v = n ? (n.hand === 'L' ? 'l' : 'r') + n.finger : '';
+    if ((fgShown.get(m) || '') === v) continue;
+    let b = el.querySelector('.fg');
+    if (!v){ if (b) b.remove(); fgShown.delete(m); continue; }
+    if (!b){ b = document.createElement('span'); el.insertBefore(b, el.firstChild); }
+    b.className = 'fg' + (n.hand === 'L' ? ' l' : ''); b.textContent = n.finger;
+    fgShown.set(m, v);
+  }
+}
 const canvas = $('#fall'), g = canvas.getContext('2d');
 const scoreCv = $('#score'), sg = scoreCv.getContext('2d');
 let geom = new Map(), COL = {};
@@ -3674,7 +3728,7 @@ function songRange(){
 }
 function buildSongKeyboard(){
   const r = songRange();
-  if (r.lo !== range.lo || r.hi !== range.hi) buildKeyboard(r.lo, r.hi);
+  if (r.lo !== range.lo || r.hi !== range.hi) buildKeyboard(r.lo, r.hi); else refreshHands();
   layoutGeom();
 }
 function layoutScore(){
@@ -3811,6 +3865,7 @@ $('#btnLevel').onclick = () => { reset(); };
 function leavePlayer(){
   if (P){ P.timers.forEach(clearTimeout); clearAuto(); }
   P = null; FLATS = false; guideKey = ''; guideEls.forEach(el => el.classList.remove('guide', 'wait', 'lh')); guideEls = [];
+  updateFingers(); refreshHands();
   cancelAnimationFrame(raf); raf = 0;
   $('#hint').hidden = true;
   $('#stage').style.setProperty('--sh', '0px'); scoreCv.hidden = true;
@@ -4025,6 +4080,7 @@ function updateGuide(){
     if (grp.length){ hint.textContent = exprHint(hide ? 'Lee la nota marcada en la partitura' : hintText(grp), grp); hint.hidden = false; } else hint.hidden = true;
   }
   guideEls.forEach(el => el.classList.toggle('wait', wait));
+  updateFingers();
 }
 function updateProgress(){
   if (!P) return;
@@ -5860,6 +5916,7 @@ function syncSettingsUI(){
   for (const b of $('#themeSeg').children) b.setAttribute('aria-pressed', b.dataset.v === settings.theme ? 'true' : 'false');
   $('#vol').value = settings.volume;
   $('#midiMute').checked = !!settings.midiMute;
+  $('#setManos').checked = !!aids.manos;
   $('#devNow').textContent = devLabel(settings.device) + '.';
   const nk = teclaDe.size;
   $('#kbdField').hidden = !kbOn();
@@ -5885,6 +5942,11 @@ $('#themeSeg').addEventListener('click', e => {
 });
 $('#vol').addEventListener('input', e => { settings.volume = +e.target.value; if (master) master.gain.value = settings.volume; saveSettings(); });
 $('#midiMute').addEventListener('change', e => { settings.midiMute = e.target.checked; saveSettings(); });
+$('#setManos').addEventListener('change', e => {
+  aids.manos = e.target.checked; settings.aids = aids; saveSettings();
+  refreshHands();
+  if (P && !$('#startOv').hidden) renderAids();
+});
 
 /* ---------- Teclas del computador: el alumno elige la letra o el número de cada tecla del piano ---------- */
 const kbdDlg = $('#kbdDlg'), kbdKeys = $('#kbdKeys'), kbdScroll = $('#kbdScroll');
