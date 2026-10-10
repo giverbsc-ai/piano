@@ -110,6 +110,9 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .mk-t{font-family:"Alegreya",Georgia,serif;font-size:1.25rem;font-weight:700;line-height:1.2;margin:0}
 .mk-s{flex:1 1 240px;margin:0;color:var(--ink-soft)}
 .mk-s.rec{color:var(--bad);font-weight:500}
+.mk-vel{flex:none;align-self:center;display:flex;align-items:center;gap:8px;margin-left:auto}
+.mk-vl{font-weight:700;font-size:.93rem}
+.mk-vel .seg button{min-height:34px;padding:0 9px;font-size:.93rem;white-space:nowrap}
 .mk-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .mk-act .linkbtn{margin-left:auto}
 .mk-act .btn.armed{border-color:var(--bad);color:var(--bad)}
@@ -122,7 +125,8 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 @media (max-height:560px){
   #viewFree.making .display{display:none}
   #viewFree.making .maker{flex:1 1 auto;max-height:none;border-bottom:0;padding-top:6px;padding-bottom:2px;gap:6px}
-  #viewFree.making .mk-t{font-size:1.05rem}
+  /* Aquí no sobra alto: el título se quita (el botón «Crear canción» de abajo ya queda marcado) y la velocidad va sin rótulo. */
+  #viewFree.making .mk-t,#viewFree.making .mk-vl{display:none}
   /* Con un tramo elegido hay ocho botones: aquí van en una sola fila que se desliza hacia los lados, como las fichas,
      y los de mover quedan solo con la flecha. */
   #viewFree.making .mk-act{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
@@ -653,6 +657,7 @@ body[data-view="welcome"] .cab{display:none}
       <div class="mk-head">
         <h2 class="mk-t">Crear canción</h2>
         <p class="mk-s" id="mkStatus" role="status"></p>
+        <div class="mk-vel"><span class="mk-vl" id="mkVelLbl">Velocidad</span><div class="seg" id="mkVel" role="group" aria-labelledby="mkVelLbl"></div></div>
       </div>
       <div class="chips row" id="mkChips" role="group" aria-label="Tramos grabados" hidden></div>
       <div class="mk-act" id="mkAct"></div>
@@ -864,7 +869,7 @@ body[data-view="welcome"] .cab{display:none}
     <div class="field" id="impSpeedField" hidden>
       <div class="flabel" id="impSpeedLabel">Velocidad de la canción</div>
       <div class="seg" id="impSpeed" role="group" aria-labelledby="impSpeedLabel"></div>
-      <p class="fhelp">Si la grabaste despacio, aquí la dejas más rápida. Al practicar siempre puedes bajarla al 50 % o al 75 %.</p>
+      <p class="fhelp">Es la misma velocidad que elegiste y escuchaste en el panel. Al practicar siempre puedes bajarla al 50 % o al 75 %.</p>
     </div>
     <div class="field">
       <div class="flabel" id="impHandsLabel">¿Con cuántas manos?</div>
@@ -2639,7 +2644,8 @@ const MK_CHORD = 80;        // notas que empiezan con menos de 80 ms de diferenc
 const MK_GAP = 2000;        // un silencio más largo que esto se acorta: es una pausa para buscar la tecla
 const MK_JOIN = 300;        // respiro entre el final de un tramo y el comienzo del siguiente
 const MK_MAX = 5 * 60000;   // duración máxima de un tramo
-const MK_SPEEDS = [[1, 'Como la grabé'], [1.25, '×1,25'], [1.5, '×1,5'], [2, '×2']];
+const MK_SPEEDS = [[0.75, '×0,75'], [1, 'Como la grabé'], [1.25, '×1,25'], [1.5, '×1,5'], [2, '×2']];
+const mkVelTxt = v => '×' + String(v).replace('.', ',');
 function mkClean(d){
   const out = {tramos: [], song: '', name: '', speed: 1, dirty: false};
   if (!d || !Array.isArray(d.tramos)) return out;
@@ -2708,16 +2714,21 @@ function mkTramo(ev, tEnd){
   }
   return {n: notes, len};
 }
-/* Todas las notas en fila, un tramo detrás de otro (o solo el tramo «only»). */
-function mkFlat(only){
+/* Todas las notas en fila, un tramo detrás de otro (o solo el tramo «only»). Con «v» los tiempos salen a esa velocidad:
+   es lo que se oye en el panel. Al guardar se usa sin «v», porque ahí la velocidad va en el tempo de la canción. */
+function mkFlat(only, v = 1){
   const notes = [], marks = []; let off = 0;
   mk.tramos.forEach((t, i) => {
     if (only >= 0 && i !== only) return;
-    marks.push({i, at: off});
-    for (const [m, s, d] of t.n) notes.push({m, at: off + s, d});
+    marks.push({i, at: off / v});
+    for (const [m, s, d] of t.n) notes.push({m, at: (off + s) / v, d: d / v});
     off += t.len + MK_JOIN;
   });
-  return {notes, marks, len: Math.max(0, off - MK_JOIN)};
+  return {notes, marks, len: Math.max(0, off - MK_JOIN) / v};
+}
+function mkSpeedUI(){
+  const dis = Mk.rec ? ' disabled' : '';
+  $('#mkVel').innerHTML = MK_SPEEDS.map(([v]) => `<button type="button" data-v="${v}" aria-pressed="${v === mk.speed}"${v === 1 ? ' title="Como la grabaste"' : ''}${dis}>${mkVelTxt(v)}</button>`).join('');
 }
 function mkStatus(){
   const el = $('#mkStatus'), r = Mk.rec, n = mk.tramos.length;
@@ -2732,11 +2743,11 @@ function mkStatus(){
   else if (!n) t = 'Graba un pedazo de la canción, detén y sigue con el siguiente. Al final la guardas en «Tus canciones» para practicarla.';
   else if (Mk.sel >= 0 && mk.tramos[Mk.sel]){
     const tr = mk.tramos[Mk.sel], g = mkParts(tr);
-    t = g > 1 ? `Tramo ${Mk.sel + 1}: grupo de ${g} tramos, ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Se escucha, se copia y se mueve entero. Para cambiar una parte, desagrúpalo.`
-      : `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len)}. Puedes escucharlo, grabarlo de nuevo, copiarlo, moverlo, agruparlo o borrarlo.`;
+    t = g > 1 ? `Tramo ${Mk.sel + 1}: grupo de ${g} tramos, ${notasTxt(tr.n.length)}, ${fmtTime(tr.len / mk.speed)}. Se escucha, se copia y se mueve entero. Para cambiar una parte, desagrúpalo.`
+      : `Tramo ${Mk.sel + 1}: ${notasTxt(tr.n.length)}, ${fmtTime(tr.len / mk.speed)}. Puedes escucharlo, grabarlo de nuevo, copiarlo, moverlo, agruparlo o borrarlo.`;
   } else {
     const s = mkSong();
-    t = `${n === 1 ? '1 tramo' : n + ' tramos'}, ${notasTxt(mkCount())}, ${fmtTime(mkLen())}. `
+    t = `${n === 1 ? '1 tramo' : n + ' tramos'}, ${notasTxt(mkCount())}, ${fmtTime(mkLen() / mk.speed)}${mk.speed !== 1 ? ' a ' + mkVelTxt(mk.speed) : ''}. `
       + (s && !mk.dirty ? `Guardada como «${s.title}».` : s ? `Tiene cambios que «${s.title}» todavía no tiene: guárdala otra vez.` : 'Todavía no está guardada como canción.');
   }
   el.setAttribute('aria-live', r ? 'off' : 'polite');
@@ -2776,7 +2787,7 @@ function mkActions(){
   }
   $('#mkAct').innerHTML = h;
 }
-function mkRender(){ if (!Mk.open) return; mkStatus(); mkChips(); mkActions(); }
+function mkRender(){ if (!Mk.open) return; mkStatus(); mkSpeedUI(); mkChips(); mkActions(); }
 function mkDisarm(){ clearTimeout(Mk.armT); Mk.armed = ''; }
 /* Lo que borra pide dos toques, como al eliminar una canción de la lista. */
 function mkArm(what){
@@ -2793,7 +2804,7 @@ function mkStopPlay(){
 }
 function mkPlay(only){
   mkStopPlay(); stopRec(); stopPlayback();
-  const f = mkFlat(only);
+  const f = mkFlat(only, mk.speed);
   if (!f.notes.length) return;
   audio();
   Mk.msg = ''; mkDisarm();
@@ -2857,6 +2868,21 @@ function mkToggle(on){
 /* Al salir de «Tocar libre»: lo que se estaba grabando queda guardado como tramo. */
 function mkLeave(){ mkStopRec(); mkStopPlay(); }
 $('#btnMaker').onclick = () => mkToggle(!Mk.open);
+/* La velocidad se elige en el panel y se oye ahí mismo; al guardar, la canción queda con esa velocidad. */
+$('#mkVel').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled || Mk.rec) return;
+  const v = +b.dataset.v;
+  if (v === mk.speed || !MK_SPEEDS.some(x => x[0] === v)) return;
+  mk.speed = v; if (mk.tramos.length) mk.dirty = true;
+  mkSave(); mkDisarm();
+  if (Mk.play) mkPlay(Mk.play.only);   // lo que estaba sonando empieza de nuevo, ya a la velocidad nueva
+  else {
+    Mk.msg = `Velocidad ${mkVelTxt(v)}${v === 1 ? ', como la grabaste' : ''}. ` + (mk.tramos.length ? 'Toca «Escuchar» para oír cómo queda.' : 'Así sonará lo que grabes.');
+    mkRender(); Mk.msg = '';
+  }
+  const cur = $('#mkVel [aria-pressed="true"]'); if (cur) cur.focus();
+});
 $('#mkChips').addEventListener('click', e => {
   const b = e.target.closest('[data-tr]');
   if (!b || Mk.rec || Mk.play) return;
@@ -3497,7 +3523,7 @@ $('#impSave').onclick = async () => {
     // El borrador recuerda qué canción salió de él, para poder seguir grabando y reemplazarla después.
     const old = mkSong();
     if (old && old.id !== s.id && $('#impReplace').checked) await Data.deleteItem(old.id);
-    Object.assign(mk, {song: s.id, name: s.title, speed: impVel, dirty: false}); mkSave();
+    Object.assign(mk, {song: s.id, name: s.title, speed: impVel, dirty: false}); mkSave(); mkRender();
   }
   btn.disabled = false; btn.textContent = 'Guardar y practicar';
   impDlg.close();

@@ -380,6 +380,77 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok(d.tramos.length === 3 && JSON.stringify(d.tramos[0].p) === '[300,300]' && !d.tramos[1].p && !d.tramos[2].p, 'un grupo guardado con datos raros se abre como tramo normal', d.tramos.map(t => t.p || null));
   await G.context().close();
 
+  console.log('\n14. Velocidad: elegirla en el panel y escuchar cómo queda');
+  const H = await open({width: 1180, height: 760}, 'tab-h');
+  await H.evaluate(() => {
+    Object.assign(__t.mk, {tramos: [{n: [[60, 0, 400], [62, 600, 400]], len: 1000}, {n: [[64, 0, 400], [65, 600, 400]], len: 1000}], song: '', name: '', speed: 1, dirty: false});
+    __t.goFree();
+  });
+  await H.click('#btnMaker');
+  const vels = () => H.evaluate(() => [...document.querySelectorAll('#mkVel button')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '') + (b.disabled ? '!' : '')).join(' '));
+  ok((await vels()) === '×0,75 ×1* ×1,25 ×1,5 ×2', 'el panel tiene el selector de velocidad, en ×1 (como se grabó)', await vels());
+  ok(/2 tramos, 4 notas, 0:02\. /.test(await txt(H, '#mkStatus')), 'a ×1 dura lo grabado', await txt(H, '#mkStatus'));
+  const planV = v => H.evaluate(v => { const f = __t.mkFlat(-1, v); return JSON.stringify([f.notes.map(n => [n.m, n.at, n.d]), f.marks.map(k => k.at), f.len]); }, v);
+  ok((await planV(1)) === '[[[60,0,400],[62,600,400],[64,1300,400],[65,1900,400]],[0,1300],2300]', 'a ×1 las notas van en su tiempo', await planV(1));
+  ok((await planV(2)) === '[[[60,0,200],[62,300,200],[64,650,200],[65,950,200]],[0,650],1150]', 'a ×2 todo va en la mitad del tiempo: notas, duraciones y pausas', await planV(2));
+  await H.click('#mkVel [data-v="2"]');
+  d = await draft(H);
+  ok(d.speed === 2 && d.dirty === true && (await vels()) === '×0,75 ×1 ×1,25 ×1,5 ×2*', 'al tocar ×2 queda elegida y guardada en el borrador', [d.speed, d.dirty, await vels()]);
+  ok(/Velocidad ×2\. Toca «Escuchar» para oír cómo queda/.test(await txt(H, '#mkStatus')), 'y dice cómo oírla', await txt(H, '#mkStatus'));
+  // Escuchar todo dura la mitad: 1150 ms de música más el medio segundo final.
+  let t0 = Date.now();
+  await H.click('[data-mk="play"]');
+  ok(/Suena la canción completa/.test(await txt(H, '#mkStatus')), 'empieza a sonar');
+  await H.waitForFunction(() => !__t.Mk.play, null, {timeout: 8000});
+  let dur = Date.now() - t0;
+  ok(dur > 1400 && dur < 2300, '«Escuchar todo» a ×2 tarda la mitad', dur);
+  ok(/2 tramos, 4 notas, 0:01 a ×2\. /.test(await txt(H, '#mkStatus')), 'el resumen muestra la duración a esa velocidad', await txt(H, '#mkStatus'));
+  // Un tramo solo también suena a la velocidad elegida, y más lento con ×0,75.
+  await H.click('#mkVel [data-v="0.75"]');
+  await H.click('#mkChips [data-tr="0"]');
+  t0 = Date.now();
+  await H.click('[data-mk="play1"]');
+  await H.waitForFunction(() => !__t.Mk.play, null, {timeout: 8000});
+  dur = Date.now() - t0;
+  ok(dur > 1700 && dur < 2600, '«Escuchar tramo» a ×0,75 tarda más que lo grabado (1 s pasa a 1,3 s)', dur);
+  ok((await H.locator('#mkVel').isVisible()) && (await vels()) === '×0,75* ×1 ×1,25 ×1,5 ×2', 'con un tramo elegido el selector sigue a la vista', await vels());
+  await H.click('[data-mk="back"]');
+  // Cambiar la velocidad mientras suena: empieza de nuevo a la velocidad nueva.
+  await H.click('[data-mk="play"]'); await sleep(500);
+  await H.click('#mkVel [data-v="2"]');
+  ok(await H.evaluate(() => !!__t.Mk.play && __t.Mk.play.cur === 0) && /Suena la canción completa: va por el tramo 1/.test(await txt(H, '#mkStatus')), 'si cambias la velocidad mientras suena, vuelve a empezar', await txt(H, '#mkStatus'));
+  t0 = Date.now();
+  await H.waitForFunction(() => !__t.Mk.play, null, {timeout: 8000});
+  dur = Date.now() - t0;
+  ok(dur > 1300 && dur < 2300 && (await H.evaluate(() => __t.autoN)) === 0, 'y termina en el tiempo de ×2, sin teclas iluminadas de más', dur);
+  // Mientras se graba no se puede cambiar.
+  await H.click('[data-mk="rec"]');
+  ok((await vels()) === '×0,75! ×1! ×1,25! ×1,5! ×2*!', 'mientras se graba un tramo la velocidad no se puede cambiar', await vels());
+  await H.click('[data-mk="cancel"]');
+  ok((await vels()) === '×0,75 ×1 ×1,25 ×1,5 ×2*', 'al terminar vuelve a estar disponible');
+  // Al guardar, la ventana trae esa misma velocidad y la canción queda con ella.
+  await H.click('[data-mk="save"]');
+  ok((await H.evaluate(() => document.querySelector('#impSpeed [aria-pressed="true"]').textContent)) === '×2' && /Dura 0:01/.test(await txt(H, '#impInfo')), 'la ventana de guardar trae la velocidad del panel', await txt(H, '#impInfo'));
+  await H.fill('#impName', 'Prueba velocidad'); await H.click('#impSave'); await sleep(300);
+  const sv = await H.evaluate(() => { const s = __t.Data.items.find(s => s.title === 'Prueba velocidad'); return s ? s.bpm : null; });
+  ok(sv === 240, 'la canción se guarda al doble de velocidad', sv);
+  d = await draft(H);
+  ok(d.speed === 2 && d.dirty === false, 'el borrador queda sin cambios pendientes');
+  // Con la canción ya guardada, cambiar la velocidad es un cambio por guardar.
+  await H.evaluate(() => __t.goFree()); await sleep(100);
+  await H.click('#mkVel [data-v="1.5"]'); await H.click('#mkChips [data-tr="0"]'); await H.click('[data-mk="back"]');
+  ok((await draft(H)).dirty === true && /Tiene cambios que «Prueba velocidad» todavía no tiene/.test(await txt(H, '#mkStatus')), 'cambiar la velocidad después de guardar pide guardar otra vez', await txt(H, '#mkStatus'));
+  await H.reload(); await H.waitForFunction(() => window.__t);
+  await H.evaluate(() => __t.goFree()); await H.click('#btnMaker');
+  ok((await draft(H)).speed === 1.5 && (await vels()) === '×0,75 ×1 ×1,25 ×1,5* ×2', 'la velocidad sigue al recargar la página', await vels());
+  // Sin tramos también se puede elegir, y no deja cambios pendientes.
+  await H.evaluate(() => { Object.assign(__t.mk, {tramos: [], song: '', name: '', speed: 1, dirty: false}); __t.goHome(); __t.goFree(); });
+  await H.click('#mkVel [data-v="1.25"]');
+  d = await draft(H);
+  ok(d.speed === 1.25 && d.dirty === false && /Velocidad ×1,25\. Así sonará lo que grabes/.test(await txt(H, '#mkStatus')), 'antes de grabar también se puede elegir la velocidad', await txt(H, '#mkStatus'));
+  await H.screenshot({path: path.join(SHOTS, 'grabar-velocidad.png')});
+  await H.context().close();
+
   await A.context().close();
   await browser.close(); server.close();
   ok(errors.length === 0, 'sin errores de JavaScript', errors);
