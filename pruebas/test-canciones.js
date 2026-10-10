@@ -135,7 +135,7 @@ const NEW = ['pollitos', 'susana', 'sorpresa', 'primavera', 'canon', 'sonata545'
   console.log('4. Lista y partituras');
   await A.evaluate(() => { __t.Data.progress = {}; __t.settings.niveles = {}; __t.settings.learnTab = 'canciones'; __t.goLearn(); });
   const txt = (await A.textContent('#songList')).replace(/\s+/g, ' ');
-  ok(/Con lo aprendido en el Nivel 2/.test(txt) && /Los pollitos dicen\s*Canción infantil tradicional\. Fa mayor, fuerte y suave\./.test(txt) && /Sonata en Do, K\. 545/.test(txt), 'la lista tiene el grupo nuevo y dice qué se practica en cada canción', txt.slice(-600, -200));
+  ok(/Con lo aprendido en el Nivel 2/.test(txt) && /Los pollitos dicen\s*Canción infantil, atribuida a Ismael Parraguez\. Fa mayor, fuerte y suave\./.test(txt) && /Sonata en Do, K\. 545/.test(txt), 'la lista tiene el grupo nuevo y dice qué se practica en cada canción', txt.slice(-600, -200));
   await A.evaluate(() => { const el = [...document.querySelectorAll('#songList .lvl h2')].find(h => /Nivel 2/.test(h.textContent)); document.querySelector('#songList').scrollTop = el.offsetTop - 70; });
   await A.screenshot({path: path.join(SHOTS, 'canciones-lista.png')});
   const shot = async (id, level, advance, name) => {

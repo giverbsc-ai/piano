@@ -489,6 +489,10 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   for (let i = 0; i < 10; i++){ await H1.evaluate(() => __t.Hist.tick(5)); await H2.evaluate(() => __t.Hist.tick(5)); await sleep(50); }
   await sleep(500);
   ok(S.writes.length === wH, 'dos dispositivos practicando a la vez no generan escrituras en cadena', S.writes.length - wH);
+  // Repetir unos compases en bucle: cada vuelta se anota, pero no se sube una por una.
+  await H1.evaluate(() => { for (let i = 0; i < 5; i++) __t.Hist.run(80, true); });
+  await sleep(400);
+  ok(S.writes.length === wH && (await hoyDe(H1)).n === 7, 'las vueltas de «repetir» no generan una escritura cada una', [S.writes.length - wH, await hoyDe(H1)]);
   await H1.evaluate(() => { __t.goFree(); __t.goHome(); });
   ok(await waitFor(H2, () => __t.Hist.total(__t.dayStr(new Date())).s === 150), 'al salir de la práctica se sube lo pendiente', await hoyDe(H2));
   await sleep(300);
@@ -505,12 +509,15 @@ const NOTAS = n => Array.from({length: n}, (_, i) => `${60 + (i % 5)}:${i * 24}:
   await Promise.all([H1.waitForEvent('load'), H1.click('#accOut')]);
   await H1.waitForFunction(() => window.__t);
   ok(docH()[dia][d1].s === 95, 'al cerrar sesión se suben los segundos que faltaban', docH()[dia]);
-  ok(await H1.evaluate(() => __t.Hist.days().length === 0 && __t.Hist.dev) === d1, 'el celular queda sin historial, pero conserva su casilla');
+  const d1b = await H1.evaluate(() => __t.Hist.days().length === 0 && __t.Hist.dev);
+  ok(/^[a-z0-9]{8}$/.test(d1b) && d1b !== d1, 'el celular queda sin historial y estrena casilla, para no chocar con lo que ya subió', [d1, d1b]);
+  // Lo que se practica sin cuenta después de cerrar sesión no se pierde al volver a entrar.
+  await H1.evaluate(() => { for (let i = 0; i < 4; i++) __t.Hist.tick(5); });
   await skipWelcome(H1);
   await signIn(H1, 'historial@example.com', 'secreto1', false);
-  ok(await settled(H1) && (await hoyDe(H1)).s === 165, 'al volver a entrar recupera todo', await hoyDe(H1));
+  ok(await settled(H1) && (await hoyDe(H1)).s === 185, 'al volver a entrar recupera todo y suma lo practicado sin cuenta', await hoyDe(H1));
   await H1.evaluate(() => { __t.Hist.tick(5); __t.Hist.run(100); });
-  ok(await waitFor(H2, () => { const t = __t.Hist.total(__t.dayStr(new Date())); return t.s === 170 && t.n === 3 && t.p === 260; }), 'y sigue sumando sobre lo que ya tenía, no desde cero', [await hoyDe(H2), docH()[dia]]);
+  ok(await waitFor(H2, () => { const t = __t.Hist.total(__t.dayStr(new Date())); return t.s === 190 && t.n === 8 && t.p === 660; }), 'y sigue sumando sobre lo que ya tenía, no desde cero', [await hoyDe(H2), docH()[dia]]);
   // Datos viejos o dañados en la cuenta
   serverEdit('usuarios/' + uH, {historial: {'2020-01-01': {}, basura: {x: 1}, '2026-09-01': {[d2]: {s: 600, n: 2, p: 150, raro: 7}, 'no vale': {s: 9}}}});
   ok(await waitFor(H1, () => __t.Hist.total('2026-09-01').s === 600), 'un día que llega de la cuenta se incorpora');

@@ -105,12 +105,30 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ok(t1.n === 3 && t1.p < 300 && t1.p > 200, 'una pieza con errores baja la precisión media', t1);
   await B.evaluate(() => { const t = __t; t.goLearn(); t.openSong('cinco-do'); t.setMode('escuchar'); t.start(); const P = t.P; let g = 0; while (!P.finished && g++ < 200000){ t.step(1 / 120); window.__tick(1000 / 120); } });
   ok((await today()).n === 3, 'escuchar una pieza no cuenta como tocarla');
+  await B.evaluate(() => { const t = __t; t.goLearn(); t.openSong('cinco-do'); t.setMode('ritmo'); t.start(); const P = t.P; let g = 0; while (!P.finished && g++ < 200000){ t.step(1 / 120); window.__tick(1000 / 120); } });
+  ok((await today()).n === 3, 'una pieza que pasa sola, sin tocar ninguna tecla, tampoco cuenta');
+  let s0 = (await today()).s;
+  await B.evaluate(() => { const t = __t; t.goFree(); t.histTick(); t.press(60, 'midi', 0.7); t.release(60); window.__skew += 3000; t.goHome(); });
+  ok((await today()).s === s0 + 3, 'al salir de la práctica se cuenta el último tramo', [(await today()).s, s0]);
+  // Una pieza sonando sin que nadie toque: cuenta mientras hubo actividad hace poco, no para siempre.
+  s0 = (await today()).s;
+  const idle = await B.evaluate(() => {
+    const t = __t; t.goLearn(); t.openSong('cinco-do'); t.setMode('escuchar'); t.start(); t.histTick();
+    window.__skew += 5000; t.histTick(); const a = t.Hist.total(t.dayStr(new Date())).s;
+    window.__skew += 6 * 60 * 1000; t.histTick(); window.__skew += 5000; t.histTick();
+    return [a, t.Hist.total(t.dayStr(new Date())).s];
+  });
+  ok(idle[0] === s0 + 5 && idle[1] === s0 + 5, 'una pieza que suena cuenta al principio, pero no si pasan minutos sin que nadie toque nada', [s0, idle]);
+  const tabs = await B.evaluate(() => { const t = __t, d = t.dayStr(new Date()), before = t.Hist.total(d).s;
+    window.dispatchEvent(new StorageEvent('storage', {key: 'piano:historial', newValue: JSON.stringify({[d]: {otrapest: {s: 600, n: 2, p: 180}}})}));
+    return t.Hist.total(d).s - before; });
+  ok(tabs === 600, 'lo que guarda otra pestaña del mismo navegador se incorpora en vez de pisarse', tabs);
   // La pantalla
   await B.evaluate(() => __t.goProgress());
   let txt = (await B.textContent('#progBody')).replace(/\s+/g, ' ');
-  ok(/Hoy\s*menos de 1 min\s*3 piezas terminadas/.test(txt) && /Racha\s*1 día/.test(txt), 'las tarjetas muestran lo de hoy y la racha', txt.slice(0, 400));
+  ok(/Hoy\s*10 min\s*5 piezas terminadas/.test(txt) && /Racha\s*1 día/.test(txt), 'las tarjetas muestran lo de hoy y la racha', txt.slice(0, 400));
   ok(await B.evaluate(() => document.querySelectorAll('#progBody .pg-chart svg').length === 2 && document.querySelectorAll('#progBody .pg-chart svg')[0].querySelectorAll('.pg-col').length === 14), 'hay dos gráficos de 14 días');
-  ok(/^Hoy, /.test(await B.textContent('#progDet')) && /3 piezas terminadas · precisión media \d+% · 4 estrellas nuevas\./.test(await B.textContent('#progDet')), 'el detalle empieza en hoy', await B.textContent('#progDet'));
+  ok(/^Hoy, /.test(await B.textContent('#progDet')) && /5 piezas terminadas · precisión media \d+% · 4 estrellas nuevas\./.test(await B.textContent('#progDet')), 'el detalle empieza en hoy', await B.textContent('#progDet'));
   await B.click('#progBody .pg-chart svg .pg-col[data-i="11"]');
   ok(/Sin práctica\./.test(await B.textContent('#progDet')) && await B.evaluate(() => document.querySelectorAll('#progBody .pg-col.sel').length === 2), 'al tocar otro día, el detalle y los dos gráficos cambian juntos', await B.textContent('#progDet'));
   await B.click('#progBody [data-span="semanas"]');
@@ -149,7 +167,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     return JSON.stringify(a) === JSON.stringify({'2026-10-01': {aaaaaa11: {s: 80, n: 2, p: 150}, bbbbbb22: {s: 10}}}); }), 'al juntar dos copias queda el número más alto de cada casilla');
   const hist = await B.evaluate(() => localStorage.getItem('piano:historial'));
   await B.context().close();
-  for (const [name, vp, dev, theme] of [['celular', {width: 390, height: 800}, 'cel-v', 'auto'], ['celular-oscuro', {width: 390, height: 800}, 'cel-v', 'dark'], ['pc-oscuro', {width: 1366, height: 768}, 'pc', 'dark']]){
+  for (const [name, vp, dev, theme] of [['celular', {width: 390, height: 800}, 'cel-v', 'auto'], ['celular-oscuro', {width: 390, height: 800}, 'cel-v', 'dark'], ['celular-angosto', {width: 360, height: 740}, 'cel-v', 'auto'], ['celular-mini', {width: 320, height: 640}, 'cel-v', 'auto'], ['celular-horizontal', {width: 740, height: 360}, 'cel-h', 'auto'], ['pc-oscuro', {width: 1366, height: 768}, 'pc', 'dark']]){
     const C = await open(vp, dev);
     await C.evaluate(([h, dev, theme]) => { localStorage.setItem('piano:historial', h); localStorage.setItem('piano:ajustes', JSON.stringify({device: dev, theme})); }, [hist, dev, theme]);
     await C.reload(); await C.waitForFunction(() => window.__t);
@@ -159,6 +177,19 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await C.screenshot({path: path.join(SHOTS, `progreso-${name}.png`)});
     await C.evaluate(() => { document.querySelector('#progBody').scrollTop = 520; });
     await C.screenshot({path: path.join(SHOTS, `progreso-${name}-2.png`)});
+    // En cada período: las etiquetas del eje no se pisan, el dibujo se hizo al ancho real y la tabla cabe.
+    for (const span of ['dias', 'semanas']){
+      await C.click(`#progBody [data-span="${span}"]`);
+      const lay = await C.evaluate(() => {
+        const body = document.querySelector('#progBody'), svg = body.querySelector('.pg-chart svg');
+        const xs = [...svg.querySelectorAll('.pg-x')].map(t => t.getBoundingClientRect()); let clash = 0;
+        for (let i = 1; i < xs.length; i++) if (xs[i].left < xs[i - 1].right + 1) clash++;
+        const card = body.querySelector('.pg-table').closest('.pg-card').getBoundingClientRect(), tb = body.querySelector('.pg-table').getBoundingClientRect();
+        return {clash, scroll: body.scrollWidth - body.clientWidth, doc: document.documentElement.scrollWidth - innerWidth, ratio: svg.getBoundingClientRect().width / svg.viewBox.baseVal.width, table: tb.right <= card.right - 8};
+      });
+      ok(lay.clash === 0 && lay.scroll <= 0 && lay.doc <= 0 && Math.abs(lay.ratio - 1) < 0.03 && lay.table, `en ${name}, por ${span === 'dias' ? 'días' : 'semanas'}: etiquetas sin pisarse, sin desplazamiento lateral y tabla dentro de su tarjeta`, lay);
+    }
+    if (name === 'celular-angosto') await C.screenshot({path: path.join(SHOTS, 'progreso-angosto-semanas.png')});
     await C.context().close();
   }
 

@@ -221,6 +221,7 @@ a.btn{text-decoration:none}
 .pg-card{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:14px 14px 12px;margin-top:14px}
 .pg-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:6px}
 .pg-head h2{font-size:1.1rem;margin:0;flex:1 1 auto}
+.pg-head .seg button{padding:0 9px}
 .pg-card h3{font-size:.95rem;font-weight:700;margin:14px 0 2px;display:flex;align-items:center;gap:8px}
 .pg-card h3 i{width:12px;height:12px;border-radius:3px;flex:none}
 .pg-card h3 i.ln{height:3px;border-radius:2px;width:16px}
@@ -241,7 +242,8 @@ a.btn{text-decoration:none}
 .pg-det b{display:block}
 .pg-none{margin:6px 0 0;color:var(--ink-soft)}
 .pg-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin-top:4px}
-.pg-table th,.pg-table td{padding:8px 4px;border-bottom:1px solid var(--line);text-align:right;font-size:.95rem}
+.pg-table th,.pg-table td{padding:8px 3px;border-bottom:1px solid var(--line);text-align:right;font-size:.95rem}
+.pg-card{min-width:0;overflow:hidden}
 .pg-table th{font-size:.85rem;color:var(--ink-soft);font-weight:700;vertical-align:bottom}
 .pg-table th:first-child,.pg-table td:first-child{text-align:left}
 .pg-table tr:last-child td{border-bottom:0}
@@ -1013,7 +1015,7 @@ const LESSONS = [
    goal:'Sol7 es el acorde de Sol con una nota más: Fa (el Re se deja fuera para que quepa en la mano). Sin sacar la mano de la posición de Do se toca con Si, Fa y Sol: el pulgar baja a Si y los dedos 4 y 5 tocan Fa y Sol. Suena tenso, como una pregunta, y el acorde de Do la responde. Escucha esa tensión y ese descanso.',
    notes:'C4+E4+G4:4:1+3+5 B3+F4+G4:4:1+4+5 C4+E4+G4:4:1+3+5 B3+F4+G4:2:1+4+5 C4+E4+G4:2:1+3+5 C4+F4+A4:4:1+3+5 B3+F4+G4:4:1+4+5 C4+E4+G4:2:1+3+5 B3+F4+G4:2:1+4+5 C4+E4+G4:4:1+3+5'},
   {id:'enlace', bpm:66, title:'Enlazar acordes', summary:'Do, La menor, Fa y Sol casi sin mover la mano.',
-   goal:'Con inversiones se pasa de un acorde a otro moviendo muy poco. De Do (Do, Mi, Sol) a La menor solo sube el meñique, de Sol a La. De La menor a Fa solo cambia Mi por Fa. Para Sol baja toda la mano un paso: Si, Re, Sol. Antes de cada cambio, busca qué notas se quedan en su lugar.',
+   goal:'Con inversiones se pasa de un acorde a otro moviendo muy poco. De Do (Do, Mi, Sol) a La menor solo sube el meñique, de Sol a La. De La menor a Fa solo cambia Mi por Fa. Para Sol, el pulgar y el meñique bajan un paso, a Si y a Sol, y en el medio el dedo 2 toca Re. Antes de cada cambio, busca qué notas se quedan en su lugar.',
    notes:'C4+E4+G4:4:1+3+5 C4+E4+A4:4:1+3+5 C4+F4+A4:4:1+3+5 B3+D4+G4:4:1+2+5 C4+E4+G4:2:1+3+5 C4+E4+A4:2:1+3+5 C4+F4+A4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:2:1+3+5 B3+D4+G4:2:1+2+5 C4+E4+G4:4:1+3+5'},
   {id:'alberti', bpm:72, hand:'L', title:'El bajo Alberti', summary:'El acorde repartido: abajo, arriba, medio, arriba.',
    goal:'Un acompañamiento clásico: las notas del acorde una por una, en el orden abajo, arriba, medio, arriba. Para Do: Do, Sol, Mi, Sol con los dedos 5, 1, 3 y 1. La mano no se desplaza; la muñeca gira un poco hacia cada lado, como al girar la perilla de una puerta.',
@@ -1112,29 +1114,29 @@ const SONGS = [
    notes:'E5:0.5:5 D#5:0.5:4 E5:0.5:5 D#5:0.5:4 E5:0.5:5 B4:0.5:2 D5:0.5:4 C5:0.5:3 A4:1.5:1 C4:0.5:1 E4:0.5:2 A4:0.5:4 B4:1.5:5 E4:0.5:1 G#4:0.5:2 B4:0.5:4 C5:1.5:5 E4:0.5:1 E5:0.5:5 D#5:0.5:4 E5:0.5:5 D#5:0.5:4 E5:0.5:5 B4:0.5:2 D5:0.5:4 C5:0.5:3 A4:1.5:1 C4:0.5:1 E4:0.5:2 A4:0.5:4 B4:1.5:5 E4:0.5:1 C5:0.5:5 B4:0.5:4 A4:3:3',
    chords:'R:1 R:3 Am:3 E:3 Am:3 R:3 Am:3 E:3 Am:3'},
   /* Canciones que usan lo del Nivel 2: armaduras, ritmos nuevos, matices y articulación. */
-  {id:'pollitos', level:4, bpm:100, sig:-1, pos:'F', dyn:'0:f 16:p', title:'Los pollitos dicen', origin:'Canción infantil tradicional', skills:'Fa mayor, fuerte y suave',
-   goal:'Está en Fa mayor: el Si♭ de la armadura vale para toda la canción. La primera vez va fuerte y la segunda, suave. Para alcanzar el Re, estira el meñique una tecla.',
-   notes:'F4:0.5:1 G4:0.5:2 A4:0.5:3 Bb4:0.5:4 C5:1:5 C5:1:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 C5:2:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 A4:1:3 A4:1:3 G4:0.5:2 G4:0.5:2 G4:0.5:2 G4:0.5:2 F4:2:1 F4:0.5:1 G4:0.5:2 A4:0.5:3 Bb4:0.5:4 C5:1:5 C5:1:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 C5:2:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 A4:1:3 A4:1:3 G4:0.5:2 G4:0.5:2 G4:0.5:2 G4:0.5:2 F4:2:1',
+  {id:'pollitos', level:4, bpm:100, sig:-1, pos:'F', dyn:'0:f 16:p', title:'Los pollitos dicen', origin:'Canción infantil, atribuida a Ismael Parraguez', skills:'Fa mayor, fuerte y suave',
+   goal:'Está en Fa mayor: el Si♭ de la armadura vale para toda la canción. La primera vez va fuerte y la segunda, suave. Para alcanzar el Re, estira el meñique una tecla y vuelve.',
+   notes:'F4:0.5:1 G4:0.5:2 A4:0.5:3 Bb4:0.5:4 C5:1:5 C5:1:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 C5:2:5 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 A4:1:3 A4:1:3 G4:0.5:2 G4:0.5:2 G4:0.5:2 G4:0.5:2 F4:2:1 F4:0.5:1 G4:0.5:2 A4:0.5:3 Bb4:0.5:4 C5:1:5 C5:1:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 D5:0.5:5 C5:2:5 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 Bb4:0.5:4 A4:1:3 A4:1:3 G4:0.5:2 G4:0.5:2 G4:0.5:2 G4:0.5:2 F4:2:1',
    chords:'F:4 Bb:2 F:2 Bb:2 F:2 C:2 F:2 F:4 Bb:2 F:2 Bb:2 F:2 C:2 F:2'},
   {id:'susana', level:4, bpm:110, sig:2, pos:'D', pickup:1, dyn:'0:p 33:f', title:'Oh, Susana', origin:'Stephen Foster', skills:'Re mayor, puntillo y síncopa',
-   goal:'Está en Re mayor: todos los Fa son Fa♯. Fíjate en las negras con puntillo y, en el estribillo, en la nota larga que entra en el segundo pulso. La estrofa va suave y el estribillo, fuerte.',
-   notes:'D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:2 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 D4:1:1 E4:3:2 D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:2 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 E4:1:2 D4:4:1 G4:2:3 G4:2:3 B4:1:5 B4:2:5 B4:1:5 A4:1:4 A4:1:4 F#4:1:2 D4:1:1 E4:3:2 D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:2 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 E4:1:2 D4:4:1',
+   goal:'Está en Re mayor: todos los Fa son Fa♯ (la armadura trae también Do♯, que esta melodía no usa). Fíjate en las negras con puntillo y, en el estribillo, en la nota larga que entra en el segundo pulso. La estrofa va suave y el estribillo, fuerte.',
+   notes:'D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:3 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 D4:1:1 E4:3:2 D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:3 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 E4:1:2 D4:4:1 G4:2:3 G4:2:3 B4:1:5 B4:2:5 B4:1:5 A4:1:4 A4:1:4 F#4:1:2 D4:1:1 E4:3:2 D4:0.5:1 E4:0.5:2 F#4:1:3 A4:1:4 A4:1.5:4 B4:0.5:5 A4:1:4 F#4:1:3 D4:1.5:1 E4:0.5:2 F#4:1:3 F#4:1:3 E4:1:2 E4:1:2 D4:4:1',
    chords:'R:1 D:4 D:4 D:4 A:4 D:4 D:4 D:2 A:2 D:4 G:4 G:4 D:4 A:4 D:4 D:4 D:2 A:2 D:4'},
   {id:'sorpresa', level:4, bpm:84, meter:2, dyn:'0:p 31:f', art:'0:s 3:n 4:s 7:n 8:s 11:n 12:s 14:n 16:s 19:n 20:s 23:n 24:s 27:n 28:s 30:n',
    title:'La sorpresa', origin:'Joseph Haydn, Sinfonía n.º 94', skills:'Staccato, suave y un fuerte de golpe',
-   goal:'Haydn escribió esta melodía muy suave y con notas cortas… y al final un acorde fuerte para despertar al público. Toca las corcheas en staccato y guarda toda la fuerza para el último acorde.',
-   notes:'C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 F4:0.5:5 F4:0.5:5 D4:0.5:3 D4:0.5:3 B3:0.5:2 B3:0.5:2 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 C5:0.5:5 C5:0.5:5 F#4:0.5:2 F#4:0.5:2 G4:1:3 R:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 F4:0.5:5 F4:0.5:5 D4:0.5:3 D4:0.5:3 B3:0.5:2 B3:0.5:2 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 C5:0.5:5 C5:0.5:5 F#4:0.5:2 F#4:0.5:2 G4:1:3 B3+D4+G4:1:1+2+5',
-   chords:'C:2 C:2 G:2 G:2 C:2 C:2 D:2 G:2 C:2 C:2 G:2 G:2 C:2 C:2 D:2 G:1 G:1'},
-  {id:'primavera', level:4, bpm:72, sig:-1, pos:'F', pickup:0.5, dyn:'0:f 12:p', title:'La primavera', origin:'Antonio Vivaldi, tema de «Las cuatro estaciones»', skills:'Fa mayor, semicorcheas y eco',
-   goal:'El tema se toca dos veces: fuerte y después suave, como un eco. Así lo escribió Vivaldi. Cuida las dos semicorcheas de cada compás: van parejas y sin correr. La mano no sale de la posición de Fa.',
-   notes:'F4:0.5:1 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 Bb4:0.25:4 C5:0.25:5 Bb4:0.5:4 A4:0.5:3 G4:1.5:2 F4:0.5:1 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 Bb4:0.25:4 C5:0.25:5 Bb4:0.5:4 A4:0.5:3 G4:1:2 F4:1:1',
+   goal:'Haydn escribió esta melodía muy suave y con notas cortas… y al final un acorde fuerte: dicen que para despertar al público. Toca las corcheas en staccato y guarda toda la fuerza para el último acorde.',
+   notes:'C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 F4:0.5:5 F4:0.5:5 D4:0.5:3 D4:0.5:3 B3:0.5:2 B3:0.5:2 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 C5:0.5:5 C5:0.5:5 F#4:0.5:2 F#4:0.5:2 G4:1:3 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 F4:0.5:5 F4:0.5:5 D4:0.5:3 D4:0.5:3 B3:0.5:2 B3:0.5:2 G3:1:1 C4:0.5:1 C4:0.5:1 E4:0.5:3 E4:0.5:3 G4:0.5:5 G4:0.5:5 E4:1:3 C5:0.5:5 C5:0.5:5 F#4:0.5:2 F#4:0.5:2 G4:1:3 B3+D4+G4:1:1+2+5',
+   chords:'C:2 C:2 G:4 C:2 C:2 D:2 G:2 C:2 C:2 G:4 C:2 C:2 D:2 G:1 G:1'},
+  {id:'primavera', level:4, bpm:72, sig:-1, pos:'F', pickup:0.5, dyn:'0:f 12:p', title:'La primavera', origin:'Antonio Vivaldi, tema de «Las cuatro estaciones», con el final adaptado', skills:'Fa mayor, semicorcheas y eco',
+   goal:'El tema se toca dos veces: fuerte y después suave, como un eco. Así lo escribió Vivaldi. Cuida los pares de semicorcheas: van parejos y sin correr. Al final de la primera frase la mano baja para tocar Sol, Mi y Do con los dedos 5, 3 y 1, y vuelve a la posición de Fa.',
+   notes:'F4:0.5:1 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 Bb4:0.25:4 C5:0.25:5 Bb4:0.5:4 A4:0.5:3 G4:0.5:5 E4:0.5:3 C4:0.5:1 F4:0.5:1 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 A4:0.5:3 A4:0.5:3 G4:0.25:2 F4:0.25:1 C5:1.5:5 C5:0.25:5 Bb4:0.25:4 A4:0.5:3 Bb4:0.25:4 C5:0.25:5 Bb4:0.5:4 A4:0.5:3 G4:1:2 F4:1:1',
    chords:'R:0.5 F:4 F:4 F:2 C:2 F:4 F:4 F:2 C:1 F:1'},
   {id:'canon', level:4, bpm:80, sig:2, pos:'D', dyn:'0:p 16:c 32:f', art:'0:l 32:n', title:'Canon en Re', origin:'Johann Pachelbel, tema', skills:'Re mayor, legato y crescendo',
    goal:'Está en Re mayor, con Fa♯ y Do♯. Las notas largas del principio van ligadas y suaves; en la segunda frase crece poco a poco hasta llegar fuerte a las negras. Después del pulgar en Re, el dedo 4 cruza por encima para tocar Do♯.',
-   notes:'F#5:2:3 E5:2:2 D5:2:1 C#5:2:4 B4:2:3 A4:2:2 B4:2:3 C#5:2:4 D5:2:5 C#5:2:4 B4:2:3 A4:2:2 G4:2:1 F#4:2:3 G4:2:4 E4:2:2 D5:1:1 F#5:1:3 A5:1:5 G5:1:4 F#5:1:3 D5:1:1 F#5:1:3 E5:1:2 D5:1:5 B4:1:3 D5:1:5 A4:1:2 G4:1:1 B4:1:3 A4:1:2 G4:1:1 D5:4:5',
+   notes:'F#5:2:3 E5:2:2 D5:2:1 C#5:2:4 B4:2:3 A4:2:2 B4:2:3 C#5:2:4 D5:2:5 C#5:2:4 B4:2:3 A4:2:2 G4:2:1 F#4:2:3 G4:2:4 E4:2:2 D4:1:1 F#4:1:3 A4:1:5 G4:1:4 F#4:1:3 D4:1:1 F#4:1:3 E4:1:2 D4:1:2 B3:1:1 D4:1:2 A4:1:4 G4:1:3 B4:1:5 A4:1:4 G4:1:3 D4:4:1',
    chords:'D:2 A:2 Bm:2 F#m:2 G:2 D:2 G:2 A:2 D:2 A:2 Bm:2 F#m:2 G:2 D:2 G:2 A:2 D:2 A:2 Bm:2 F#m:2 G:2 D:2 G:2 A:2 D:4'},
   {id:'sonata545', level:4, bpm:100, title:'Sonata en Do, K. 545', origin:'Wolfgang Amadeus Mozart, primeros compases', skills:'Bajo Alberti',
-   goal:'El comienzo de la sonata más conocida de Mozart, con el final adaptado. En el nivel «Original» la mano izquierda toca el bajo Alberti tal como él lo escribió. Que la izquierda suene más suave que la melodía.',
+   goal:'El comienzo de una de las sonatas más conocidas de Mozart, con el final adaptado. En el nivel «Original» la mano izquierda toca el bajo Alberti tal como él lo escribió. Que la izquierda suene más suave que la melodía.',
    notes:'C5:2:1 E5:1:3 G5:1:5 B4:1.5:1 C5:0.25:2 D5:0.25:3 C5:1:2 R:1 A5:2:4 G5:1:3 C6:1:5 G5:1:3 F5:0.5:2 E5:0.25:1 F5:0.25:2 E5:1:1 R:1 C5:4:1',
    left:'C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 D4:0.5:4 G4:0.5:1 F4:0.5:2 G4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 C4:0.5:5 A4:0.5:1 F4:0.5:2 A4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 B3:0.5:5 G4:0.5:1 D4:0.5:3 G4:0.5:1 C4:0.5:5 G4:0.5:1 E4:0.5:3 G4:0.5:1 C4+E4+G4:4:5+3+1',
    chords:'C:4 G:2 C:2 F:2 C:2 G:2 C:2 C:4'}
@@ -1506,8 +1508,9 @@ const joinDays = (a, b) => [...new Set((Array.isArray(a) ? a : []).concat(Array.
 const Hist = (() => {
   const KEY = 'piano:historial', FLD = ['s', 'n', 'p', 'e'], MAX = {s: 86400, n: 5000, p: 500000, e: 3000}, EVERY = 120000;
   const okId = id => typeof id === 'string' && /^[a-z0-9]{6,12}$/.test(id);
+  const newId = () => { const id = (Math.random().toString(36).slice(2, 10) + '00000000').slice(0, 8); store.set('piano:equipo', id); return id; };
   let dev = store.get('piano:equipo', '');
-  if (!okId(dev)){ dev = (Math.random().toString(36).slice(2, 10) + '00000000').slice(0, 8); store.set('piano:equipo', dev); }
+  if (!okId(dev)) dev = newId();
   function clean(src){
     const out = {};
     if (!isObj(src)) return out;
@@ -1525,6 +1528,10 @@ const Hist = (() => {
   }
   let data = clean(store.get(KEY, {})), dirty = false, force = true, sentAt = 0;
   const save = () => store.set(KEY, data);
+  window.addEventListener('storage', e => {
+    if (e.key !== KEY || !e.newValue) return;
+    try { data = merge(data, JSON.parse(e.newValue)); } catch(x){}
+  });
   /* De dos copias queda, en cada casilla, el número más alto: los contadores solo suben. */
   function merge(a, b){
     const out = clean(a);
@@ -1556,13 +1563,13 @@ const Hist = (() => {
     get dev(){ return dev; }, clean, merge, total, due, flush,
     raw: () => data,
     set(m){ data = clean(m); save(); },
-    clear(){ data = {}; dirty = false; save(); },
+    clear(){ data = {}; dirty = false; save(); dev = newId(); },
     /* Sin cuenta, en este dispositivo solo queda lo que se practicó aquí. */
     own(){ for (const day of Object.keys(data)){ const c = data[day][dev]; if (c) data[day] = {[dev]: c}; else delete data[day]; } save(); },
     mark(){ force = true; },
     sent(){ dirty = false; force = false; sentAt = Date.now(); },
     tick(sec){ add('s', sec); if (due()) Nube.push(); },
-    run(pct){ add('n', 1); add('p', Math.max(0, Math.min(100, pct))); flush(); },
+    run(pct, quiet){ add('n', 1); add('p', Math.max(0, Math.min(100, pct))); if (!quiet) flush(); else if (due()) Nube.push(); },
     stars(n){ add('e', n); flush(); },
     days: () => Object.keys(data).sort(),
     /* Días seguidos con práctica (al menos un minuto o una pieza terminada), contando hoy o hasta ayer. */
@@ -3693,7 +3700,8 @@ function lapRestart(pct){
 function finish(){
   const s = P.song, total = P.total, listen = P.mode === 'escuchar';
   const r = runResult(), {stars, pct} = r;
-  if (!listen && total) Hist.run(pct);
+  // Solo cuenta lo que tocó el alumno; las vueltas de «repetir» se suben juntas, no una por una.
+  if (!listen && total && P.hits + P.errors > 0) Hist.run(pct, aidOn('parts') && partSel.loop);
   if (!listen && total && !P.partial){
     Data.saveBest(progKey(s, P.level), stars, pct);
     sesStore.ult[s.key] = dayStr(new Date()); saveSes();
@@ -4402,7 +4410,7 @@ const TEO = [
       {names:false, maxErr:1, range:[60,72], miss:'Esa no es. Un semitono es la tecla de al lado: no te saltes ninguna, ni blanca ni negra.'}),
     tT('La receta de la escala mayor', ['Toda escala mayor sigue la misma receta de distancias: tono, tono, semitono, tono, tono, tono, semitono. Por eso todas suenan parecido, empiecen donde empiecen.',
       'Si empiezas en Do, la receta cae justo en las teclas blancas. Si empiezas en Fa, la cuarta nota tiene que quedar a un semitono de La: no es Si, es la tecla negra de su izquierda, Si♭.',
-      'Eso es una tonalidad: la nota donde la música se siente en casa y las teclas que le tocan según la receta. Fa mayor usa un bemol, Si♭.'],
+      'Eso es una tonalidad: la nota donde la música se siente en casa y las teclas que le corresponden según la receta. Fa mayor usa un bemol, Si♭.'],
       {keys:{lo:65, hi:77, hl:[70], mark:{65:'Fa',67:'Sol',69:'La',70:'Si♭',72:'Do',74:'Re',76:'Mi',77:'Fa'}, alt:'La escala de Fa mayor: todas las teclas son blancas menos Si bemol'}}),
     tT('La armadura', ['Para no escribir el bemol delante de cada Si, se pone una sola vez al principio de cada pentagrama, junto a la clave. Eso es la armadura.',
       'Un bemol en la línea de Si quiere decir: en esta pieza todos los Si son Si♭, en cualquier altura, aunque no lleven nada al lado.'],
@@ -4418,7 +4426,7 @@ const TEO = [
       'La armadura de Sol mayor es un sostenido, dibujado en la línea de Fa. Todos los Fa de la pieza son Fa♯.'],
       {staff:{sig:1, notes:[67,69,71,72,74,76,78,79], names:true, alt:'La escala de Sol mayor con un sostenido en la armadura'}}),
     tT('Re mayor: dos sostenidos', ['Si empiezas en Re hacen falta dos teclas negras: Fa♯ y Do♯. La armadura lleva los dos sostenidos, siempre en ese orden.',
-      'Un truco para reconocer la tonalidad: mira el último sostenido de la armadura y sube un semitono. Si el último es Fa♯, estás en Sol; si es Do♯, estás en Re.',
+      'Un truco para reconocer la tonalidad: mira el último sostenido de la armadura y sube un semitono. Si el último es Fa♯, estás en Sol mayor; si es Do♯, en Re mayor.',
       'Con bemoles, por ahora basta recordar que un solo bemol es Fa mayor. Y sin nada en la armadura, Do mayor.'],
       {staff:{sig:2, notes:[62,64,66,67,69,71,73,74], names:true, alt:'La escala de Re mayor con dos sostenidos en la armadura'}}),
     tS('Lee en Re mayor', 'Mira la nota y toca su tecla. La armadura cambia dos notas: Fa y Do.', [62,64,66,67,69,71,73,74], 10, [60,77], 'T', 2),
@@ -4428,7 +4436,7 @@ const TEO = [
   {id:'d19', part:2, title:'Mayor y menor', sum:'La nota que cambia el color de un acorde.',
    fin:'Mayor y menor son los dos colores básicos de la música. Empieza a escucharlos en las canciones que te gustan.',
    steps:[
-    tT('La tercera manda', ['Un acorde tiene tres notas. La de abajo le da el nombre, y la del medio, que se llama tercera, le da el color.',
+    tT('La tercera manda', ['Los acordes que conoces tienen tres notas. Ordenadas una tecla sí y una no, como Do, Mi, Sol, la de abajo le da el nombre al acorde y la del medio, que se llama tercera, le da el color.',
       'Si la tercera está a cuatro semitonos de la nota de abajo, el acorde es mayor y suena luminoso. Si está a tres, es menor y suena más oscuro.',
       'De Re mayor a Re menor cambia una sola tecla: Fa♯ baja a Fa.'],
       {keys:{lo:60, hi:71, hl:[62,66,69], mark:{62:'Re',65:'Fa',66:'Fa♯',69:'La'}, alt:'Re mayor usa Fa sostenido; Re menor usa Fa'}}),
@@ -4436,10 +4444,10 @@ const TEO = [
       [{midi:66, label:'La tercera de Re mayor'}, {midi:65, label:'La tercera de Re menor'}, {midi:64, label:'La tercera de Do mayor'}, {midi:63, label:'La tercera de Do menor'}, {midi:71, label:'La tercera de Sol mayor'}, {midi:70, label:'La tercera de Sol menor'}],
       {names:false, maxErr:2, range:[60,72], miss:'Esa no es. Cuenta los semitonos desde la nota de abajo, tecla por tecla.'}),
     tT('El becuadro', ['En la partitura, el signo ♮ se llama becuadro y anula un sostenido o un bemol: devuelve la nota a su tecla blanca.',
-      'Un sostenido, un bemol o un becuadro escrito junto a una nota vale hasta el final de ese compás. En el compás siguiente vuelve a mandar la armadura.']),
+      'Un sostenido, un bemol o un becuadro escrito junto a una nota vale para esa misma nota hasta el final del compás. En el compás siguiente vuelve a mandar la armadura.']),
     tP('Re mayor y Re menor', 'Escucha cómo cambia el color cuando el dedo 3 pasa de la tecla negra a la blanca.', 're-mayor-menor'),
     tT('Los menores de las teclas blancas', ['Usando solo teclas blancas salen tres acordes mayores, que ya conoces (Do, Fa y Sol), y tres menores: Re menor, Mi menor y La menor.',
-      'En los cifrados de las canciones, una m minúscula quiere decir menor: Rem, Mim, Lam. En el cifrado con letras son Dm, Em y Am.'],
+      'En los cancioneros, los acordes se anotan con cifrado, y una m minúscula quiere decir menor: Rem, Mim, Lam. En el cifrado con letras son Dm, Em y Am.'],
       {keys:{lo:57, hi:71, hl:[57,60,64], mark:{57:'La',60:'Do',64:'Mi'}, alt:'El acorde de La menor: La, Do y Mi'}}),
     tP('Acordes menores', 'Los tres se tocan con los dedos 1, 3 y 5. Mueve toda la mano de uno a otro.', 'acordes-menores')
    ]},
@@ -4462,7 +4470,7 @@ const TEO = [
     tT('Un cuarto de pulso', ['La semicorchea dura la mitad de una corchea: en un pulso caben cuatro. Sola, se reconoce por sus dos ganchitos.',
       'Con ella ya conoces cinco figuras, y cada una dura la mitad de la anterior.'], 'notes16'),
     tT('Cómo se reparten', ['Cuando van seguidas, las semicorcheas se unen con una barra doble en grupos de cuatro: cada grupo es un pulso, y así el ojo ve los pulsos de un vistazo.',
-      'Para que salgan parejas, di una palabra de cuatro sílabas en cada pulso: «ca-fe-ci-to, ca-fe-ci-to». La primera sílaba cae con el clic.'],
+      'Para que salgan parejas, di una palabra de cuatro sílabas en cada pulso: «ca-fe-ci-to, ca-fe-ci-to». La primera sílaba cae con el clic. En una negra dices solo «ca».'],
       {rhythm:{items:[{d:.25,b:1},{d:.25,b:1},{d:.25,b:1},{d:.25,b:1},{d:1},{d:.25,b:2},{d:.25,b:2},{d:.25,b:2},{d:.25,b:2},{d:1}],
         count:['ca','fe','ci','to','ca','','','','ca','fe','ci','to','ca','','',''], grid:0.25, strong:[0,4,8,12], alt:'Cuatro semicorcheas unidas y una negra, dos veces, con las sílabas «ca-fe-ci-to» debajo'}}),
     tP('Semicorcheas', 'En modo Ritmo. Empieza al 50 % de velocidad: no hay ningún apuro.', 'semicorcheas', {mode:'ritmo', force:{metro:true}}),
@@ -4477,7 +4485,7 @@ const TEO = [
    steps:[
     tT('Pulsos de dos y pulsos de tres', ['Hasta ahora cada pulso se partía en dos corcheas: «1 y, 2 y». Hay compases donde cada pulso se parte en tres.',
       'El más común es el 6/8: seis corcheas por compás, agrupadas en dos pulsos de tres. Cuenta «1, 2, 3, 4, 5, 6» con un pequeño acento en el 1 y en el 4.',
-      'Las barras que unen las corcheas muestran los grupos: de tres en tres.'],
+      'En la partitura, el 8 de abajo dice que se cuentan corcheas y el 6 de arriba, que hay seis en cada compás. Las barras que unen las corcheas muestran los grupos: de tres en tres.'],
       {rhythm:{items:[{d:.5,b:1},{d:.5,b:1},{d:.5,b:1},{d:.5,b:2},{d:.5,b:2},{d:.5,b:2}], count:['1','2','3','4','5','6'], grid:0.5, strong:[0,3], alt:'Seis corcheas unidas de tres en tres, con la cuenta del 1 al 6 y acento en el 1 y en el 4'}}),
     tT('Qué figura vale un pulso', ['En 6/8 el pulso ya no es la negra: es la negra con puntillo, que vale tres corcheas. Una negra seguida de una corchea también llena un pulso: larga, corta.',
       'El metrónomo de la app marca solo los dos pulsos del compás.',
@@ -4489,9 +4497,9 @@ const TEO = [
    fin:'Las inversiones son el secreto para acompañar sin saltar por todo el teclado. Las usarás en la próxima lección.',
    steps:[
     tT('Las mismas notas, en otro orden', ['Do, Mi y Sol forman el acorde de Do mayor en cualquier orden y en cualquier altura. Con Do abajo, el acorde está en posición fundamental.',
-      'Si pasas el Do de abajo a la octava de arriba queda Mi, Sol, Do: es la primera inversión. Se toca con los dedos 1, 2 y 5.'],
+      'Si pasas el Do de abajo a la octava de arriba queda Mi, Sol, Do: es la primera inversión. Con la mano derecha se toca con los dedos 1, 2 y 5.'],
       {keys:{lo:60, hi:76, hl:[64,67,72], mark:{64:'1',67:'2',72:'5'}, alt:'Primera inversión de Do mayor: Mi, Sol y Do con los dedos 1, 2 y 5'}}),
-    tT('La segunda inversión', ['Si ahora subes también el Mi queda Sol, Do, Mi: la segunda inversión, con los dedos 1, 3 y 5.',
+    tT('La segunda inversión', ['Si ahora subes también el Mi queda Sol, Do, Mi: la segunda inversión, con los dedos 1, 3 y 5 de la mano derecha.',
       'Las tres posiciones suenan parecido porque tienen las mismas notas. Lo que cambia es cuál queda abajo y cuál arriba.'],
       {keys:{lo:60, hi:76, hl:[67,72,76], mark:{67:'1',72:'3',76:'5'}, alt:'Segunda inversión de Do mayor: Sol, Do y Mi con los dedos 1, 3 y 5'}}),
     tF('Arma las inversiones', 'Toca las notas una por una, de abajo hacia arriba, empezando a la derecha del Do central.',
@@ -4505,7 +4513,7 @@ const TEO = [
    steps:[
     tT('El acorde de séptima', ['Si al acorde de Sol (Sol, Si, Re) le agregas un Fa, se vuelve Sol7. Esa nota de más choca un poco con las otras y crea tensión: el oído espera que algo la resuelva.',
       'Lo que la resuelve es el acorde de Do. Sol7 y después Do es el final más común de la música: pregunta y respuesta.',
-      'Para que quepa en la mano se deja fuera el Re y se toca Si, Fa y Sol, sin salir de la posición de Do.'],
+      'Para que quepa en la mano se deja fuera el Re y se toca Si, Fa y Sol, casi sin mover la mano: el pulgar baja a Si y los dedos 4 y 5 tocan Fa y Sol.'],
       {keys:{lo:59, hi:67, hl:[59,65,67], mark:{59:'1',65:'4',67:'5'}, alt:'Sol7 junto al Do central: Si, Fa y Sol con los dedos 1, 4 y 5'}}),
     tP('Sol7 y Do', 'Escucha la tensión de Sol7 y cómo descansa al llegar a Do.', 'sol-siete'),
     tT('Enlazar acordes', ['Pasar de un acorde a otro saltando con toda la mano suena cortado y cuesta más. Con inversiones, la mano casi no se mueve.',
@@ -4522,7 +4530,7 @@ const TEO = [
       {keys:{lo:48, hi:60, hl:[57], mark:{48:'5',50:'4',52:'3',53:'2',55:'1',57:'3',59:'2',60:'1'}, alt:'Escala de Do con la mano izquierda: después del pulgar en Sol, el dedo 3 cruza a La'}}),
     tP('Escala de Do con la izquierda', 'Despacio y parejo. Que el cruce del dedo 3 no se note.', 'escala-izq'),
     tT('El bajo Alberti', ['En lugar de tocar el acorde de golpe, sus notas se reparten una por una en este orden: abajo, arriba, medio, arriba. Para Do: Do, Sol, Mi, Sol, con los dedos 5, 1, 3 y 1.',
-      'La mano no se desplaza. La muñeca gira un poco hacia cada lado, como al mover la perilla de una puerta.'],
+      'La mano no se desplaza. La muñeca gira un poco hacia cada lado, como al girar la perilla de una puerta.'],
       {keys:{lo:48, hi:55, hl:[48,52,55], mark:{48:'5',52:'3',55:'1'}, alt:'Bajo Alberti en Do con la mano izquierda: Do con el dedo 5, Mi con el 3 y Sol con el 1'}}),
     tP('El bajo Alberti', 'Solo la mano izquierda. Busca que las cuatro notas de cada grupo suenen parejas.', 'alberti'),
     tT('Quién canta y quién acompaña', ['Cuando una mano lleva la melodía y la otra acompaña, la melodía tiene que oírse más. El acompañamiento va más suave, como un fondo.',
@@ -4532,7 +4540,7 @@ const TEO = [
   {id:'d26', part:2, title:'Fuerte y suave', sum:'Los matices: p y f.',
    fin:'Los matices separan tocar las notas de hacer música. Desde hoy, pregúntate en cada pieza dónde va fuerte y dónde suave.',
    steps:[
-    tT('Los matices', ['La música cambia de volumen, igual que la voz al hablar. Esos cambios se llaman matices y se escriben con letras debajo del pentagrama, que vienen del italiano.',
+    tT('Los matices', ['La música cambia de volumen, igual que la voz al hablar. Esos cambios se llaman matices y se escriben con letras, abreviaturas de palabras italianas, debajo del pentagrama.',
       'La p es «piano», suave. La f es «forte», fuerte. También verás mp y mf, medio suave y medio fuerte, y pp y ff, muy suave y muy fuerte.',
       'Un matiz vale desde donde está escrito hasta que aparece otro.'], 'dyn'),
     tT('Cómo se hace', ['El piano suena más fuerte cuanto más rápido baja la tecla. Para tocar fuerte no golpees: deja caer el peso del brazo. Para tocar suave, acerca los dedos a las teclas y bájalas con poco peso.',
@@ -4546,7 +4554,8 @@ const TEO = [
    steps:[
     tT('La articulación', ['Además de qué nota es y cuánto dura, la partitura dice cómo se toca: separada de las demás o unida a ellas. Eso es la articulación.',
       'Un punto encima o debajo de la nota es el staccato, o picado: la nota suena corta, pero su lugar en el compás no cambia. Lo que sobra es silencio.',
-      'Una línea curva que abarca varias notas es la ligadura: todo lo que cubre se toca legato, unido, sin huecos.'], 'art'),
+      'Una línea curva que abarca varias notas es la ligadura: todo lo que cubre se toca legato, unido, sin huecos.',
+      'Dos parecidos que no hay que confundir. El punto del staccato va encima o debajo de la nota; el puntillo va a su derecha y la alarga. Y si la curva une dos notas iguales, la segunda no se vuelve a tocar: solo se alarga la primera.'], 'art'),
     tP('Staccato', 'Toca y suelta enseguida, con un pequeño rebote de la muñeca. No apures el pulso.', 'staccato'),
     tT('Cómo se liga', ['Para ligar dos notas, no sueltes la primera hasta que la segunda ya esté sonando. Por un instante las dos teclas están abajo.',
       'Piensa en caminar: un pie no se levanta hasta que el otro pisa. Donde termina la ligadura levantas la mano, como quien respira al final de una frase.']),
@@ -5187,8 +5196,8 @@ function progBuckets(){
     for (let w = 11; w >= 0; w--){
       const a = noon(mon, -7 * w), b = noon(a, 6), list = [];
       for (let k = 0; k < 7; k++) list.push(Hist.total(dayStr(noon(a, k))));
-      out.push({t: sumT(list), lab: `${a.getDate()}/${a.getMonth() + 1}`, short: w === 0 ? 'Esta semana' : `${a.getDate()}${a.getMonth() === b.getMonth() ? '' : ' ' + MESES[a.getMonth()].slice(0, 3)} al ${b.getDate()} ${MESES[b.getMonth()].slice(0, 3)}`,
-        name: (w === 0 ? 'Esta semana: del ' : 'Semana del ') + (a.getMonth() === b.getMonth() ? `${a.getDate()} al ${b.getDate()} de ${MESES[b.getMonth()]}` : `${a.getDate()} de ${MESES[a.getMonth()]} al ${b.getDate()} de ${MESES[b.getMonth()]}`), tick: ''});
+      out.push({t: sumT(list), lab: String(a.getDate()), tick: w === 11 || a.getDate() <= 7 ? MESES[a.getMonth()].slice(0, 3) : '', short: w === 0 ? 'Esta semana' : `${a.getDate()}${a.getMonth() === b.getMonth() ? '' : ' ' + MESES[a.getMonth()].slice(0, 3)} al ${b.getDate()} ${MESES[b.getMonth()].slice(0, 3)}`,
+        name: (w === 0 ? 'Esta semana: del ' : 'Semana del ') + (a.getMonth() === b.getMonth() ? `${a.getDate()} al ${b.getDate()} de ${MESES[b.getMonth()]}` : `${a.getDate()} de ${MESES[a.getMonth()]} al ${b.getDate()} de ${MESES[b.getMonth()]}`)});
     }
   }
   return out;
@@ -5222,7 +5231,7 @@ function progChart(kind, B, W){
       prev = i;
     });
   }
-  const bw = Math.max(4, Math.min(24, step - 4));
+  const bw = Math.max(4, Math.min(24, step - 4)), every = step < 19 ? 2 : 1;   // en pantallas muy angostas, una etiqueta sí y una no
   B.forEach((b, i) => {
     const v = vals[i], x = cx(i);
     let m = '', lbl = '';
@@ -5236,7 +5245,7 @@ function progChart(kind, B, W){
     }
     const isMax = v != null && v > 0 && v === top && vals.indexOf(v) === i;
     cols += `<g class="pg-col${isMax ? ' max' : ''}" data-i="${i}"><rect class="pg-band" x="${(x - step / 2).toFixed(1)}" y="${T - 18}" width="${step.toFixed(1)}" height="${H + 18 + Bm}" rx="6"/>${m}${lbl}
-      <text class="pg-x" x="${x.toFixed(1)}" y="${y0 + 17}" text-anchor="middle">${b.lab}</text>${b.tick ? `<text x="${x.toFixed(1)}" y="${y0 + 33}" text-anchor="middle">${b.tick}</text>` : ''}
+      ${(N - 1 - i) % every ? '' : `<text class="pg-x" x="${x.toFixed(1)}" y="${y0 + 17}" text-anchor="middle">${b.lab}</text>`}${b.tick ? `<text x="${x.toFixed(1)}" y="${y0 + 33}" text-anchor="middle">${b.tick}</text>` : ''}
       <rect x="${(x - step / 2).toFixed(1)}" y="${T - 18}" width="${step.toFixed(1)}" height="${H + 18 + Bm}" fill="transparent"/></g>`;
   });
   const Ht = T + H + Bm;
@@ -5281,7 +5290,8 @@ function renderProgress(){
   } else {
     progB = progBuckets();
     if (!progB[progSel]) progSel = progB.length - 1;
-    const W = Math.max(280, Math.round(el.querySelector('.list-inner')?.clientWidth || Math.min(el.clientWidth - 32, 780)) - 30);
+    if (!el.querySelector('.list-inner')) el.innerHTML = '<div class="list-inner"></div>';   // para medir el ancho real antes de dibujar
+    const W = Math.max(230, Math.round(el.querySelector('.list-inner').clientWidth) - 30);
     const per = progSpan === 'dias' ? 'día' : 'semana', anyPct = progB.some(b => b.t.n);
     const seg = (v, t) => `<button data-span="${v}" aria-pressed="${progSpan === v}">${t}</button>`;
     h += `<div class="pg-card"><div class="pg-head"><h2>Cómo vas</h2><div class="seg" role="group" aria-label="Período">${seg('dias', '14 días')}${seg('semanas', '12 semanas')}</div></div>
@@ -5292,7 +5302,7 @@ function renderProgress(){
       <p class="pg-det" id="progDet" role="status">${progDetail()}</p></div>`;
     const rows = progB.map((b, i) => ({b, i})).filter(x => x.b.t.s >= 30 || x.b.t.n).reverse();
     h += `<div class="pg-card"><div class="pg-head"><h2>${progSpan === 'dias' ? 'Día por día' : 'Semana por semana'}</h2></div>`;
-    h += rows.length ? `<table class="pg-table"><thead><tr><th scope="col">${progSpan === 'dias' ? 'Día' : 'Semana'}</th><th scope="col">Tiempo</th><th scope="col">Piezas</th><th scope="col">Precisión</th><th scope="col">Estrellas</th></tr></thead><tbody>
+    h += rows.length ? `<table class="pg-table"><thead><tr><th scope="col">${progSpan === 'dias' ? 'Día' : 'Semana'}</th><th scope="col">Tiempo</th><th scope="col">Piezas</th><th scope="col">Precisión</th><th scope="col" aria-label="Estrellas nuevas" title="Estrellas nuevas">★</th></tr></thead><tbody>
       ${rows.map(({b}) => `<tr><td>${b.short}</td><td>${minTxt(b.t.s)}</td><td>${b.t.n}</td><td>${pctOf(b.t) == null ? '—' : pctOf(b.t) + '%'}</td><td>${b.t.e || '—'}</td></tr>`).join('')}
       </tbody></table>` : '<p class="pg-none">Sin práctica en este período.</p>';
     h += `<p class="pg-none" style="margin-top:10px">En total: ${minTxt(all.s)} de práctica en ${nDays === 1 ? '1 día' : nDays + ' días'}, ${all.n === 1 ? '1 pieza terminada' : all.n + ' piezas terminadas'}.</p></div>`;
@@ -5435,20 +5445,21 @@ setInterval(syncWake, 30000);
 const HIST_STEP = 5000, HIST_IDLE = 60000;
 let histAt = Date.now(), histWas = false;
 const practicing = () => !document.hidden && WAKE_VIEWS.includes(view)
-  && (Date.now() - lastAct < HIST_IDLE || !!(P && P.playing && !P.waiting && !P.finished));
-function histTick(){
+  && (Date.now() - lastAct < HIST_IDLE || (!!(P && P.playing && !P.waiting && !P.finished) && Date.now() - lastAct < WAKE_IDLE));
+/* leaving: se está saliendo de la práctica o se ocultó la app; el último tramo cuenta si hubo actividad hace poco. */
+function histTick(leaving){
   const now = Date.now(), dt = Math.min(now - histAt, 2 * HIST_STEP); histAt = now;
-  if (dt > 0 && practicing()) Hist.tick(dt / 1000);
+  if (dt > 0 && (leaving === true ? now - lastAct < HIST_IDLE : practicing())) Hist.tick(dt / 1000);
 }
-setInterval(histTick, HIST_STEP);
+setInterval(() => histTick(), HIST_STEP);
 /* Al salir de la práctica o al ocultar la app, lo que falta se sube a la cuenta. */
 function histView(){
   const inP = WAKE_VIEWS.includes(view);
-  if (histWas && !inP){ histTick(); Hist.flush(); }
+  if (histWas && !inP){ histTick(true); Hist.flush(); }
   if (!histWas && inP) histAt = Date.now();
   histWas = inP;
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden){ histTick(); Hist.flush(); } else histAt = Date.now(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden){ if (histWas) histTick(true); Hist.flush(); } else histAt = Date.now(); });
 window.addEventListener('pagehide', () => Hist.flush());
 
 /* ---------- Pantalla completa ----------
