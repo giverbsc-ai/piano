@@ -184,6 +184,10 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .song-row .song{border-bottom:0;flex:1;min-width:0}
 .song-row .song .t{overflow:hidden;text-overflow:ellipsis}
 .del{margin:0 4px;color:var(--ink-soft)}
+.oct{margin:0 0 0 4px;color:var(--ink-soft);font-weight:700;font-size:13px;letter-spacing:-.02em}
+.oct[aria-expanded="true"]{border-color:var(--brass);color:var(--brass-ink)}
+.oct-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 4px 12px 44px;border-bottom:1px solid var(--line)}
+.oct-row p{margin:0;flex-basis:100%;font-size:13px;color:var(--ink-soft)}
 .del.armed{width:auto;padding:0 12px;border-color:var(--bad);color:var(--bad)}
 .imp-row{margin:10px 0 6px;display:flex;flex-wrap:wrap;gap:8px}
 a.btn{text-decoration:none}
@@ -3071,7 +3075,31 @@ function rowItem(s){
   const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : diffHTML(lvRank(s, lv));
   return `<div class="song-row"><button class="song" data-id="${esc(s.key)}">${icon}
     <span><span class="t">${esc(s.title)}</span><span class="o">${esc(sub)}</span></span>${b ? starsHTML(b) : '<span class="new">Nuevo</span>'}</button>
-    <button class="btn icon del" data-del="${esc(s.id)}" aria-label="Eliminar ${esc(s.title)}">${ICON.trash}</button></div>`;
+    ${gen ? '' : `<button class="btn icon oct" data-oct="${esc(s.id)}" aria-expanded="${octOpen === s.id}" aria-label="Subir o bajar una octava: ${esc(s.title)}" title="Subir o bajar una octava">8ª</button>`}<button class="btn icon del" data-del="${esc(s.id)}" aria-label="Eliminar ${esc(s.title)}">${ICON.trash}</button></div>${!gen && octOpen === s.id ? octRow(s) : ''}`;
+}
+/* Subir o bajar una octava: crea una copia de la canción con cada nota 12 teclas más arriba o más abajo; la original no cambia. */
+let octOpen = '';
+function octSpan(s){ const ms = decodeNotes(s.notas).map(n => n.midi); return ms.length ? [Math.min(...ms), Math.max(...ms)] : null; }
+function octRow(s){
+  const r = octSpan(s);
+  const can = d => r && r[0] + d >= 21 && r[1] + d <= 108;
+  const b = (d, txt) => `<button class="btn" data-octgo="${esc(s.id)}:${d}"${can(d) ? '' : ' disabled'}>${txt}</button>`;
+  return `<div class="oct-row"><p>${r ? `Va de ${fullName(r[0])} a ${fullName(r[1])}. Se crea una copia en otra octava; esta no cambia.` : 'Esta canción no tiene notas.'}</p>${b(12, 'Subir una octava')}${b(-12, 'Bajar una octava')}</div>`;
+}
+async function octCopy(id, d){
+  const s = Data.items.find(x => x.id === id); if (!s || s.kind !== 'midi') return;
+  const notes = decodeNotes(s.notas);
+  if (!notes.length || notes.some(n => n.midi + d < 21 || n.midi + d > 108)) return;
+  for (const n of notes) n.midi += d;
+  const base = s.title.replace(/ \((una )?octava (arriba|abajo)\)$/, '');
+  const title = (base + (d > 0 ? ' (octava arriba)' : ' (octava abajo)')).slice(0, 80);
+  const ns = await Data.addItem(Object.assign({kind: 'midi', title, bpm: s.bpm, notas: encodeNotes(notes)}, s.nivel ? {nivel: s.nivel} : {}));
+  if (settings.niveles && settings.niveles[s.key] != null){ settings.niveles[ns.key] = settings.niveles[s.key]; saveSettings(); }
+  const lo = Math.min(...notes.map(n => n.midi)), hi = Math.max(...notes.map(n => n.midi));
+  octOpen = '';
+  listMsg = `Listo: «${title}» quedó al final de Tus canciones, de ${fullName(lo)} a ${fullName(hi)}. La original no cambió.`
+    + (lo < 36 || hi > 96 ? ' Ojo: algunas notas quedan fuera de un teclado de 61 teclas (Do2 a Do7); esas solo se tocan en la pantalla.' : '');
+  renderList();
 }
 function renderLessons(){
   const best = Data.progress;
@@ -3168,6 +3196,10 @@ $('#songList').addEventListener('click', e => {
   if (e.target.closest('[data-go="teoria"]')){ goTheory(); return; }
   const rb = e.target.closest('[data-reto]');
   if (rb){ const [id, lvl] = rb.dataset.reto.split(':'); openReto(id, +lvl); return; }
+  const og = e.target.closest('[data-octgo]');
+  if (og){ const [id, d] = og.dataset.octgo.split(':'); og.disabled = true; octCopy(id, +d); return; }
+  const oc = e.target.closest('[data-oct]');
+  if (oc){ octOpen = octOpen === oc.dataset.oct ? '' : oc.dataset.oct; listMsg = ''; renderList(); return; }
   const del = e.target.closest('[data-del]');
   if (del){
     if (del.classList.contains('armed')){ clearTimeout(del._t); Data.deleteItem(del.dataset.del).then(renderList); }
