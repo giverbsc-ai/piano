@@ -20,6 +20,8 @@ No forman parte de la app: sirven para comprobar la sincronización entre dispos
   que el borrador no se pierde.
 - `test-teclas.js`: «Teclas del computador» en Ajustes: elegir la letra o el número de cada tecla del piano, tocar con ellas en
   Tocar libre y en un ejercicio, mudar o quitar una letra, volver a las de fábrica y que todo quede guardado al recargar.
+- `test-sonido.js`: sonido de piano grabado: carga con el primer toque, mide el tono de cada grabación, revisa la mezcla de
+  fuerzas, soltar y pedal, que quede guardado para la siguiente visita y que sin conexión suene el sonido sencillo.
 - `pianista.js`: el «pianista virtual» que comparten las pruebas.
 
 Cómo correrlas (Node 18 o más):
@@ -35,5 +37,6 @@ Cómo correrlas (Node 18 o más):
     node pruebas/test-varios.js
     node pruebas/test-grabar.js
     node pruebas/test-teclas.js
+    node pruebas/test-sonido.js
 
 Las dos primeras usan una configuración de mentira dentro de la prueba (reemplazan `NUBE_CFG` al servir la página), así que nunca tocan el proyecto real de Firebase.
