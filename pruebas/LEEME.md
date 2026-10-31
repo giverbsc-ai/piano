@@ -26,6 +26,8 @@ No forman parte de la app: sirven para comprobar la sincronización entre dispos
   respeta los límites del piano, queda guardada al recargar y el panel cabe en un celular.
 - `test-numeros-colores.js`: «Números y colores» en Tocar libre: poner y quitar números en las teclas, dividir el piano en
   un color por mano, mostrar u ocultar, que no aparezca fuera de Tocar libre, que quede guardado al recargar y que quepa en celular.
+- `test-guia.js`: «Guía para imprimir» en Tus canciones: arma las páginas con el color de cada mano, el nombre y el número de
+  cada tecla, avisa las notas sin número, descarga la imagen, imprime solo la guía y cabe en el celular.
 - `pianista.js`: el «pianista virtual» que comparten las pruebas.
 
 Cómo correrlas (Node 18 o más):
@@ -44,5 +46,6 @@ Cómo correrlas (Node 18 o más):
     node pruebas/test-sonido.js
     node pruebas/test-octava.js
     node pruebas/test-numeros-colores.js
+    node pruebas/test-guia.js
 
 Las dos primeras usan una configuración de mentira dentro de la prueba (reemplazan `NUBE_CFG` al servir la página), así que nunca tocan el proyecto real de Firebase.

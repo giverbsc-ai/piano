@@ -215,6 +215,19 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .oct[aria-expanded="true"]{border-color:var(--brass);color:var(--brass-ink)}
 .oct-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 4px 12px 44px;border-bottom:1px solid var(--line)}
 .oct-row p{margin:0;flex-basis:100%;font-size:13px;color:var(--ink-soft)}
+.guia-b{margin:0 0 0 4px;color:var(--ink-soft)}
+#guiaDlg{width:min(760px,calc(100% - 24px))}
+.guia-pages{display:flex;flex-direction:column;gap:12px;max-height:56vh;overflow:auto;background:var(--line);padding:10px;border-radius:12px}
+.guia-pages img{width:100%;height:auto;background:#fff;box-shadow:0 1px 4px rgba(20,12,28,.25);border-radius:2px}
+#guiaPrint{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  body > *:not(#guiaPrint){display:none !important}
+  html,body{background:#fff !important;height:auto !important;overflow:visible !important}
+  #guiaPrint{display:block}
+  #guiaPrint img{display:block;width:100%;height:auto;break-after:page;page-break-after:always}
+  #guiaPrint img:last-child{break-after:auto;page-break-after:auto}
+}
 .del.armed{width:auto;padding:0 12px;border-color:var(--bad);color:var(--bad)}
 .imp-row{margin:10px 0 6px;display:flex;flex-wrap:wrap;gap:8px}
 a.btn{text-decoration:none}
@@ -939,6 +952,17 @@ body[data-view="welcome"] .cab{display:none}
     </div>
   </div>
 </dialog>
+
+<dialog id="guiaDlg" aria-labelledby="guiaTitle">
+  <div class="dlg">
+    <div class="acc-top"><h2 id="guiaTitle">Guía para imprimir</h2><button type="button" class="btn icon" id="guiaX" aria-label="Cerrar">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="fhelp" id="guiaInfo"></p>
+    <div class="guia-pages" id="guiaPages"></div>
+    <div class="dlg-actions"><button class="btn" id="guiaPng">Descargar imagen</button><button class="btn primary" id="guiaPrintBtn">Imprimir</button></div>
+  </div>
+</dialog>
+<div id="guiaPrint" aria-hidden="true"></div>
 
 <dialog id="kbdDlg" aria-labelledby="kbdTitle">
   <div class="dlg">
@@ -2736,6 +2760,7 @@ const ICON = {
   pause: '<svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z"/></svg>',
   stop: '<svg class="i" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
   trash: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  print: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6H7z"/></svg>',
   copy: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
   left: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
   right: '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
@@ -3222,7 +3247,7 @@ function rowItem(s){
   const icon = gen ? '<span class="num ia" aria-hidden="true">IA</span>' : diffHTML(lvRank(s, lv));
   return `<div class="song-row"><button class="song" data-id="${esc(s.key)}">${icon}
     <span><span class="t">${esc(s.title)}</span><span class="o">${esc(sub)}</span></span>${b ? starsHTML(b) : '<span class="new">Nuevo</span>'}</button>
-    ${gen ? '' : `<button class="btn icon oct" data-oct="${esc(s.id)}" aria-expanded="${octOpen === s.id}" aria-label="Subir o bajar una octava: ${esc(s.title)}" title="Subir o bajar una octava">8ª</button>`}<button class="btn icon del" data-del="${esc(s.id)}" aria-label="Eliminar ${esc(s.title)}">${ICON.trash}</button></div>${!gen && octOpen === s.id ? octRow(s) : ''}`;
+    ${gen ? '' : `<button class="btn icon oct" data-oct="${esc(s.id)}" aria-expanded="${octOpen === s.id}" aria-label="Subir o bajar una octava: ${esc(s.title)}" title="Subir o bajar una octava">8ª</button><button class="btn icon guia-b" data-guia="${esc(s.id)}" aria-label="Guía para imprimir: ${esc(s.title)}" title="Guía para imprimir, con colores y números">${ICON.print}</button>`}<button class="btn icon del" data-del="${esc(s.id)}" aria-label="Eliminar ${esc(s.title)}">${ICON.trash}</button></div>${!gen && octOpen === s.id ? octRow(s) : ''}`;
 }
 /* Subir o bajar una octava: crea una copia de la canción con cada nota 12 teclas más arriba o más abajo; la original no cambia. */
 let octOpen = '';
@@ -3248,6 +3273,195 @@ async function octCopy(id, d){
     + (lo < 36 || hi > 96 ? ' Ojo: algunas notas quedan fuera de un teclado de 61 teclas (Do2 a Do7); esas solo se tocan en la pantalla.' : '');
   renderList();
 }
+/* ---------- Guía para imprimir ----------
+   Páginas A4 (1240 × 1754, unos 150 puntos por pulgada) con el pentagrama de una canción propia: cada nota en el color de su
+   mano según «Números y colores» (azul la izquierda, rojo la derecha), su nombre y el número de su tecla. Las canciones
+   grabadas no tienen compás real, así que la guía muestra el orden de las notas, no cuánto dura cada una. */
+const GUIA = {W: 1240, H: 1754, M: 84, sp: 16, col: 74};
+const GUIA_COL = {L: {fill: '#3C5BA3', soft: '#DCE6FA', ink: '#1F3468'}, R: {fill: '#B03A4E', soft: '#F8DDE1', ink: '#5A1825'}};
+const guiaName = m => PCN[sys()][pc(m)];
+let guiaState = null;
+function guiaEvents(notes){
+  const ns = [...notes].sort((a, b) => a.start - b.start || a.midi - b.midi), ev = [];
+  for (const n of ns){
+    const last = ev[ev.length - 1];
+    if (last && n.start - last.t < 0.12){ if (!last.notes.some(x => x.midi === n.midi)) last.notes.push(n); last.end = Math.max(last.end, n.start + n.dur); continue; }
+    ev.push({t: n.start, end: n.start + n.dur, notes: [n]});
+  }
+  for (let i = 1; i < ev.length; i++) ev[i].pause = ev[i].t - ev[i - 1].end >= 1;
+  return ev;
+}
+/* Arma las páginas. Devuelve los lienzos y cuántas notas quedaron sin número. */
+function guiaPages(title, notes){
+  const {W, H, M, sp, col} = GUIA, sc = sp / 250, hw = 295 * sc;
+  const ev = guiaEvents(notes);
+  const handOf = m => m < NC.div ? 'L' : 'R', staffOf = m => m >= 60 ? 'T' : 'B';
+  const staves = [...new Set(ev.flatMap(e => e.notes.map(n => staffOf(n.midi))))].sort().reverse();   // T antes que B
+  const two = staves.length === 2;
+  const FONT = '"Alegreya Sans", Arial, sans-serif';
+  const chipH = 66;
+  const x0 = M + 671 * sc + 26, perRow = W - M - x0;
+  // Reparte los eventos en sistemas (renglones).
+  const systems = [];
+  let cur = [], w = 0;
+  for (const e of ev){
+    let ew = col + (e.pause && cur.length ? 34 : 0);
+    if (cur.length && w + ew > perRow){ systems.push(cur); cur = []; w = 0; ew = col; }
+    cur.push(e); w += ew;
+  }
+  if (cur.length) systems.push(cur);
+  // Alto de cada sistema: fichas arriba (mano derecha) y abajo (izquierda), pentagramas y líneas adicionales.
+  const BOTS = {T: 30, B: 18};
+  const lay = systems.map(sy => {
+    let rUp = 0, lDn = 0, top = {T: 0, B: 0}, bot = {T: 0, B: 0};
+    for (const e of sy){
+      const r = e.notes.filter(n => handOf(n.midi) === 'R').length, l = e.notes.length - r;
+      rUp = Math.max(rUp, r); lDn = Math.max(lDn, l);
+      for (const n of e.notes){
+        const st = staffOf(n.midi), s = staffStep(n.midi) - BOTS[st];
+        top[st] = Math.max(top[st], (s - 8) * sp / 2); bot[st] = Math.max(bot[st], -s * sp / 2);
+      }
+    }
+    // Si una mano no tiene fichas en este renglón igual se deja el espacio de los nombres.
+    return {sy, rUp, lDn, top, bot};
+  });
+  const pages = [];
+  let page = null, pc0 = null, y = 0, missing = 0;
+  const newPage = () => {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+    pages.push(cv); page = cv; pc0 = c;
+    y = M;
+    if (pages.length === 1){
+      c.fillStyle = '#231B2B'; c.font = `700 46px ${FONT}`; c.textBaseline = 'alphabetic';
+      c.fillText(title.length > 44 ? title.slice(0, 43) + '…' : title, M, y + 40); y += 66;
+      const leg = (x, k, txt) => { c.fillStyle = GUIA_COL[k].fill; c.beginPath(); c.arc(x + 14, y + 12, 14, 0, 7); c.fill(); c.fillStyle = '#231B2B'; c.font = `600 26px ${FONT}`; c.fillText(txt, x + 38, y + 21); return x + 38 + c.measureText(txt).width + 34; };
+      let lx = leg(M, 'L', 'Mano izquierda'); leg(lx, 'R', 'Mano derecha');
+      y += 40;
+      c.fillStyle = '#6A5C72'; c.font = `500 21px ${FONT}`;
+      c.fillText('El círculo lleva el número de la tecla y debajo va el nombre de la nota. Se lee de izquierda a derecha.', M, y + 18);
+      y += 46;
+    }
+  };
+  const text = (c, s, x, yy, font, color) => { c.font = font; c.fillStyle = color; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(s, x, yy); c.textAlign = 'left'; c.textBaseline = 'alphabetic'; };
+  const chip = (c, n, x, yy) => {
+    const k = handOf(n.midi), num = NC.nums[n.midi], C = GUIA_COL[k];
+    if (num){
+      c.fillStyle = C.fill; c.beginPath(); c.arc(x, yy + 20, 20, 0, 7); c.fill();
+      text(c, String(num), x, yy + 21, `700 ${num > 9 ? 22 : 26}px ${FONT}`, '#fff');
+    } else {
+      missing++;
+      c.strokeStyle = C.fill; c.lineWidth = 2; c.setLineDash([4, 4]); c.beginPath(); c.arc(x, yy + 20, 19, 0, 7); c.stroke(); c.setLineDash([]);
+    }
+    text(c, guiaName(n.midi), x, yy + 54, `700 21px ${FONT}`, C.ink);
+  };
+  for (const L of lay){
+    const hTop = L.rUp * chipH + 10, hBot = L.lDn * chipH + 10;
+    const gapTB = two ? Math.max(5 * sp, L.bot.T + L.top.B + 3 * sp) : 0;
+    const staffBlock = two ? 4 * sp + gapTB + 4 * sp : 4 * sp;
+    const firstSt = staves[0], lastSt = staves[staves.length - 1];
+    const padTop = Math.max(sp, L.top[firstSt] + sp), padBot = Math.max(sp, L.bot[lastSt] + sp);
+    const need = hTop + padTop + staffBlock + padBot + hBot + 30;
+    if (!page || y + need > H - M) newPage();
+    const c = pc0;
+    const yTopLine = {}; let yy = y + hTop + padTop;
+    yTopLine[firstSt] = yy; if (two) yTopLine.B = yy + 4 * sp + gapTB;
+    const yb = st => yTopLine[st] + 4 * sp;
+    const yOf = (st, s) => yb(st) - (s - BOTS[st]) * sp / 2;
+    c.strokeStyle = '#3A2F42'; c.lineWidth = 1.6;
+    for (const st of staves) for (let i = 0; i < 5; i++){ const ly = Math.round(yTopLine[st] + i * sp) + 0.5; c.beginPath(); c.moveTo(M, ly); c.lineTo(W - M, ly); c.stroke(); }
+    c.lineWidth = 2.2;
+    c.beginPath(); c.moveTo(M, yTopLine[firstSt]); c.lineTo(M, yb(lastSt)); c.stroke();
+    c.beginPath(); c.moveTo(W - M, yTopLine[firstSt]); c.lineTo(W - M, yb(lastSt)); c.stroke();
+    c.fillStyle = '#231B2B';
+    for (const st of staves){
+      const p = new Path2D(GLYPH[st === 'T' ? 'g' : 'f']);
+      c.save(); c.translate(M + 10, yOf(st, BOTS[st] + (st === 'T' ? 2 : 6))); c.scale(sc, -sc); c.fill(p); c.restore();
+    }
+    let x = x0;
+    L.sy.forEach((e, i) => {
+      if (e.pause && i){
+        c.strokeStyle = '#B9AFC0'; c.lineWidth = 2; c.setLineDash([6, 6]);
+        c.beginPath(); c.moveTo(x + 6, yTopLine[firstSt] - 6); c.lineTo(x + 6, yb(lastSt) + 6); c.stroke(); c.setLineDash([]);
+        x += 34;
+      }
+      const cx = x + col / 2;
+      // Notas en el pentagrama
+      for (const st of staves){
+        const ns = e.notes.filter(n => staffOf(n.midi) === st).sort((a, b) => a.midi - b.midi);
+        let prev = null, shifted = false;
+        for (const n of ns){
+          const s = staffStep(n.midi), ny = yOf(st, s), C = GUIA_COL[handOf(n.midi)];
+          shifted = prev !== null && s - prev <= 1 && !shifted;
+          const hx = cx - hw / 2 + (shifted ? hw : 0);
+          c.strokeStyle = '#3A2F42'; c.lineWidth = 1.6;
+          for (let l = BOTS[st] - 2; l >= s; l -= 2){ const ly = yOf(st, l); c.beginPath(); c.moveTo(hx - 8, ly); c.lineTo(hx + hw + 8, ly); c.stroke(); }
+          for (let l = BOTS[st] + 10; l <= s; l += 2){ const ly = yOf(st, l); c.beginPath(); c.moveTo(hx - 8, ly); c.lineTo(hx + hw + 8, ly); c.stroke(); }
+          c.fillStyle = C.fill;
+          const hp = new Path2D(GLYPH.nb); c.save(); c.translate(hx, ny); c.scale(sc, -sc); c.fill(hp); c.restore();
+          if (isBlack(n.midi)){ const ap = new Path2D(GLYPH.sh); c.save(); c.translate(hx - 249 * sc - 4, ny); c.scale(sc, -sc); c.fill(ap); c.restore(); }
+          prev = s;
+        }
+      }
+      // Fichas: la mano derecha arriba (la más aguda primero), la izquierda abajo.
+      const byHi = [...e.notes].sort((a, b) => b.midi - a.midi);
+      byHi.filter(n => handOf(n.midi) === 'R').forEach((n, j, arr) => chip(c, n, cx, y + hTop - 10 - (arr.length - j) * chipH));
+      const yLow = yb(lastSt) + padBot + 4;
+      byHi.filter(n => handOf(n.midi) === 'L').forEach((n, j) => chip(c, n, cx, yLow + j * chipH));
+      x += col;
+    });
+    y += need;
+  }
+  if (!pages.length) newPage();
+  pages.forEach((cv, i) => {
+    const c = cv.getContext('2d');
+    c.fillStyle = '#8D8496'; c.font = `500 20px ${FONT}`; c.textAlign = 'right';
+    c.fillText(`${title.slice(0, 50)} · página ${i + 1} de ${pages.length}`, W - M, H - 40); c.textAlign = 'left';
+  });
+  return {pages, missing, events: ev.length};
+}
+async function guiaOpen(id){
+  const s = Data.items.find(x => x.id === id); if (!s) return;
+  try { await document.fonts.load('700 26px "Alegreya Sans"'); } catch(e){}
+  const notes = decodeNotes(s.notas);
+  const g = guiaPages(s.title, notes);
+  const urls = g.pages.map(cv => cv.toDataURL('image/png'));
+  guiaState = {title: s.title, pages: g.pages, urls};
+  const nNotes = notes.length, nb = Object.keys(NC.nums).length;
+  let info = `${nNotes} notas en ${g.pages.length === 1 ? '1 página' : g.pages.length + ' páginas'}. `
+    + `La mano izquierda va en azul y la derecha en rojo; la derecha empieza en ${fullName(NC.div)}, como en «Números y colores». `
+    + 'Muestra el orden de las notas, no cuánto dura cada una; una línea punteada marca una pausa.';
+  if (g.missing) info += nb ? ` ${g.missing === 1 ? 'Una nota no tiene' : g.missing + ' notas no tienen'} número (círculo punteado): pónselo en Tocar libre, «Números y colores», y vuelve a abrir la guía.`
+    : ' Todavía no hay números en las teclas: ponlos en Tocar libre, «Números y colores», y vuelve a abrir la guía. Mientras tanto salen círculos punteados.';
+  $('#guiaInfo').textContent = info;
+  $('#guiaPages').innerHTML = urls.map((u, i) => `<img src="${u}" alt="Página ${i + 1} de la guía de ${esc(s.title)}">`).join('');
+  $('#guiaPng').textContent = g.pages.length > 1 ? `Descargar ${g.pages.length} imágenes` : 'Descargar imagen';
+  if (!$('#guiaDlg').open) $('#guiaDlg').showModal();
+}
+function guiaFile(i){
+  // Sin tildes ni eñes: algunos navegadores descartan el nombre del archivo si las lleva.
+  const base = (guiaState.title || 'Guia').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7e]/g, '').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 60) || 'Guia';
+  return `${base} - guia${guiaState.pages.length > 1 ? ' ' + (i + 1) : ''}.png`;
+}
+$('#guiaX').onclick = () => $('#guiaDlg').close();
+$('#guiaDlg').addEventListener('click', e => { if (e.target === $('#guiaDlg')) $('#guiaDlg').close(); });
+$('#guiaPng').onclick = () => {
+  if (!guiaState) return;
+  guiaState.pages.forEach((cv, i) => setTimeout(() => cv.toBlob(b => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = guiaFile(i);
+    ($('#guiaDlg').open ? $('#guiaDlg') : document.body).appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png'), i * 400));
+};
+$('#guiaPrintBtn').onclick = () => {
+  if (!guiaState) return;
+  const box = $('#guiaPrint');
+  box.innerHTML = guiaState.urls.map(u => `<img src="${u}" alt="">`).join('');
+  $('#guiaDlg').close();
+  const imgs = [...box.querySelectorAll('img')];
+  Promise.all(imgs.map(im => im.decode ? im.decode().catch(() => {}) : null)).then(() => setTimeout(() => window.print(), 50));
+};
+window.addEventListener('afterprint', () => { $('#guiaPrint').innerHTML = ''; });
+
 function renderLessons(){
   const best = Data.progress;
   const doneOf = l => (best[l.key]?.stars || 0) >= 2;
@@ -3343,6 +3557,8 @@ $('#songList').addEventListener('click', e => {
   if (e.target.closest('[data-go="teoria"]')){ goTheory(); return; }
   const rb = e.target.closest('[data-reto]');
   if (rb){ const [id, lvl] = rb.dataset.reto.split(':'); openReto(id, +lvl); return; }
+  const gb = e.target.closest('[data-guia]');
+  if (gb){ guiaOpen(gb.dataset.guia); return; }
   const og = e.target.closest('[data-octgo]');
   if (og){ const [id, d] = og.dataset.octgo.split(':'); og.disabled = true; octCopy(id, +d); return; }
   const oc = e.target.closest('[data-oct]');
