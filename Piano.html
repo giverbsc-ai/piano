@@ -119,6 +119,30 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
 .btn.primary .rec-dot{background:#FFF5F2}
 .maker .chip.now{border-color:var(--felt);color:var(--felt-ink);box-shadow:inset 0 0 0 1px var(--felt)}
 #viewFree .toolbar .group{flex-wrap:wrap}
+/* Números y colores en «Tocar libre»: un número en las teclas que elige el adulto y dos grupos de color, uno por mano */
+.mn{display:none}
+.keys.ncol .mn{display:flex;align-items:center;justify-content:center;min-width:1.75em;height:1.75em;padding:0 .22em;border-radius:999px;
+  font-weight:700;font-size:clamp(14px,2.1vw,21px);line-height:1;background:#FFFDF8;color:#231B2B;border:1.5px solid rgba(40,28,50,.55);box-shadow:0 1px 1px rgba(40,28,50,.18)}
+.keys.ncol .key.black .mn{font-size:clamp(11px,1.6vw,17px);min-width:1.6em;height:1.6em;border-color:rgba(255,255,255,.75)}
+.keys.ncol .key.white.ml{background:linear-gradient(180deg,#C6D6F6,#E1E9FA)}
+.keys.ncol .key.white.mr{background:linear-gradient(180deg,#F3C6CD,#F9E0E3)}
+.keys.ncol .key.black.ml{background:linear-gradient(180deg,#1F3468,#3C5BA3)}
+.keys.ncol .key.black.mr{background:linear-gradient(180deg,#5A1825,#8E3646)}
+.keys.ncol .key.white.ml.down{background:linear-gradient(180deg,#9DB6EA,#BFD0F3)}
+.keys.ncol .key.white.mr.down{background:linear-gradient(180deg,#E79DA8,#F0BEC6)}
+.keys.ncol .key.black.ml.down{background:linear-gradient(180deg,#121F42,#2A447F)}
+.keys.ncol .key.black.mr.down{background:linear-gradient(180deg,#3B0E17,#6E2433)}
+.keys.ncol .key.white.auto{background:linear-gradient(180deg,#E9C77E,#F3DCA6)}
+.keys.ncol .key.black.auto{background:linear-gradient(180deg,#86601F,#C79436)}
+.ncl{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;margin-top:4px;color:var(--ink-soft);font-size:.95rem}
+.ncl span{display:inline-flex;align-items:center;gap:6px}
+.ncl i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(40,28,50,.35)}
+.ncl .l{background:#C6D6F6}.ncl .r{background:#F3C6CD}
+.nc-n{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.nc-n output{min-width:2.2em;text-align:center;font-size:1.25rem;font-family:"Alegreya",Georgia,serif}
+#ncMode button{min-height:38px}
+#viewFree.ncing .sub{display:none}
+#viewFree.ncing .big{font-size:clamp(1.8rem,7vmin,3.4rem)}
 #viewFree.making .sub{display:none}
 #viewFree.making .big{font-size:clamp(1.8rem,7vmin,3.4rem)}
 #viewFree.making #btnRec,#viewFree.making #btnPlayRec{display:none}
@@ -127,6 +151,9 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;position:rela
   #viewFree.making .maker{flex:1 1 auto;max-height:none;border-bottom:0;padding-top:6px;padding-bottom:2px;gap:6px}
   /* Aquí no sobra alto: el título se quita (el botón «Crear canción» de abajo ya queda marcado) y la velocidad va sin rótulo. */
   #viewFree.making .mk-t,#viewFree.making .mk-vl{display:none}
+  #viewFree.ncing .display{display:none}
+  #viewFree.ncing .maker{flex:1 1 auto;max-height:none;border-bottom:0;padding-top:6px;padding-bottom:2px;gap:6px}
+  #viewFree.ncing .mk-t{display:none}
   /* Con un tramo elegido hay ocho botones: aquí van en una sola fila que se desliza hacia los lados, como las fichas,
      y los de mover quedan solo con la flecha. */
   #viewFree.making .mk-act{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
@@ -666,10 +693,23 @@ body[data-view="welcome"] .cab{display:none}
       <div class="chips row" id="mkChips" role="group" aria-label="Tramos grabados" hidden></div>
       <div class="mk-act" id="mkAct"></div>
     </div>
+    <div class="maker" id="ncPanel" hidden>
+      <div class="mk-head">
+        <h2 class="mk-t">Números y colores</h2>
+        <p class="mk-s" id="ncStatus" role="status"></p>
+        <div class="mk-vel"><span class="mk-vl" id="ncShowLbl">Mostrar en el piano</span><div class="seg" id="ncShow" role="group" aria-labelledby="ncShowLbl"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      </div>
+      <div class="mk-act">
+        <div class="seg" id="ncMode" role="group" aria-label="Qué pasa al tocar una tecla"><button data-v="num">Poner números</button><button data-v="del">Quitar números</button><button data-v="div">Dividir manos</button></div>
+        <div class="nc-n" id="ncNum"><span id="ncCurLbl">Número</span><button class="btn icon" id="ncMinus" aria-label="Número anterior">−</button><output id="ncCur" aria-labelledby="ncCurLbl">1</output><button class="btn icon" id="ncPlus" aria-label="Número siguiente">+</button></div>
+      </div>
+      <div class="mk-act"><button class="btn" id="ncClear">Borrar todos los números</button><button class="btn primary" id="ncDone">Listo</button></div>
+    </div>
     <div class="display">
       <div class="big idle" id="bigName">Toca una tecla</div>
       <div class="sub" id="subName"></div>
       <svg class="staff" id="staff" viewBox="0 0 220 130" aria-hidden="true"></svg>
+      <div class="ncl" id="ncLegend" hidden><span><i class="l"></i>Mano izquierda</span><span><i class="r"></i>Mano derecha</span></div>
     </div>
     <div class="toolbar">
       <div class="group">
@@ -686,6 +726,7 @@ body[data-view="welcome"] .cab{display:none}
         <button class="btn" id="btnRec"></button>
         <button class="btn" id="btnPlayRec"></button>
         <button class="btn" id="btnMaker" aria-pressed="false" title="Graba una canción por tramos y guárdala para practicarla">Crear canción</button>
+        <button class="btn" id="btnNcol" aria-pressed="false" title="Pon números en las teclas y un color para cada mano">Números y colores</button>
       </div>
     </div>
   </section>
@@ -2417,6 +2458,20 @@ const teclas = {};
 let teclaDe = new Map();
 function reindexTeclas(){ teclaDe = new Map(Object.keys(teclas).map(m => [teclas[m][0], +m])); }
 reindexTeclas();
+/* Números y colores de «Tocar libre»: nota (MIDI) → número que eligió el adulto, y la primera tecla de la mano derecha.
+   Las teclas por debajo de esa van en azul (mano izquierda) y desde ella en rojo (mano derecha). Solo se ve en «Tocar libre»
+   y solo si está activado; se guarda en este dispositivo (Ajustes, clave «marcas»), no en la cuenta. */
+const NC_MAX = 99;
+const NC = (() => {
+  const raw = settings.marcas && typeof settings.marcas === 'object' ? settings.marcas : {}, nums = {};
+  if (raw.nums && typeof raw.nums === 'object') for (const k of Object.keys(raw.nums)){
+    const m = +k, n = +raw.nums[k];
+    if (Number.isInteger(m) && m >= 21 && m <= 108 && Number.isInteger(n) && n >= 1 && n <= NC_MAX) nums[m] = n;
+  }
+  const div = Number.isInteger(raw.div) && raw.div >= 21 && raw.div <= 108 ? raw.div : 60;
+  const top = Math.max(0, ...Object.values(nums));
+  return {on: raw.on === true, nums, div, open: false, mode: 'num', cur: Math.min(NC_MAX, top + 1), msg: '', armed: false, armT: 0};
+})();
 const kbOn = () => fine || settings.device === 'pc' || teclaDe.size > 0;
 function codeToMidi(code){
   const t = teclaDe.get(code); if (t != null) return t;
@@ -2471,7 +2526,7 @@ function buildKeyboard(lo, hi){
     keysEl.appendChild(el);
     keyEls.set(m, el);
   }
-  refreshLabels();
+  refreshLabels(); ncPaint();
 }
 function refreshLabels(){
   for (const [m, el] of keyEls){
@@ -2562,6 +2617,7 @@ function onPress(m, src, vel){
     lastNote = m; updateDisplay();
     if (rec.on) rec.events.push({t: performance.now() - rec.start, m, on: true});
     mkKey(m, true);
+    if (NC.open) ncKey(m);
   } else if (view === 'player') judge(m, src, vel);
   else if (view === 'reto') judgeReto(m);
   else if (view === 'teo') teoPress(m);
@@ -2954,7 +3010,7 @@ function mkSaveSong(){
 function mkToggle(on){
   on = !!on;
   if (Mk.open === on) return;
-  if (on){ stopRec(); stopPlayback(); } else { mkStopRec(); mkStopPlay(); }
+  if (on){ ncToggle(false); stopRec(); stopPlayback(); } else { mkStopRec(); mkStopPlay(); }
   Mk.open = on; Mk.sel = -1; Mk.msg = ''; mkDisarm();
   $('#maker').hidden = !on;
   $('#viewFree').classList.toggle('making', on);
@@ -2964,6 +3020,97 @@ function mkToggle(on){
 /* Al salir de «Tocar libre»: lo que se estaba grabando queda guardado como tramo. */
 function mkLeave(){ mkStopRec(); mkStopPlay(); }
 $('#btnMaker').onclick = () => mkToggle(!Mk.open);
+
+/* ---------- Números y colores en «Tocar libre» ---------- */
+function ncSave(){ settings.marcas = {on: NC.on, nums: NC.nums, div: NC.div}; saveSettings(); }
+function ncPaintKey(m, el){
+  el.classList.toggle('ml', m < NC.div); el.classList.toggle('mr', m >= NC.div);
+  let s = el.querySelector('.mn'); const n = NC.nums[m];
+  if (!n){ if (s) s.remove(); return; }
+  if (!s){ s = document.createElement('span'); s.className = 'mn'; el.insertBefore(s, el.querySelector('.lbl')); }
+  s.textContent = n;
+}
+function ncPaint(){ for (const [m, el] of keyEls) ncPaintKey(m, el); ncShow(); }
+function ncShow(){
+  const vis = view === 'free' && NC.on;
+  keysEl.classList.toggle('ncol', vis);
+  $('#ncLegend').hidden = !vis || NC.open;
+}
+function ncDisarm(){ clearTimeout(NC.armT); NC.armed = false; }
+function ncStatus(){
+  const ms = Object.keys(NC.nums).map(Number), out = ms.filter(m => !keyEls.has(m)).length;
+  let t = NC.msg;
+  if (!t){
+    if (NC.mode === 'num') t = `Toca una tecla para ponerle el ${NC.cur}.`;
+    else if (NC.mode === 'del') t = ms.length ? 'Toca una tecla para quitarle su número.' : 'No hay números que quitar.';
+    else t = `Toca la primera tecla de la mano derecha. Ahora la izquierda llega hasta ${fullName(NC.div - 1)} y la derecha empieza en ${fullName(NC.div)}.`;
+  }
+  if (NC.mode !== 'div') t += ms.length ? ` ${ms.length === 1 ? 'Hay 1 tecla' : `Hay ${ms.length} teclas`} con número${out ? ` (${out} fuera de la vista: usa las flechas de abajo)` : ''}.` : '';
+  if (!NC.on) t += ' Están ocultos: elige «Sí» para verlos.';
+  $('#ncStatus').textContent = t.trim();
+}
+function ncRender(){
+  if (!NC.open) return;
+  for (const b of $('#ncShow').children) b.setAttribute('aria-pressed', (b.dataset.v === '1') === NC.on ? 'true' : 'false');
+  for (const b of $('#ncMode').children) b.setAttribute('aria-pressed', b.dataset.v === NC.mode ? 'true' : 'false');
+  $('#ncNum').hidden = NC.mode !== 'num';
+  $('#ncCur').textContent = NC.cur;
+  $('#ncMinus').disabled = NC.cur <= 1; $('#ncPlus').disabled = NC.cur >= NC_MAX;
+  const n = Object.keys(NC.nums).length, c = $('#ncClear');
+  c.disabled = !n; c.classList.toggle('armed', NC.armed);
+  c.textContent = NC.armed ? `¿Borrar los ${n === 1 ? '' : n + ' '}número${n === 1 ? '' : 's'}?` : 'Borrar todos los números';
+  ncStatus();
+}
+function ncToggle(on){
+  on = !!on;
+  if (NC.open === on) return;
+  if (on) mkToggle(false);
+  NC.open = on; NC.msg = ''; ncDisarm();
+  $('#ncPanel').hidden = !on;
+  $('#viewFree').classList.toggle('ncing', on);
+  $('#btnNcol').setAttribute('aria-pressed', on ? 'true' : 'false');
+  ncShow(); ncRender();
+}
+/* Cada tecla que se toca con el panel abierto (pantalla, teclado del computador o teclado USB). */
+function ncKey(m){
+  ncDisarm();
+  if (NC.mode === 'num'){
+    const n = NC.cur;
+    NC.nums[m] = n; NC.on = true;
+    NC.cur = Math.min(NC_MAX, n + 1);
+    NC.msg = `Listo: ${fullName(m)} tiene el ${n}.` + (n < NC_MAX ? ` Ahora toca la tecla del ${NC.cur}.` : '');
+  } else if (NC.mode === 'del'){
+    if (NC.nums[m]){ NC.msg = `Quitaste el ${NC.nums[m]} de ${fullName(m)}.`; delete NC.nums[m]; }
+    else NC.msg = `${fullName(m)} no tenía número.`;
+  } else {
+    NC.div = m; NC.on = true;
+    NC.msg = `Listo: la mano izquierda llega hasta ${fullName(m - 1)} y la derecha empieza en ${fullName(m)}.`;
+  }
+  ncSave();
+  if (NC.mode === 'div') ncPaint(); else { const el = keyEls.get(m); if (el) ncPaintKey(m, el); ncShow(); }
+  ncRender(); NC.msg = '';
+}
+$('#btnNcol').onclick = () => ncToggle(!NC.open);
+$('#ncDone').onclick = () => ncToggle(false);
+$('#ncShow').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  NC.on = b.dataset.v === '1'; ncSave(); ncDisarm(); ncShow(); ncRender();
+});
+$('#ncMode').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  NC.mode = b.dataset.v; NC.msg = ''; ncDisarm(); ncRender();
+});
+$('#ncMinus').onclick = () => { NC.cur = Math.max(1, NC.cur - 1); ncDisarm(); ncRender(); };
+$('#ncPlus').onclick = () => { NC.cur = Math.min(NC_MAX, NC.cur + 1); ncDisarm(); ncRender(); };
+$('#ncClear').onclick = () => {
+  if (!NC.armed){
+    NC.armed = true; clearTimeout(NC.armT);
+    NC.armT = setTimeout(() => { NC.armed = false; ncRender(); }, 3500);
+    ncRender(); return;
+  }
+  ncDisarm(); NC.nums = {}; NC.cur = 1; ncSave(); ncPaint();
+  NC.msg = 'Se borraron todos los números. Los colores de cada mano siguen.'; ncRender(); NC.msg = '';
+};
 /* La velocidad se elige en el panel y se oye ahí mismo; al guardar, la canción queda con esa velocidad. */
 $('#mkVel').addEventListener('click', e => {
   const b = e.target.closest('button');
@@ -5722,7 +5869,7 @@ function setTabs(){
   $('#viewLearn').hidden = !learn;
   // En horizontal las listas ocupan toda la pantalla: el teclado aparece al tocar.
   $('.board').hidden = view === 'home' || view === 'welcome' || view === 'teoList' || view === 'device' || view === 'progress' || (view === 'list' && DEV.pos === 'h');
-  syncWake(); histView();
+  syncWake(); histView(); ncShow();
 }
 function leaveAll(){
   leavePlayer(); leaveReto(); releaseAll(); stopRec(); stopPlayback(); mkLeave(); clearQuiz();

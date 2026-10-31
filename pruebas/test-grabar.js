@@ -208,7 +208,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const C = await open({width: 390, height: 780}, 'cel-v');
   await C.evaluate(() => __t.goFree());
   const fit = await C.evaluate(() => [...document.querySelectorAll('#viewFree .toolbar button')].filter(b => b.offsetParent).map(b => Math.round(b.getBoundingClientRect().right)));
-  ok(fit.length === 6 && fit.every(x => x <= 390), 'en el celular en vertical caben todos los botones de la barra, también «Crear canción»', fit);
+  ok(fit.length === 7 && fit.every(x => x <= 390), 'en el celular en vertical caben todos los botones de la barra, también «Crear canción» y «Números y colores»', fit);
   await C.screenshot({path: path.join(SHOTS, 'grabar-celular-cerrado.png')});
   await C.click('#btnMaker'); await C.click('[data-mk="rec"]');
   await events(C, [[100, 64, true], [300, 64, false], [100, 62, true], [300, 62, false], [100, 60, true], [300, 60, false], [100, 62, true], [300, 62, false], [100, 64, true], [600, 64, false]]);

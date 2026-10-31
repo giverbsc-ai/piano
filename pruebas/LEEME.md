@@ -24,6 +24,8 @@ No forman parte de la app: sirven para comprobar la sincronización entre dispos
   fuerzas, soltar y pedal, que quede guardado para la siguiente visita y que sin conexión suene el sonido sencillo.
 - `test-octava.js`: «Subir o bajar una octava» en Tus canciones: crea la copia en otra octava, deja la original igual,
   respeta los límites del piano, queda guardada al recargar y el panel cabe en un celular.
+- `test-numeros-colores.js`: «Números y colores» en Tocar libre: poner y quitar números en las teclas, dividir el piano en
+  un color por mano, mostrar u ocultar, que no aparezca fuera de Tocar libre, que quede guardado al recargar y que quepa en celular.
 - `pianista.js`: el «pianista virtual» que comparten las pruebas.
 
 Cómo correrlas (Node 18 o más):
@@ -41,5 +43,6 @@ Cómo correrlas (Node 18 o más):
     node pruebas/test-teclas.js
     node pruebas/test-sonido.js
     node pruebas/test-octava.js
+    node pruebas/test-numeros-colores.js
 
 Las dos primeras usan una configuración de mentira dentro de la prueba (reemplazan `NUBE_CFG` al servir la página), así que nunca tocan el proyecto real de Firebase.
